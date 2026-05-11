@@ -4,10 +4,10 @@ Private Obsidian plugin distribution for a Codex-powered sidebar with shared vau
 
 ## Installation
 
-1. Create or open this folder in your vault:
+1. Clone or copy this repository into this folder in your vault:
 
    ```text
-   .obsidian/plugins/agent-memory-sync/
+   .obsidian/plugins/obsidian-codex/
    ```
 
 2. Copy these files into that folder:
@@ -18,9 +18,15 @@ Private Obsidian plugin distribution for a Codex-powered sidebar with shared vau
    manifest.json
    ```
 
-3. Enable `Agent Memory Sync` from Obsidian community plugins.
+3. Enable `Obsidian-Codex` from Obsidian community plugins.
 
 The plugin will generate its own local `data.json` when it runs. Do not commit or share `data.json`; it belongs to a specific Obsidian installation.
+
+## Migration from the Legacy Plugin
+
+`Obsidian-Codex` keeps using `_agent/` as the vault data contract, so shared memory, sessions, candidates, outbox, and backups do not need to move.
+
+On first load, the plugin attempts to import compatible settings from the legacy installation and local runtime state. The old plugin folder is not deleted automatically.
 
 ## Requirements
 

@@ -1,9 +1,9 @@
 {
-  "id": "agent-memory-sync",
-  "name": "Agent Memory Sync",
-  "version": "0.5.6",
+  "id": "obsidian-codex",
+  "name": "Obsidian-Codex",
+  "version": "0.6.0",
   "minAppVersion": "1.8.0",
-  "description": "Desktop-first agent sidebar for shared memory across Obsidian Sync vaults.",
+  "description": "Codex sidebar for Obsidian with vault context, shared memory, and local CLI fallback.",
   "author": "OpenAI Codex",
   "isDesktopOnly": false
 }
