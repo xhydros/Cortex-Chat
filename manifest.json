@@ -1,0 +1,9 @@
+{
+  "id": "agent-memory-sync",
+  "name": "Agent Memory Sync",
+  "version": "0.5.6",
+  "minAppVersion": "1.8.0",
+  "description": "Desktop-first agent sidebar for shared memory across Obsidian Sync vaults.",
+  "author": "OpenAI Codex",
+  "isDesktopOnly": false
+}

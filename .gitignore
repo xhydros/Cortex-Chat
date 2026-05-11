@@ -1,0 +1,17 @@
+data.json
+.env
+.env.*
+*.log
+*.tmp
+*.bak
+
+.obsidian/
+_agent/
+node_modules/
+dist/
+build/
+
+coverage/
+.cache/
+.DS_Store
+Thumbs.db
