@@ -52,6 +52,7 @@ const SHARED_SETTING_KEYS = [
 ];
 const LOCAL_SETTING_KEYS = [
   "deviceId",
+  "deviceLabel",
   "deviceTokenSecretName",
   "localBootstrapToken",
   "localBackendBootstrapScript",
@@ -63,7 +64,8 @@ const LOCAL_SETTING_KEYS = [
   "codexLastCheck",
   "codexInstalledOk",
   "codexLoginOk",
-  "codexExecutionOk"
+  "codexExecutionOk",
+  "deviceRegisteredOk"
 ];
 const DEFAULT_SYSTEM_PROMPT_SECTIONS = {
   role: "Actúa como un agente integrado en una bóveda personal de Obsidian. Tu trabajo es ayudar a pensar, organizar, escribir y ejecutar tareas dentro del contexto de la vault.",
@@ -76,7 +78,8 @@ const DEFAULT_SYSTEM_PROMPT_SECTIONS = {
 
 const DEFAULT_SETTINGS = {
   backendUrl: "http://127.0.0.1:8787",
-  deviceId: "desktop-main",
+  deviceId: "",
+  deviceLabel: "",
   deviceTokenSecretName: `${PLUGIN_ID}-device-token`,
   allowRemoteBackend: false,
   maxContextChars: 2000,
@@ -95,6 +98,7 @@ const DEFAULT_SETTINGS = {
   codexInstalledOk: false,
   codexLoginOk: false,
   codexExecutionOk: false,
+  deviceRegisteredOk: false,
   systemPromptSections: DEFAULT_SYSTEM_PROMPT_SECTIONS,
   uiScale: 1
 };
@@ -113,6 +117,41 @@ function makeId(prefix) {
   window.crypto?.getRandomValues?.(bytes);
   const random = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("") || String(Date.now());
   return `${prefix}_${random}`;
+}
+
+function randomHex(bytes = 16) {
+  if (nodeCrypto?.randomBytes) {
+    return nodeCrypto.randomBytes(bytes).toString("hex");
+  }
+  const buffer = new Uint8Array(bytes);
+  window.crypto?.getRandomValues?.(buffer);
+  return Array.from(buffer, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function cleanDevicePart(value, fallback = "device") {
+  const cleaned = String(value || "")
+    .trim()
+    .replace(/[^A-Za-z0-9_.-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 48);
+  return cleaned || fallback;
+}
+
+function getHostLabel() {
+  try {
+    return cleanDevicePart(os?.hostname?.() || "device");
+  } catch {
+    return "device";
+  }
+}
+
+function generateDeviceId() {
+  return `${getHostLabel()}-${randomHex(4)}`;
+}
+
+function generateDeviceToken() {
+  return randomHex(32);
 }
 
 function summarize(text) {
@@ -1246,6 +1285,10 @@ class CodexSetupModal extends Modal {
       await this.plugin.testCodexExecution();
       this.renderStatus();
     });
+    this.addAction(actionsEl, "Reparar dispositivo", "deviceRegisteredOk", async () => {
+      await this.plugin.repairLocalProvisioning();
+      this.renderStatus();
+    });
     this.addAction(actionsEl, "Recomprobar", "codexSetupCompleted", async () => {
       await this.plugin.autoCheckCodexSetup({ notify: true });
       this.renderStatus();
@@ -1263,6 +1306,11 @@ class CodexSetupModal extends Modal {
       return;
     }
     this.statusEl.createDiv({ text: `Estado: ${this.plugin.settings.codexStatus || "No comprobado"}` });
+    this.statusEl.createDiv({
+      text: `Dispositivo: ${this.plugin.settings.deviceRegisteredOk ? "registrado" : "pendiente"} · ${
+        this.plugin.settings.deviceId || "(se generará automáticamente)"
+      }`
+    });
     if (this.plugin.settings.codexVersion) {
       this.statusEl.createDiv({ text: `Versión: ${this.plugin.settings.codexVersion}` });
     }
@@ -2270,14 +2318,32 @@ class AgentMemorySettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Device ID")
-      .setDesc("Identificador estable local para este equipo. No se sincroniza por Obsidian Sync.")
-      .addText((text) =>
-        text.setValue(this.plugin.settings.deviceId).onChange(async (value) => {
-          this.plugin.settings.deviceId = value.trim();
-          await this.plugin.saveSettings();
+      .setName("Estado de dispositivo")
+      .setDesc(
+        `Dispositivo: ${this.plugin.settings.deviceRegisteredOk ? "registrado" : "pendiente"} · ID: ${
+          this.plugin.settings.deviceId || "(se generará automáticamente)"
+        }`
+      )
+      .addButton((button) =>
+        button.setButtonText("Reparar configuración local").onClick(async () => {
+          await this.plugin.repairLocalProvisioning();
+          this.display();
+        })
+      )
+      .addButton((button) =>
+        button.setButtonText("Registrar ahora").onClick(async () => {
+          await this.plugin.registerLocalDeviceIfPossible({ notify: true });
+          this.display();
         })
       );
+
+    new Setting(containerEl)
+      .setName("Device ID")
+      .setDesc("Identificador estable local generado automáticamente. No se sincroniza por Obsidian Sync.")
+      .addText((text) => {
+        text.setValue(this.plugin.settings.deviceId || "(pendiente)");
+        text.inputEl.disabled = true;
+      });
 
     new Setting(containerEl)
       .setName("Allow remote backend")
@@ -2383,13 +2449,11 @@ class AgentMemorySettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Local bootstrap token")
-      .setDesc("Solo para pruebas locales rápidas cuando SecretStorage no tenga token. No se sincroniza.")
-      .addText((text) =>
-        text.setValue(this.plugin.settings.localBootstrapToken || "").onChange(async (value) => {
-          this.plugin.settings.localBootstrapToken = value.trim();
-          await this.plugin.saveSettings();
-        })
-      );
+      .setDesc("Diagnóstico avanzado. Se autogenera si SecretStorage no está disponible. No se sincroniza.")
+      .addText((text) => {
+        text.setValue(this.plugin.settings.localBootstrapToken ? "configurado" : "no usado");
+        text.inputEl.disabled = true;
+      });
 
     new Setting(containerEl)
       .setName("Local backend bootstrap script")
@@ -2472,6 +2536,7 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
     this.lastMarkdownFile = null;
     this.lastEditorSelection = null;
     this.normalizePortableSettings();
+    await this.ensureLocalIdentity();
     if (this.hasLegacySharedLocalSettings) {
       await this.saveSettings();
     }
@@ -2580,6 +2645,7 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
         }
         return;
       }
+      await this.registerLocalDeviceIfPossible({ notify: false });
       const status = await this.autoCheckCodexSetup({ notify: false });
       if (!status.ready) {
         new CodexSetupModal(this.app, this).open();
@@ -3232,6 +3298,7 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
       return { ready, installed: false, login: ready, execution: ready };
     }
     const notify = Boolean(options.notify);
+    await this.registerLocalDeviceIfPossible({ notify: false });
     const install = await this.checkCodexStatus({ notify: false });
     if (!install) {
       if (notify) {
@@ -3716,22 +3783,132 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
       .map((entry) => entry.file);
   }
 
-  async getDeviceToken() {
+  async getSecretToken(secretName = this.settings.deviceTokenSecretName) {
     const getter =
       this.app.secretStorage && this.app.secretStorage.get
         ? this.app.secretStorage.get.bind(this.app.secretStorage)
         : null;
+    if (!getter || !secretName) {
+      return "";
+    }
+    return (await Promise.resolve(getter(secretName))) || "";
+  }
 
-    if (getter) {
-      const token = await Promise.resolve(getter(this.settings.deviceTokenSecretName));
-      if (token) {
-        return token;
+  async setSecretToken(secretName, token) {
+    const setter =
+      this.app.secretStorage && this.app.secretStorage.set
+        ? this.app.secretStorage.set.bind(this.app.secretStorage)
+        : null;
+    if (!setter || !secretName || !token) {
+      return false;
+    }
+    await Promise.resolve(setter(secretName, token));
+    return true;
+  }
+
+  async ensureLocalIdentity(options = {}) {
+    let changed = false;
+    if (!this.settings.deviceId) {
+      this.settings.deviceId = generateDeviceId();
+      changed = true;
+    }
+    if (!this.settings.deviceLabel) {
+      this.settings.deviceLabel = getHostLabel();
+      changed = true;
+    }
+    if (!this.settings.deviceTokenSecretName) {
+      this.settings.deviceTokenSecretName = `${PLUGIN_ID}-device-token`;
+      changed = true;
+    }
+
+    let token = await this.getSecretToken(this.settings.deviceTokenSecretName);
+    if (!token && this.settings.deviceTokenSecretName !== LEGACY_DEVICE_TOKEN_SECRET_NAME) {
+      token = await this.getSecretToken(LEGACY_DEVICE_TOKEN_SECRET_NAME);
+    }
+    if (!token && this.settings.localBootstrapToken) {
+      token = this.settings.localBootstrapToken;
+    }
+    if (!token) {
+      token = generateDeviceToken();
+      changed = true;
+    }
+
+    const storedInSecret = await this.setSecretToken(this.settings.deviceTokenSecretName, token).catch(() => false);
+    if (!storedInSecret && this.settings.localBootstrapToken !== token) {
+      this.settings.localBootstrapToken = token;
+      changed = true;
+    }
+    if (storedInSecret && this.settings.localBootstrapToken) {
+      this.settings.localBootstrapToken = "";
+      changed = true;
+    }
+
+    if (changed || options.save) {
+      await this.saveSettings();
+    }
+    return { deviceId: this.settings.deviceId, token };
+  }
+
+  async registerLocalDeviceIfPossible(options = {}) {
+    if (this.isMobileRuntime() || !this.isLocalBackendUrl(this.settings.backendUrl)) {
+      return false;
+    }
+    await this.ensureLocalBackendRunning();
+    const identity = await this.ensureLocalIdentity();
+    try {
+      const response = await requestUrl({
+        url: `${this.settings.backendUrl.replace(/\/$/, "")}/auth/register-device`,
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deviceId: identity.deviceId,
+          token: identity.token,
+          label: this.settings.deviceLabel || identity.deviceId
+        })
+      });
+      if (response.status >= 400) {
+        throw new Error(response.text || `HTTP ${response.status}`);
       }
-      if (this.settings.deviceTokenSecretName !== LEGACY_DEVICE_TOKEN_SECRET_NAME) {
-        const legacyToken = await Promise.resolve(getter(LEGACY_DEVICE_TOKEN_SECRET_NAME));
-        if (legacyToken) {
-          return legacyToken;
-        }
+      this.settings.deviceRegisteredOk = true;
+      if (!this.settings.codexStatus || /token|configuración local pendiente/i.test(this.settings.codexStatus)) {
+        this.settings.codexStatus = "Dispositivo local registrado.";
+      }
+      await this.saveSettings();
+      if (options.notify) {
+        new Notice("Dispositivo local registrado correctamente.");
+      }
+      return true;
+    } catch (error) {
+      this.settings.deviceRegisteredOk = false;
+      this.settings.codexStatus = `Configuración local pendiente: ${error.message}`;
+      await this.saveSettings();
+      if (options.notify) {
+        new Notice("No se pudo registrar el dispositivo local. Arranca el backend y vuelve a intentarlo.");
+      }
+      return false;
+    }
+  }
+
+  async repairLocalProvisioning() {
+    this.settings.deviceId = generateDeviceId();
+    this.settings.deviceLabel = getHostLabel();
+    this.settings.localBootstrapToken = generateDeviceToken();
+    this.settings.deviceRegisteredOk = false;
+    await this.setSecretToken(this.settings.deviceTokenSecretName, this.settings.localBootstrapToken).catch(() => false);
+    await this.saveSettings();
+    return this.registerLocalDeviceIfPossible({ notify: true });
+  }
+
+  async getDeviceToken() {
+    await this.ensureLocalIdentity();
+    const token = await this.getSecretToken(this.settings.deviceTokenSecretName);
+    if (token) {
+      return token;
+    }
+    if (this.settings.deviceTokenSecretName !== LEGACY_DEVICE_TOKEN_SECRET_NAME) {
+      const legacyToken = await this.getSecretToken(LEGACY_DEVICE_TOKEN_SECRET_NAME);
+      if (legacyToken) {
+        return legacyToken;
       }
     }
 
@@ -3739,7 +3916,7 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
       return this.settings.localBootstrapToken;
     }
 
-    throw new Error("No se encontró el token del dispositivo en SecretStorage ni en el token local de arranque.");
+    throw new Error("Configuración local pendiente: no hay token de dispositivo disponible.");
   }
 
   async apiRequest(method, endpoint, body) {
@@ -3747,6 +3924,9 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
       throw new Error("Configura un backend remoto HTTPS y activa backends remotos para usar el plugin en móvil/iOS.");
     }
     await this.ensureLocalBackendRunning();
+    if (this.isLocalBackendUrl(this.settings.backendUrl)) {
+      await this.registerLocalDeviceIfPossible({ notify: false });
+    }
     const token = await this.getDeviceToken();
     const url = `${this.settings.backendUrl.replace(/\/$/, "")}${endpoint}`;
     this.validateBackendUrl(url);
