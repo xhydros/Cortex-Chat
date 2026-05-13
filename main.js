@@ -31,10 +31,12 @@ const childProcess = optionalRequire("node:child_process");
 const util = optionalRequire("node:util");
 const execFileAsync =
   childProcess?.execFile && util?.promisify ? util.promisify(childProcess.execFile) : null;
-const PLUGIN_ID = "obsidian-codex";
-const LEGACY_PLUGIN_ID = ["agent", "memory", "sync"].join("-");
-const LEGACY_PLUGIN_NAME = ["Agent", "Memory", "Sync"].join(" ");
-const LEGACY_DEVICE_TOKEN_SECRET_NAME = `${LEGACY_PLUGIN_ID}-device-token`;
+const PLUGIN_ID = "codex-chat";
+const LEGACY_PLUGIN_IDS = [
+  ["obsidian", "codex"].join("-"),
+  ["agent", "memory", "sync"].join("-")
+];
+const LEGACY_DEVICE_TOKEN_SECRET_NAMES = LEGACY_PLUGIN_IDS.map((pluginId) => `${pluginId}-device-token`);
 const VIEW_TYPE = `${PLUGIN_ID}-view`;
 const MEMORY_CATEGORIES = ["preferences", "projects", "people", "decisions", "recent"];
 const AGENT_SCHEMA_VERSION = "2";
@@ -1249,7 +1251,7 @@ class CodexSetupModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.addClass("obsidian-codex-setup-modal");
+    contentEl.addClass("codex-chat-setup-modal");
     const mobile = this.plugin.isMobileRuntime();
     contentEl.createEl("h2", { text: mobile ? "Configurar backend móvil" : "Configurar Codex OAuth" });
     contentEl.createEl("p", {
@@ -1259,10 +1261,10 @@ class CodexSetupModal extends Modal {
           : "Este plugin necesita Codex CLI actualizado y autenticado con ChatGPT para dar respuestas reales. Si Codex no está listo, solo puede usar respaldo local."
     });
 
-    this.statusEl = contentEl.createDiv({ cls: "obsidian-codex-setup-status" });
+    this.statusEl = contentEl.createDiv({ cls: "codex-chat-setup-status" });
     this.renderStatus();
 
-    const actionsEl = contentEl.createDiv({ cls: "obsidian-codex-setup-actions" });
+    const actionsEl = contentEl.createDiv({ cls: "codex-chat-setup-actions" });
     if (mobile) {
       this.addAction(actionsEl, "Abrir ajustes", "allowRemoteBackend", async () => {
         this.plugin.openPluginSettings();
@@ -1320,7 +1322,7 @@ class CodexSetupModal extends Modal {
   }
 
   addAction(parentEl, label, statusKey, onClick) {
-    const button = parentEl.createEl("button", { cls: "obsidian-codex-setup-action" });
+    const button = parentEl.createEl("button", { cls: "codex-chat-setup-action" });
     this.renderActionButton(button, label, statusKey);
     button.addEventListener("click", async () => {
       button.disabled = true;
@@ -1338,14 +1340,14 @@ class CodexSetupModal extends Modal {
     button.empty();
     const ok = Boolean(this.plugin.settings[statusKey]);
     button.createSpan({
-      cls: `obsidian-codex-setup-badge ${ok ? "is-ok" : "is-pending"}`,
+      cls: `codex-chat-setup-badge ${ok ? "is-ok" : "is-pending"}`,
       text: ok ? "✓" : "•"
     });
     button.createSpan({ text: label });
   }
 }
 
-class AgentMemoryView extends ItemView {
+class CodexChatView extends ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -1417,7 +1419,7 @@ class AgentMemoryView extends ItemView {
     if (!this.contentEl) {
       return;
     }
-    this.contentEl.style.setProperty("--obsidian-codex-scale", String(this.plugin.getUiScale()));
+    this.contentEl.style.setProperty("--codex-chat-scale", String(this.plugin.getUiScale()));
   }
 
   registerScaleShortcuts() {
@@ -1488,31 +1490,31 @@ class AgentMemoryView extends ItemView {
   render() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.addClass("obsidian-codex-view");
+    contentEl.addClass("codex-chat-view");
     contentEl.setAttr("tabindex", "0");
     this.applyUiScale();
     this.registerScaleShortcuts();
 
-    this.headerEl = contentEl.createDiv({ cls: "obsidian-codex-header" });
-    this.quickActionsEl = contentEl.createDiv({ cls: "obsidian-codex-quick-actions" });
-    this.messagesEl = contentEl.createDiv({ cls: "obsidian-codex-messages" });
-    this.sendEl = contentEl.createDiv({ cls: "obsidian-codex-send" });
-    this.contextEl = this.sendEl.createDiv({ cls: "obsidian-codex-context" });
-    this.modeCardsEl = this.sendEl.createDiv({ cls: "obsidian-codex-mode-cards" });
+    this.headerEl = contentEl.createDiv({ cls: "codex-chat-header" });
+    this.quickActionsEl = contentEl.createDiv({ cls: "codex-chat-quick-actions" });
+    this.messagesEl = contentEl.createDiv({ cls: "codex-chat-messages" });
+    this.sendEl = contentEl.createDiv({ cls: "codex-chat-send" });
+    this.contextEl = this.sendEl.createDiv({ cls: "codex-chat-context" });
+    this.modeCardsEl = this.sendEl.createDiv({ cls: "codex-chat-mode-cards" });
     this.renderModeCards();
 
     this.suggestionsEl = this.sendEl.createDiv({
-      cls: "obsidian-codex-suggestions suggestion-container"
+      cls: "codex-chat-suggestions suggestion-container"
     });
     this.suggestionsEl.hide();
 
-    this.composerRowEl = this.sendEl.createDiv({ cls: "obsidian-codex-composer-row" });
+    this.composerRowEl = this.sendEl.createDiv({ cls: "codex-chat-composer-row" });
     this.inputEl = this.composerRowEl.createEl("textarea", {
       attr: {
         placeholder: "Pregunta a Codex..."
       }
     });
-    this.inputEl.addClass("obsidian-codex-input");
+    this.inputEl.addClass("codex-chat-input");
 
     this.inputEl.addEventListener("input", () => {
       this.autoResizeInput();
@@ -1539,7 +1541,7 @@ class AgentMemoryView extends ItemView {
     });
 
     this.sendButtonEl = this.composerRowEl.createEl("button", {
-      cls: "obsidian-codex-send-button",
+      cls: "codex-chat-send-button",
       attr: { "aria-label": "Enviar mensaje" }
     });
     setIcon(this.sendButtonEl, "send-horizontal");
@@ -1547,7 +1549,7 @@ class AgentMemoryView extends ItemView {
       await this.sendMessage();
     });
     this.sendHintEl = this.sendEl.createDiv({
-      cls: "obsidian-codex-input-hint",
+      cls: "codex-chat-input-hint",
       text: "Enter envía · Shift+Enter línea · @nota"
     });
 
@@ -1577,25 +1579,25 @@ class AgentMemoryView extends ItemView {
   addSegmentedSetting(config) {
     const current = this.plugin.settings[config.settingKey] || DEFAULT_SETTINGS[config.settingKey];
     const active = config.values[current] || config.values[Object.keys(config.values)[0]];
-    const groupEl = this.modeCardsEl.createDiv({ cls: "obsidian-codex-mode-group" });
-    const headerEl = groupEl.createDiv({ cls: "obsidian-codex-mode-group-header" });
-    headerEl.createSpan({ cls: "obsidian-codex-mode-group-title", text: config.title });
+    const groupEl = this.modeCardsEl.createDiv({ cls: "codex-chat-mode-group" });
+    const headerEl = groupEl.createDiv({ cls: "codex-chat-mode-group-header" });
+    headerEl.createSpan({ cls: "codex-chat-mode-group-title", text: config.title });
     if (active?.detail) {
-      headerEl.createSpan({ cls: "obsidian-codex-mode-group-hint", text: active.detail });
+      headerEl.createSpan({ cls: "codex-chat-mode-group-hint", text: active.detail });
     }
-    const segmentedEl = groupEl.createDiv({ cls: "obsidian-codex-mode-segmented" });
+    const segmentedEl = groupEl.createDiv({ cls: "codex-chat-mode-segmented" });
     for (const [value, option] of Object.entries(config.values)) {
       const buttonEl = segmentedEl.createEl("button", {
-        cls: `obsidian-codex-mode-segment${value === current ? " is-active" : ""}`,
+        cls: `codex-chat-mode-segment${value === current ? " is-active" : ""}`,
         attr: {
           "aria-label": `${config.title}: ${option.label}`,
           "aria-pressed": String(value === current),
           title: option.detail ? `${option.label} · ${option.detail}` : option.label
         }
       });
-      buttonEl.createSpan({ cls: "obsidian-codex-mode-segment-label", text: option.label });
+      buttonEl.createSpan({ cls: "codex-chat-mode-segment-label", text: option.label });
       if (option.detail) {
-        buttonEl.createSpan({ cls: "obsidian-codex-mode-segment-detail", text: option.detail });
+        buttonEl.createSpan({ cls: "codex-chat-mode-segment-detail", text: option.detail });
       }
       buttonEl.addEventListener("click", async () => {
         if (this.plugin.settings[config.settingKey] === value) {
@@ -1614,20 +1616,20 @@ class AgentMemoryView extends ItemView {
       return;
     }
     this.headerEl.empty();
-    const leftEl = this.headerEl.createDiv({ cls: "obsidian-codex-header-left" });
-    leftEl.createDiv({ cls: "obsidian-codex-title", text: "Codex" });
+    const leftEl = this.headerEl.createDiv({ cls: "codex-chat-header-left" });
+    leftEl.createDiv({ cls: "codex-chat-title", text: "Codex" });
     const state = this.getCodexState();
-    const stateEl = leftEl.createDiv({ cls: `obsidian-codex-state is-${state.kind}` });
-    stateEl.createSpan({ cls: "obsidian-codex-state-dot" });
+    const stateEl = leftEl.createDiv({ cls: `codex-chat-state is-${state.kind}` });
+    stateEl.createSpan({ cls: "codex-chat-state-dot" });
     stateEl.createSpan({ text: state.label });
     if ((this.plugin.settings.defaultInteractionMode || DEFAULT_SETTINGS.defaultInteractionMode) === "execute") {
-      leftEl.createDiv({ cls: "obsidian-codex-header-mode-chip is-unrestricted", text: "Sin restricciones" });
+      leftEl.createDiv({ cls: "codex-chat-header-mode-chip is-unrestricted", text: "Sin restricciones" });
     }
-    const actionsButton = this.createIconButton(this.headerEl, "settings", "Opciones y diagnostico", "obsidian-codex-icon-button");
+    const actionsButton = this.createIconButton(this.headerEl, "settings", "Opciones y diagnostico", "codex-chat-icon-button");
     actionsButton.addEventListener("click", (event) => this.openActionsMenu(event));
     if (this.plugin.settings.showDiagnostics) {
       this.headerEl.createDiv({
-        cls: "obsidian-codex-diagnostics",
+        cls: "codex-chat-diagnostics",
         text: `${this.plugin.settings.backendUrl} | ${this.plugin.settings.deviceId}`
       });
     }
@@ -1671,7 +1673,7 @@ class AgentMemoryView extends ItemView {
 
   createQuickAction(icon, ariaLabel, handler) {
     const button = this.quickActionsEl.createEl("button", {
-      cls: "obsidian-codex-quick-action",
+      cls: "codex-chat-quick-action",
       attr: { "aria-label": ariaLabel, title: ariaLabel }
     });
     setIcon(button, icon);
@@ -1774,9 +1776,9 @@ class AgentMemoryView extends ItemView {
   }
 
   createContextItem(parentEl, label, value, state = "") {
-    const itemEl = parentEl.createDiv({ cls: `obsidian-codex-context-item ${state}`.trim() });
-    itemEl.createDiv({ cls: "obsidian-codex-context-label", text: label });
-    itemEl.createDiv({ cls: "obsidian-codex-context-value", text: value });
+    const itemEl = parentEl.createDiv({ cls: `codex-chat-context-item ${state}`.trim() });
+    itemEl.createDiv({ cls: "codex-chat-context-label", text: label });
+    itemEl.createDiv({ cls: "codex-chat-context-value", text: value });
   }
 
   getContextSummary() {
@@ -1789,7 +1791,7 @@ class AgentMemoryView extends ItemView {
 
   renderContext() {
     this.contextEl.empty();
-    const summaryEl = this.contextEl.createDiv({ cls: "obsidian-codex-context-summary" });
+    const summaryEl = this.contextEl.createDiv({ cls: "codex-chat-context-summary" });
     summaryEl.setAttribute("role", "button");
     summaryEl.setAttribute("tabindex", "0");
     summaryEl.setAttribute("aria-expanded", String(this.contextExpanded));
@@ -1804,7 +1806,7 @@ class AgentMemoryView extends ItemView {
         toggleContext();
       }
     });
-    const summaryTextEl = summaryEl.createDiv({ cls: "obsidian-codex-context-line" });
+    const summaryTextEl = summaryEl.createDiv({ cls: "codex-chat-context-line" });
     const noteReady = Boolean(this.context?.path || this.plugin.lastMarkdownFile);
     const referenceReady = Boolean(this.context?.references?.length);
     const selectionReady = Boolean(this.context?.selection);
@@ -1815,7 +1817,7 @@ class AgentMemoryView extends ItemView {
     ];
     for (const [icon, ready, label, handler] of indicators) {
       const indicatorEl = summaryTextEl.createEl("button", {
-        cls: ready ? "obsidian-codex-context-icon is-ready" : "obsidian-codex-context-icon",
+        cls: ready ? "codex-chat-context-icon is-ready" : "codex-chat-context-icon",
         attr: { "aria-label": label, title: label }
       });
       setIcon(indicatorEl, icon);
@@ -1825,17 +1827,17 @@ class AgentMemoryView extends ItemView {
         await handler();
       });
     }
-    summaryTextEl.createSpan({ cls: "obsidian-codex-context-kicker", text: this.context?.path ? "Contexto activo" : "Contexto" });
-    summaryTextEl.createSpan({ cls: "obsidian-codex-context-text", text: this.getContextSummary() });
+    summaryTextEl.createSpan({ cls: "codex-chat-context-kicker", text: this.context?.path ? "Contexto activo" : "Contexto" });
+    summaryTextEl.createSpan({ cls: "codex-chat-context-text", text: this.getContextSummary() });
     const toggleButton = this.createIconButton(
       summaryEl,
       this.contextExpanded ? "chevron-down" : "chevron-right",
       this.contextExpanded ? "Ocultar detalles de contexto" : "Ver detalles de contexto",
-      "obsidian-codex-context-toggle"
+      "codex-chat-context-toggle"
     );
     toggleButton.setAttribute("aria-expanded", String(this.contextExpanded));
     toggleButton.createSpan({
-      cls: "obsidian-codex-context-toggle-label",
+      cls: "codex-chat-context-toggle-label",
       text: this.contextExpanded ? "Ocultar" : "Detalles"
     });
     toggleButton.addEventListener("click", (event) => {
@@ -1849,9 +1851,9 @@ class AgentMemoryView extends ItemView {
 
     if (!this.context) {
       const lastNote = this.plugin.lastMarkdownFile?.path || "(ninguna detectada)";
-      this.contextEl.createDiv({ cls: "obsidian-codex-context-title", text: "Contexto pendiente" });
+      this.contextEl.createDiv({ cls: "codex-chat-context-title", text: "Contexto pendiente" });
       this.contextEl.createDiv({
-        cls: "obsidian-codex-context-help",
+        cls: "codex-chat-context-help",
         text: `Última nota vista: ${lastNote}. Usa @NombreNota o las acciones rápidas para anclar el contexto.`
       });
       return;
@@ -1873,8 +1875,8 @@ class AgentMemoryView extends ItemView {
         }`
       : "(ninguno)";
 
-    this.contextEl.createDiv({ cls: "obsidian-codex-context-title", text: "Contexto que se enviará" });
-    const gridEl = this.contextEl.createDiv({ cls: "obsidian-codex-context-grid" });
+    this.contextEl.createDiv({ cls: "codex-chat-context-title", text: "Contexto que se enviará" });
+    const gridEl = this.contextEl.createDiv({ cls: "codex-chat-context-grid" });
     this.createContextItem(gridEl, "Nota", this.context.path || "(ninguna)", this.context.path ? "is-ready" : "");
     this.createContextItem(gridEl, "Selección", selectionSummary, this.context.selection ? "is-ready" : "");
     this.createContextItem(gridEl, "Enlaces salientes", outgoingSummary, this.context.outgoingLinks?.length ? "is-ready" : "");
@@ -1882,7 +1884,7 @@ class AgentMemoryView extends ItemView {
 
     if (references.length) {
       this.contextEl.createDiv({
-        cls: "obsidian-codex-context-help",
+        cls: "codex-chat-context-help",
         text: references
           .slice(0, 5)
           .map((reference) => reference.path)
@@ -1899,7 +1901,7 @@ class AgentMemoryView extends ItemView {
     this.messagesEl.empty();
     if (!this.messages.length) {
       this.messagesEl.createEl("div", {
-        cls: "obsidian-codex-empty-state",
+        cls: "codex-chat-empty-state",
         text: "La conversación aparecerá aquí. El chat prioriza el contexto de la nota activa y sus referencias."
       });
       return;
@@ -1908,45 +1910,45 @@ class AgentMemoryView extends ItemView {
     for (const message of this.messages) {
       const isAssistant = message.role === "assistant";
       const messageEl = this.messagesEl.createDiv({
-        cls: `obsidian-codex-message ${isAssistant ? "is-assistant" : "is-user"}`
+        cls: `codex-chat-message ${isAssistant ? "is-assistant" : "is-user"}`
       });
-      const headerEl = messageEl.createDiv({ cls: "obsidian-codex-message-header" });
-      const metaEl = headerEl.createDiv({ cls: "obsidian-codex-message-meta" });
+      const headerEl = messageEl.createDiv({ cls: "codex-chat-message-header" });
+      const metaEl = headerEl.createDiv({ cls: "codex-chat-message-meta" });
       metaEl.createDiv({
-        cls: "obsidian-codex-role",
+        cls: "codex-chat-role",
         text: isAssistant ? "Codex" : "Tú"
       });
       if (message.meta?.label) {
-        metaEl.createDiv({ cls: "obsidian-codex-message-chip", text: message.meta.label });
+        metaEl.createDiv({ cls: "codex-chat-message-chip", text: message.meta.label });
       }
       if (isAssistant && !message.meta?.loading && message.content) {
-        const actionsEl = headerEl.createDiv({ cls: "obsidian-codex-message-actions" });
-        const copyButton = this.createIconButton(actionsEl, "copy", "Copiar esta respuesta", "obsidian-codex-message-action");
+        const actionsEl = headerEl.createDiv({ cls: "codex-chat-message-actions" });
+        const copyButton = this.createIconButton(actionsEl, "copy", "Copiar esta respuesta", "codex-chat-message-action");
         copyButton.addEventListener("click", async () => {
           await navigator.clipboard.writeText(message.content);
           new Notice("Respuesta copiada.");
         });
-        const insertButton = this.createIconButton(actionsEl, "corner-down-left", "Insertar esta respuesta", "obsidian-codex-message-action");
+        const insertButton = this.createIconButton(actionsEl, "corner-down-left", "Insertar esta respuesta", "codex-chat-message-action");
         insertButton.addEventListener("click", async () => {
           await this.insertTextIntoActiveNote(message.content);
         });
-        const useButton = this.createIconButton(actionsEl, "message-square-plus", "Usar como contexto", "obsidian-codex-message-action");
+        const useButton = this.createIconButton(actionsEl, "message-square-plus", "Usar como contexto", "codex-chat-message-action");
         useButton.addEventListener("click", () => {
           this.appendToComposer(`Contexto de respuesta anterior:\n${message.content}`);
         });
       }
-      const bodyEl = messageEl.createDiv({ cls: "obsidian-codex-message-body" });
+      const bodyEl = messageEl.createDiv({ cls: "codex-chat-message-body" });
       if (message.meta?.loading) {
-        bodyEl.createDiv({ cls: "obsidian-codex-loading", text: message.meta.status || "Preparando respuesta" });
-        bodyEl.createDiv({ cls: "obsidian-codex-loading-bar" });
+        bodyEl.createDiv({ cls: "codex-chat-loading", text: message.meta.status || "Preparando respuesta" });
+        bodyEl.createDiv({ cls: "codex-chat-loading-bar" });
       } else if (isAssistant) {
         void this.renderAssistantMessage(bodyEl, message.content);
       } else {
         bodyEl.setText(message.content);
       }
       if (message.meta?.detail) {
-        const footerEl = messageEl.createDiv({ cls: "obsidian-codex-message-detail" });
-        footerEl.createSpan({ cls: "obsidian-codex-message-detail-text", text: message.meta.detail });
+        const footerEl = messageEl.createDiv({ cls: "codex-chat-message-detail" });
+        footerEl.createSpan({ cls: "codex-chat-message-detail-text", text: message.meta.detail });
       }
     }
 
@@ -2096,7 +2098,7 @@ class AgentMemoryView extends ItemView {
 
     this.mentionState.items.forEach((file, index) => {
       const itemEl = this.suggestionsEl.createDiv({
-        cls: `suggestion-item obsidian-codex-suggestion-item${index === this.mentionState.selectedIndex ? " is-selected" : ""}`
+        cls: `suggestion-item codex-chat-suggestion-item${index === this.mentionState.selectedIndex ? " is-selected" : ""}`
       });
 
       itemEl.createDiv({
@@ -2104,7 +2106,7 @@ class AgentMemoryView extends ItemView {
         text: file.basename
       });
       itemEl.createDiv({
-        cls: "suggestion-note obsidian-codex-suggestion-note",
+        cls: "suggestion-note codex-chat-suggestion-note",
         text: file.path
       });
 
@@ -2276,7 +2278,7 @@ class ConsistencyDiagnosticsModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.addClass("obsidian-codex-setup-modal");
+    contentEl.addClass("codex-chat-setup-modal");
     contentEl.createEl("h3", { text: "Diagnóstico de consistencia" });
     contentEl.createEl("p", {
       text: this.report.summary
@@ -2293,7 +2295,7 @@ class ConsistencyDiagnosticsModal extends Modal {
   }
 }
 
-class AgentMemorySettingTab extends PluginSettingTab {
+class CodexChatSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -2414,7 +2416,7 @@ class AgentMemorySettingTab extends PluginSettingTab {
         .addTextArea((text) => {
           text.setValue(this.plugin.settings.systemPromptSections?.[key] || "");
           text.inputEl.rows = 4;
-          text.inputEl.addClass("obsidian-codex-settings-textarea");
+          text.inputEl.addClass("codex-chat-settings-textarea");
           text.onChange(async (value) => {
             this.plugin.settings.systemPromptSections = {
               ...normalizeSystemPromptSections(this.plugin.settings.systemPromptSections),
@@ -2528,7 +2530,7 @@ class AgentMemorySettingTab extends PluginSettingTab {
   }
 }
 
-module.exports = class AgentMemorySyncPlugin extends Plugin {
+module.exports = class CodexChatPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
     this.lastResponse = null;
@@ -2541,16 +2543,16 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
       await this.saveSettings();
     }
 
-    this.registerView(VIEW_TYPE, (leaf) => new AgentMemoryView(leaf, this));
-    this.addSettingTab(new AgentMemorySettingTab(this.app, this));
+    this.registerView(VIEW_TYPE, (leaf) => new CodexChatView(leaf, this));
+    this.addSettingTab(new CodexChatSettingTab(this.app, this));
 
-    this.addRibbonIcon("bot", "Open Obsidian-Codex chat", async () => {
+    this.addRibbonIcon("bot", "Abrir Codex Chat", async () => {
       await this.activateView();
     });
 
     this.addCommand({
-      id: "open-agent-sidebar",
-      name: "Open agent sidebar",
+      id: "open-codex-chat",
+      name: "Abrir Codex Chat",
       callback: async () => {
         await this.activateView();
       }
@@ -2606,7 +2608,7 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
 
     this.addCommand({
       id: "run-consistency-diagnostics",
-      name: "Diagnóstico de consistencia de Obsidian-Codex",
+      name: "Diagnóstico de consistencia de Codex Chat",
       callback: async () => {
         await this.openConsistencyDiagnostics();
       }
@@ -2681,19 +2683,22 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
       return {};
     }
 
-    try {
-      const legacyPath = path.join(vaultRoot, ".obsidian", "plugins", LEGACY_PLUGIN_ID, "data.json");
-      const parsed = JSON.parse(await fs.readFile(legacyPath, "utf8"));
-      const legacyShared = {};
-      for (const key of SHARED_SETTING_KEYS) {
-        if (Object.prototype.hasOwnProperty.call(parsed, key)) {
-          legacyShared[key] = parsed[key];
+    for (const legacyPluginId of LEGACY_PLUGIN_IDS) {
+      try {
+        const legacyPath = path.join(vaultRoot, ".obsidian", "plugins", legacyPluginId, "data.json");
+        const parsed = JSON.parse(await fs.readFile(legacyPath, "utf8"));
+        const legacyShared = {};
+        for (const key of SHARED_SETTING_KEYS) {
+          if (Object.prototype.hasOwnProperty.call(parsed, key)) {
+            legacyShared[key] = parsed[key];
+          }
         }
+        return legacyShared;
+      } catch {
+        // Try the next known legacy identity.
       }
-      return legacyShared;
-    } catch {
-      return {};
     }
+    return {};
   }
 
   async saveSettings() {
@@ -2736,12 +2741,11 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
     if (directory) {
       return path.join(directory, "tmp");
     }
-    return os?.tmpdir ? path.join(os.tmpdir(), "obsidian-codex") : "";
+    return os?.tmpdir ? path.join(os.tmpdir(), "codex-chat") : "";
   }
 
   async loadLocalRuntimeState(sharedSettings = {}) {
     const localStatePath = this.getLocalStatePath();
-    const legacyLocalStatePath = this.getLocalStatePath(LEGACY_PLUGIN_ID);
     const localState = {};
     let migrated = false;
 
@@ -2775,12 +2779,19 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
       // No local state yet.
     }
 
-    if (!Object.keys(localState).length && legacyLocalStatePath && legacyLocalStatePath !== localStatePath) {
-      try {
-        await mergeLocalStateFile(legacyLocalStatePath);
-        migrated = true;
-      } catch {
-        // No legacy local state to migrate.
+    if (!Object.keys(localState).length) {
+      for (const legacyPluginId of LEGACY_PLUGIN_IDS) {
+        const legacyLocalStatePath = this.getLocalStatePath(legacyPluginId);
+        if (!legacyLocalStatePath || legacyLocalStatePath === localStatePath) {
+          continue;
+        }
+        try {
+          await mergeLocalStateFile(legacyLocalStatePath);
+          migrated = true;
+          break;
+        } catch {
+          // No local state for this legacy identity.
+        }
       }
     }
 
@@ -2881,7 +2892,7 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
       this.app.setting.open();
       this.app.setting.openTabById(this.manifest.id);
     } else {
-      new Notice("Abre los ajustes de Obsidian y selecciona Obsidian-Codex.");
+      new Notice("Abre los ajustes de Obsidian y selecciona Codex Chat.");
     }
   }
 
@@ -2897,7 +2908,7 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
       if (Object.prototype.hasOwnProperty.call(shared, key)) {
         items.push({
           severity: "warn",
-          message: `\`.obsidian/plugins/obsidian-codex/data.json\` aún contiene \`${key}\`, que debería ser local y no sincronizarse.`
+          message: `\`.obsidian/plugins/codex-chat/data.json\` aún contiene \`${key}\`, que debería ser local y no sincronizarse.`
         });
       }
     }
@@ -3103,7 +3114,7 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
       const domSelection = window.getSelection?.();
       const anchorNode = domSelection?.anchorNode;
       const anchorEl = anchorNode?.nodeType === Node.ELEMENT_NODE ? anchorNode : anchorNode?.parentElement;
-      if (anchorEl?.closest?.(".obsidian-codex-view, .modal")) {
+      if (anchorEl?.closest?.(".codex-chat-view, .modal")) {
         return;
       }
       selection = domSelection?.toString?.() || "";
@@ -3213,7 +3224,7 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
     return this.app.workspace
       .getLeavesOfType(VIEW_TYPE)
       .map((leaf) => leaf.view)
-      .filter((view) => view instanceof AgentMemoryView);
+      .filter((view) => view instanceof CodexChatView);
   }
 
   refreshAgentViewScale() {
@@ -3822,8 +3833,8 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
     }
 
     let token = await this.getSecretToken(this.settings.deviceTokenSecretName);
-    if (!token && this.settings.deviceTokenSecretName !== LEGACY_DEVICE_TOKEN_SECRET_NAME) {
-      token = await this.getSecretToken(LEGACY_DEVICE_TOKEN_SECRET_NAME);
+    if (!token) {
+      token = await this.getLegacySecretToken();
     }
     if (!token && this.settings.localBootstrapToken) {
       token = this.settings.localBootstrapToken;
@@ -3905,11 +3916,9 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
     if (token) {
       return token;
     }
-    if (this.settings.deviceTokenSecretName !== LEGACY_DEVICE_TOKEN_SECRET_NAME) {
-      const legacyToken = await this.getSecretToken(LEGACY_DEVICE_TOKEN_SECRET_NAME);
-      if (legacyToken) {
-        return legacyToken;
-      }
+    const legacyToken = await this.getLegacySecretToken();
+    if (legacyToken) {
+      return legacyToken;
     }
 
     if (this.isLocalBackendUrl(this.settings.backendUrl) && this.settings.localBootstrapToken) {
@@ -3917,6 +3926,19 @@ module.exports = class AgentMemorySyncPlugin extends Plugin {
     }
 
     throw new Error("Configuración local pendiente: no hay token de dispositivo disponible.");
+  }
+
+  async getLegacySecretToken() {
+    for (const secretName of LEGACY_DEVICE_TOKEN_SECRET_NAMES) {
+      if (!secretName || secretName === this.settings.deviceTokenSecretName) {
+        continue;
+      }
+      const token = await this.getSecretToken(secretName);
+      if (token) {
+        return token;
+      }
+    }
+    return "";
   }
 
   async apiRequest(method, endpoint, body) {

@@ -1,13 +1,13 @@
-# Obsidian Codex
+# Codex Chat
 
-Private Obsidian plugin distribution for a Codex-powered sidebar with shared vault context, local Codex CLI fallback, session persistence, and `_agent` memory support.
+Private Obsidian plugin distribution for a Codex-powered chat sidebar with shared vault context, local Codex CLI fallback, session persistence, and `_agent` memory support.
 
 ## Installation
 
 1. Clone or copy this repository into this folder in your vault:
 
    ```text
-   .obsidian/plugins/obsidian-codex/
+   .obsidian/plugins/codex-chat/
    ```
 
 2. Copy these files into that folder:
@@ -18,7 +18,7 @@ Private Obsidian plugin distribution for a Codex-powered sidebar with shared vau
    manifest.json
    ```
 
-3. Enable `Obsidian-Codex` from Obsidian community plugins.
+3. Enable `Codex Chat` from Obsidian community plugins.
 
 The plugin will generate its own local `data.json` when it runs. Do not commit or share `data.json`; it belongs to a specific Obsidian installation.
 
@@ -32,9 +32,9 @@ Users should not paste random values into token fields. Device tokens are stored
 
 ## Migration from the Legacy Plugin
 
-`Obsidian-Codex` keeps using `_agent/` as the vault data contract, so shared memory, sessions, candidates, outbox, and backups do not need to move.
+`Codex Chat` keeps using `_agent/` as the vault data contract, so shared memory, sessions, candidates, outbox, and backups do not need to move.
 
-On first load, the plugin attempts to import compatible settings from the legacy installation and local runtime state. The old plugin folder is not deleted automatically.
+On first load, the plugin attempts to import compatible settings from prior Codex Chat identities and local runtime state. The old plugin folder is not deleted automatically.
 
 ## Requirements
 

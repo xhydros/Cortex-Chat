@@ -1,4 +1,4 @@
-.obsidian-codex-view {
+.codex-chat-view {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -14,31 +14,31 @@
     var(--background-primary);
 }
 
-.obsidian-codex-toolbar {
+.codex-chat-toolbar {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.obsidian-codex-toolbar-group {
+.codex-chat-toolbar-group {
   display: grid;
   gap: 8px;
 }
 
-.obsidian-codex-toolbar-group.is-context {
+.codex-chat-toolbar-group.is-context {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.obsidian-codex-toolbar-group.is-response {
+.codex-chat-toolbar-group.is-response {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.obsidian-codex-toolbar-group.is-response button {
+.codex-chat-toolbar-group.is-response button {
   opacity: 0.86;
 }
 
-.obsidian-codex-toolbar button,
-.obsidian-codex-send-button {
+.codex-chat-toolbar button,
+.codex-chat-send-button {
   border: 1px solid var(--background-modifier-border);
   border-radius: 10px;
   padding: 8px 10px;
@@ -48,7 +48,7 @@
   line-height: 1.25;
 }
 
-.obsidian-codex-status {
+.codex-chat-status {
   flex: 0 0 auto;
   padding: 7px 9px;
   border-radius: 12px;
@@ -59,7 +59,7 @@
   line-height: 1.25;
 }
 
-.obsidian-codex-status-main {
+.codex-chat-status-main {
   display: grid;
   grid-template-columns: minmax(72px, auto) minmax(0, 1fr) auto;
   align-items: center;
@@ -68,13 +68,13 @@
   font-weight: 650;
 }
 
-.obsidian-codex-status-title {
+.codex-chat-status-title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.obsidian-codex-status-badges {
+.codex-chat-status-badges {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
@@ -83,7 +83,7 @@
   overflow: hidden;
 }
 
-.obsidian-codex-pill {
+.codex-chat-pill {
   display: inline-flex;
   align-items: center;
   max-width: 42%;
@@ -99,13 +99,13 @@
   white-space: nowrap;
 }
 
-.obsidian-codex-pill.is-ready {
+.codex-chat-pill.is-ready {
   color: var(--text-normal);
   border-color: color-mix(in srgb, var(--interactive-accent) 45%, var(--background-modifier-border));
   background: color-mix(in srgb, var(--interactive-accent) 12%, var(--background-secondary));
 }
 
-.obsidian-codex-status-sub {
+.codex-chat-status-sub {
   color: var(--text-muted);
   font-size: 0.82em;
   margin-top: 4px;
@@ -114,7 +114,7 @@
   white-space: nowrap;
 }
 
-.obsidian-codex-actions-button {
+.codex-chat-actions-button {
   border: 1px solid var(--background-modifier-border);
   border-radius: 999px;
   min-width: 28px;
@@ -126,7 +126,7 @@
   line-height: 1;
 }
 
-.obsidian-codex-messages {
+.codex-chat-messages {
   flex: 1;
   min-height: 0;
   overflow: auto;
@@ -136,29 +136,29 @@
   padding: 2px 4px 2px 0;
 }
 
-.obsidian-codex-message {
+.codex-chat-message {
   border: 1px solid color-mix(in srgb, var(--background-modifier-border) 88%, transparent);
   border-radius: 14px;
   padding: 10px 12px;
   box-shadow: 0 4px 14px color-mix(in srgb, var(--background-modifier-box-shadow) 30%, transparent);
 }
 
-.obsidian-codex-message.is-user {
+.codex-chat-message.is-user {
   background: color-mix(in srgb, var(--interactive-accent) 12%, var(--background-primary));
 }
 
-.obsidian-codex-message.is-assistant {
+.codex-chat-message.is-assistant {
   background: color-mix(in srgb, var(--background-secondary) 92%, var(--background-primary));
 }
 
-.obsidian-codex-role {
+.codex-chat-role {
   font-size: 0.72em;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
 }
 
-.obsidian-codex-message-header {
+.codex-chat-message-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -166,7 +166,7 @@
   margin-bottom: 6px;
 }
 
-.obsidian-codex-message-chip {
+.codex-chat-message-chip {
   border: 1px solid var(--background-modifier-border);
   border-radius: 999px;
   color: var(--text-muted);
@@ -176,7 +176,7 @@
   white-space: nowrap;
 }
 
-.obsidian-codex-message-body {
+.codex-chat-message-body {
   color: var(--text-normal);
   font-size: var(--font-text-size);
   line-height: 1.5;
@@ -184,31 +184,31 @@
   user-select: text;
 }
 
-.obsidian-codex-message-body h1,
-.obsidian-codex-message-body h2,
-.obsidian-codex-message-body h3 {
+.codex-chat-message-body h1,
+.codex-chat-message-body h2,
+.codex-chat-message-body h3 {
   font-size: 1em;
   line-height: 1.35;
   margin: 14px 0 6px;
   letter-spacing: 0;
 }
 
-.obsidian-codex-message-body ul,
-.obsidian-codex-message-body ol {
+.codex-chat-message-body ul,
+.codex-chat-message-body ol {
   padding-inline-start: 20px;
 }
 
-.obsidian-codex-message-body p:first-child {
+.codex-chat-message-body p:first-child {
   margin-top: 0;
 }
 
-.obsidian-codex-message-body p:last-child,
-.obsidian-codex-message-body ul:last-child,
-.obsidian-codex-message-body ol:last-child {
+.codex-chat-message-body p:last-child,
+.codex-chat-message-body ul:last-child,
+.codex-chat-message-body ol:last-child {
   margin-bottom: 0;
 }
 
-.obsidian-codex-message-detail {
+.codex-chat-message-detail {
   color: var(--text-faint);
   font-size: 0.78em;
   margin-top: 10px;
@@ -217,18 +217,18 @@
   overflow-wrap: anywhere;
 }
 
-.obsidian-codex-loading {
+.codex-chat-loading {
   color: var(--text-muted);
 }
 
-.obsidian-codex-loading::after {
+.codex-chat-loading::after {
   content: "";
   display: inline-block;
   width: 1.5em;
-  animation: obsidian-codex-dots 1.2s steps(4, end) infinite;
+  animation: codex-chat-dots 1.2s steps(4, end) infinite;
 }
 
-.obsidian-codex-loading-bar {
+.codex-chat-loading-bar {
   height: 3px;
   margin-top: 12px;
   border-radius: 999px;
@@ -236,17 +236,17 @@
   background: var(--background-modifier-border);
 }
 
-.obsidian-codex-loading-bar::before {
+.codex-chat-loading-bar::before {
   content: "";
   display: block;
   width: 42%;
   height: 100%;
   border-radius: inherit;
   background: var(--interactive-accent);
-  animation: obsidian-codex-slide 1.1s ease-in-out infinite;
+  animation: codex-chat-slide 1.1s ease-in-out infinite;
 }
 
-@keyframes obsidian-codex-dots {
+@keyframes codex-chat-dots {
   0% { content: ""; }
   25% { content: "."; }
   50% { content: ".."; }
@@ -254,12 +254,12 @@
   100% { content: ""; }
 }
 
-@keyframes obsidian-codex-slide {
+@keyframes codex-chat-slide {
   0% { transform: translateX(-110%); }
   100% { transform: translateX(260%); }
 }
 
-.obsidian-codex-context {
+.codex-chat-context {
   flex: 0 0 auto;
   border: 1px solid color-mix(in srgb, var(--background-modifier-border) 75%, transparent);
   border-radius: 12px;
@@ -269,20 +269,20 @@
   font-size: var(--font-ui-smaller);
 }
 
-.obsidian-codex-context-summary {
+.codex-chat-context-summary {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
 }
 
-.obsidian-codex-context-summary > span {
+.codex-chat-context-summary > span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.obsidian-codex-context-toggle {
+.codex-chat-context-toggle {
   border: 0;
   border-radius: 999px;
   padding: 3px 7px;
@@ -292,19 +292,19 @@
   cursor: pointer;
 }
 
-.obsidian-codex-context-title {
+.codex-chat-context-title {
   color: var(--text-normal);
   font-weight: 650;
   margin: 8px 0 6px;
 }
 
-.obsidian-codex-context-grid {
+.codex-chat-context-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
 }
 
-.obsidian-codex-context-item {
+.codex-chat-context-item {
   min-width: 0;
   border: 1px solid color-mix(in srgb, var(--background-modifier-border) 70%, transparent);
   border-radius: 10px;
@@ -312,11 +312,11 @@
   background: color-mix(in srgb, var(--background-primary) 72%, var(--background-secondary));
 }
 
-.obsidian-codex-context-item.is-ready {
+.codex-chat-context-item.is-ready {
   border-color: color-mix(in srgb, var(--interactive-accent) 34%, var(--background-modifier-border));
 }
 
-.obsidian-codex-context-label {
+.codex-chat-context-label {
   color: var(--text-faint);
   font-size: 0.78em;
   text-transform: uppercase;
@@ -324,25 +324,25 @@
   margin-bottom: 3px;
 }
 
-.obsidian-codex-context-value {
+.codex-chat-context-value {
   color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.obsidian-codex-context-item.is-ready .obsidian-codex-context-value {
+.codex-chat-context-item.is-ready .codex-chat-context-value {
   color: var(--text-normal);
 }
 
-.obsidian-codex-context-help {
+.codex-chat-context-help {
   margin-top: 6px;
   color: var(--text-faint);
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
 
-.obsidian-codex-send {
+.codex-chat-send {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -359,14 +359,14 @@
   border-top: 1px solid color-mix(in srgb, var(--background-modifier-border) 75%, transparent);
 }
 
-.obsidian-codex-controls {
+.codex-chat-controls {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
 }
 
-.obsidian-codex-chip-group {
+.codex-chat-chip-group {
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -376,7 +376,7 @@
   background: color-mix(in srgb, var(--background-secondary) 76%, var(--background-primary));
 }
 
-.obsidian-codex-mode-chip {
+.codex-chat-mode-chip {
   border: 0;
   border-radius: 999px;
   min-height: 24px;
@@ -388,20 +388,20 @@
   line-height: 1;
 }
 
-.obsidian-codex-mode-chip.is-active {
+.codex-chat-mode-chip.is-active {
   background: color-mix(in srgb, var(--interactive-accent) 18%, var(--background-primary));
   color: var(--text-normal);
   font-weight: 650;
 }
 
-.obsidian-codex-composer-row {
+.codex-chat-composer-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: 7px;
 }
 
-.obsidian-codex-send textarea {
+.codex-chat-send textarea {
   min-height: 40px;
   max-height: 24vh;
   resize: none;
@@ -412,24 +412,24 @@
   overflow-y: auto;
 }
 
-.obsidian-codex-send-button {
+.codex-chat-send-button {
   min-width: 70px;
   min-height: 40px;
   font-weight: 600;
 }
 
-.obsidian-codex-secondary {
+.codex-chat-secondary {
   color: var(--text-muted);
   font-size: 0.85em;
 }
 
-.obsidian-codex-input-hint {
+.codex-chat-input-hint {
   color: var(--text-faint);
   font-size: 0.82em;
   padding: 0 2px;
 }
 
-.obsidian-codex-suggestions {
+.codex-chat-suggestions {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -442,30 +442,30 @@
   padding: 6px;
 }
 
-.obsidian-codex-suggestion-item {
+.codex-chat-suggestion-item {
   border-radius: 10px;
   padding: 8px 10px;
   cursor: pointer;
 }
 
-.obsidian-codex-suggestion-item.is-selected,
-.obsidian-codex-suggestion-item:hover {
+.codex-chat-suggestion-item.is-selected,
+.codex-chat-suggestion-item:hover {
   background: color-mix(in srgb, var(--interactive-accent) 14%, var(--background-secondary));
 }
 
-.obsidian-codex-suggestion-note {
+.codex-chat-suggestion-note {
   font-size: 0.8em;
   color: var(--text-muted);
   margin-top: 2px;
   overflow-wrap: anywhere;
 }
 
-.obsidian-codex-setup-modal p {
+.codex-chat-setup-modal p {
   color: var(--text-muted);
   line-height: 1.5;
 }
 
-.obsidian-codex-setup-status {
+.codex-chat-setup-status {
   border: 1px solid var(--background-modifier-border);
   border-radius: 10px;
   padding: 10px 12px;
@@ -474,20 +474,20 @@
   margin: 12px 0;
 }
 
-.obsidian-codex-setup-actions {
+.codex-chat-setup-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
-.obsidian-codex-setup-action {
+.codex-chat-setup-action {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
 }
 
-.obsidian-codex-setup-badge {
+.codex-chat-setup-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -499,46 +499,46 @@
   border: 1px solid var(--background-modifier-border);
 }
 
-.obsidian-codex-setup-badge.is-ok {
+.codex-chat-setup-badge.is-ok {
   background: var(--color-green);
   border-color: var(--color-green);
   color: var(--text-on-accent);
 }
 
-.obsidian-codex-setup-badge.is-pending {
+.codex-chat-setup-badge.is-pending {
   background: var(--background-secondary-alt);
   color: var(--text-muted);
 }
 
 /* Compact v2 sidebar layout */
-.obsidian-codex-view {
-  --obsidian-codex-scale: 1;
-  --obsidian-codex-gap: calc(6px * var(--obsidian-codex-scale));
-  --obsidian-codex-radius: calc(8px * var(--obsidian-codex-scale));
-  --obsidian-codex-control-size: calc(42px * var(--obsidian-codex-scale));
-  --obsidian-codex-control-size-sm: calc(30px * var(--obsidian-codex-scale));
-  --obsidian-codex-font-ui-small: calc(var(--font-ui-small) * var(--obsidian-codex-scale));
-  --obsidian-codex-font-ui-smaller: calc(var(--font-ui-smaller) * var(--obsidian-codex-scale));
-  --obsidian-codex-font-text: calc(var(--font-text-size) * var(--obsidian-codex-scale));
-  gap: var(--obsidian-codex-gap);
-  padding: var(--obsidian-codex-gap);
+.codex-chat-view {
+  --codex-chat-scale: 1;
+  --codex-chat-gap: calc(6px * var(--codex-chat-scale));
+  --codex-chat-radius: calc(8px * var(--codex-chat-scale));
+  --codex-chat-control-size: calc(42px * var(--codex-chat-scale));
+  --codex-chat-control-size-sm: calc(30px * var(--codex-chat-scale));
+  --codex-chat-font-ui-small: calc(var(--font-ui-small) * var(--codex-chat-scale));
+  --codex-chat-font-ui-smaller: calc(var(--font-ui-smaller) * var(--codex-chat-scale));
+  --codex-chat-font-text: calc(var(--font-text-size) * var(--codex-chat-scale));
+  gap: var(--codex-chat-gap);
+  padding: var(--codex-chat-gap);
   background: var(--background-primary);
 }
 
-.obsidian-codex-header {
+.codex-chat-header {
   flex: 0 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 32px;
   align-items: center;
-  gap: var(--obsidian-codex-gap);
-  min-height: calc(36px * var(--obsidian-codex-scale));
-  padding: calc(4px * var(--obsidian-codex-scale)) var(--obsidian-codex-gap);
+  gap: var(--codex-chat-gap);
+  min-height: calc(36px * var(--codex-chat-scale));
+  padding: calc(4px * var(--codex-chat-scale)) var(--codex-chat-gap);
   border: 1px solid color-mix(in srgb, var(--background-modifier-border) 78%, transparent);
-  border-radius: var(--obsidian-codex-radius);
+  border-radius: var(--codex-chat-radius);
   background: color-mix(in srgb, var(--background-secondary) 70%, var(--background-primary));
 }
 
-.obsidian-codex-header-left {
+.codex-chat-header-left {
   min-width: 0;
   display: flex;
   align-items: center;
@@ -546,163 +546,163 @@
   gap: 8px;
 }
 
-.obsidian-codex-title {
+.codex-chat-title {
   color: var(--text-normal);
   font-weight: 700;
-  font-size: var(--obsidian-codex-font-ui-small);
+  font-size: var(--codex-chat-font-ui-small);
   line-height: 1;
 }
 
-.obsidian-codex-state {
+.codex-chat-state {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   min-width: 0;
   color: var(--text-muted);
-  font-size: var(--obsidian-codex-font-ui-smaller);
+  font-size: var(--codex-chat-font-ui-smaller);
   line-height: 1;
 }
 
-.obsidian-codex-state-dot {
+.codex-chat-state-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--text-faint);
 }
 
-.obsidian-codex-state.is-ready .obsidian-codex-state-dot {
+.codex-chat-state.is-ready .codex-chat-state-dot {
   background: var(--color-green);
 }
 
-.obsidian-codex-state.is-pending .obsidian-codex-state-dot {
+.codex-chat-state.is-pending .codex-chat-state-dot {
   background: var(--color-yellow);
 }
 
-.obsidian-codex-state.is-error .obsidian-codex-state-dot {
+.codex-chat-state.is-error .codex-chat-state-dot {
   background: var(--color-red);
 }
 
-.obsidian-codex-header-mode-chip {
+.codex-chat-header-mode-chip {
   display: inline-flex;
   align-items: center;
-  min-height: calc(20px * var(--obsidian-codex-scale));
-  padding: 0 calc(8px * var(--obsidian-codex-scale));
+  min-height: calc(20px * var(--codex-chat-scale));
+  padding: 0 calc(8px * var(--codex-chat-scale));
   border: 1px solid color-mix(in srgb, var(--background-modifier-border) 75%, transparent);
   border-radius: 999px;
-  font-size: calc(0.72em * var(--obsidian-codex-scale));
+  font-size: calc(0.72em * var(--codex-chat-scale));
   line-height: 1;
   white-space: nowrap;
 }
 
-.obsidian-codex-header-mode-chip.is-unrestricted {
+.codex-chat-header-mode-chip.is-unrestricted {
   border-color: color-mix(in srgb, var(--color-orange) 48%, var(--background-modifier-border));
   background: color-mix(in srgb, var(--color-orange) 16%, var(--background-primary));
   color: color-mix(in srgb, var(--color-orange) 82%, var(--text-normal));
 }
 
-.obsidian-codex-diagnostics {
+.codex-chat-diagnostics {
   grid-column: 1 / -1;
   min-width: 0;
   color: var(--text-faint);
-  font-size: calc(0.78em * var(--obsidian-codex-scale));
+  font-size: calc(0.78em * var(--codex-chat-scale));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.obsidian-codex-icon-button,
-.obsidian-codex-message-action {
+.codex-chat-icon-button,
+.codex-chat-message-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--obsidian-codex-control-size-sm);
-  height: var(--obsidian-codex-control-size-sm);
-  min-width: var(--obsidian-codex-control-size-sm);
+  width: var(--codex-chat-control-size-sm);
+  height: var(--codex-chat-control-size-sm);
+  min-width: var(--codex-chat-control-size-sm);
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--background-modifier-border) 80%, transparent);
-  border-radius: var(--obsidian-codex-radius);
+  border-radius: var(--codex-chat-radius);
   background: var(--background-secondary);
   color: var(--text-muted);
   cursor: pointer;
 }
 
-.obsidian-codex-icon-button:hover,
-.obsidian-codex-message-action:hover {
+.codex-chat-icon-button:hover,
+.codex-chat-message-action:hover {
   color: var(--text-normal);
   background: var(--background-secondary-alt);
 }
 
-.obsidian-codex-quick-actions {
+.codex-chat-quick-actions {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: var(--obsidian-codex-gap);
+  gap: var(--codex-chat-gap);
   padding: 0 1px;
 }
 
-.obsidian-codex-quick-actions.is-disabled {
+.codex-chat-quick-actions.is-disabled {
   pointer-events: none;
   opacity: 0.65;
 }
 
-.obsidian-codex-quick-action {
+.codex-chat-quick-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 calc(40px * var(--obsidian-codex-scale));
-  width: calc(40px * var(--obsidian-codex-scale));
-  height: calc(40px * var(--obsidian-codex-scale));
-  min-width: calc(40px * var(--obsidian-codex-scale));
+  flex: 0 0 calc(40px * var(--codex-chat-scale));
+  width: calc(40px * var(--codex-chat-scale));
+  height: calc(40px * var(--codex-chat-scale));
+  min-width: calc(40px * var(--codex-chat-scale));
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--background-modifier-border) 62%, transparent);
-  border-radius: var(--obsidian-codex-radius);
+  border-radius: var(--codex-chat-radius);
   background: color-mix(in srgb, var(--background-secondary) 82%, var(--background-primary));
   color: var(--text-muted);
   line-height: 1;
   cursor: pointer;
 }
 
-.obsidian-codex-quick-action:hover {
+.codex-chat-quick-action:hover {
   color: var(--text-normal);
   background: color-mix(in srgb, var(--background-secondary-alt) 78%, var(--background-primary));
 }
 
-.obsidian-codex-quick-action:disabled {
+.codex-chat-quick-action:disabled {
   opacity: 0.42;
   cursor: default;
 }
 
-.obsidian-codex-quick-action.is-muted {
+.codex-chat-quick-action.is-muted {
   opacity: 0.62;
 }
 
-.obsidian-codex-messages {
-  gap: var(--obsidian-codex-gap);
+.codex-chat-messages {
+  gap: var(--codex-chat-gap);
   padding: 4px 2px 2px 0;
 }
 
-.obsidian-codex-message {
+.codex-chat-message {
   position: relative;
-  border-radius: var(--obsidian-codex-radius);
+  border-radius: var(--codex-chat-radius);
   max-width: 94%;
-  padding: calc(10px * var(--obsidian-codex-scale)) calc(12px * var(--obsidian-codex-scale));
+  padding: calc(10px * var(--codex-chat-scale)) calc(12px * var(--codex-chat-scale));
   box-shadow: 0 1px 0 color-mix(in srgb, var(--background-modifier-border) 35%, transparent);
 }
 
-.obsidian-codex-message.is-user {
+.codex-chat-message.is-user {
   margin-left: auto;
   border-left: 0;
   border-right: 3px solid color-mix(in srgb, var(--interactive-accent) 62%, var(--background-modifier-border));
   background: color-mix(in srgb, var(--interactive-accent) 12%, var(--background-primary));
 }
 
-.obsidian-codex-message.is-assistant {
+.codex-chat-message.is-assistant {
   margin-right: auto;
   border-left: 3px solid color-mix(in srgb, var(--color-green) 40%, var(--background-modifier-border));
   background: color-mix(in srgb, var(--background-secondary) 74%, var(--background-primary));
 }
 
-.obsidian-codex-message-header {
+.codex-chat-message-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -710,7 +710,7 @@
   margin-bottom: 8px;
 }
 
-.obsidian-codex-message-meta {
+.codex-chat-message-meta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -718,7 +718,7 @@
   flex-wrap: wrap;
 }
 
-.obsidian-codex-message-chip {
+.codex-chat-message-chip {
   display: inline-flex;
   align-items: center;
   max-width: 100%;
@@ -727,13 +727,13 @@
   border-radius: 999px;
   background: color-mix(in srgb, var(--background-secondary) 84%, transparent);
   color: var(--text-muted);
-  font-size: calc(0.76em * var(--obsidian-codex-scale));
+  font-size: calc(0.76em * var(--codex-chat-scale));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.obsidian-codex-message-actions {
+.codex-chat-message-actions {
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -742,25 +742,25 @@
   transition: opacity 120ms ease;
 }
 
-.obsidian-codex-message:hover .obsidian-codex-message-actions,
-.obsidian-codex-message:focus-within .obsidian-codex-message-actions {
+.codex-chat-message:hover .codex-chat-message-actions,
+.codex-chat-message:focus-within .codex-chat-message-actions {
   opacity: 1;
   pointer-events: auto;
 }
 
-.obsidian-codex-message-action {
-  width: calc(26px * var(--obsidian-codex-scale));
-  height: calc(26px * var(--obsidian-codex-scale));
-  min-width: calc(26px * var(--obsidian-codex-scale));
-  border-radius: calc(7px * var(--obsidian-codex-scale));
+.codex-chat-message-action {
+  width: calc(26px * var(--codex-chat-scale));
+  height: calc(26px * var(--codex-chat-scale));
+  min-width: calc(26px * var(--codex-chat-scale));
+  border-radius: calc(7px * var(--codex-chat-scale));
 }
 
-.obsidian-codex-message-body {
-  font-size: var(--obsidian-codex-font-ui-small);
+.codex-chat-message-body {
+  font-size: var(--codex-chat-font-ui-small);
   line-height: 1.58;
 }
 
-.obsidian-codex-message-detail {
+.codex-chat-message-detail {
   display: flex;
   align-items: center;
   min-width: 0;
@@ -768,10 +768,10 @@
   padding-top: 8px;
   border-top: 1px solid color-mix(in srgb, var(--background-modifier-border) 58%, transparent);
   color: var(--text-faint);
-  font-size: calc(0.74em * var(--obsidian-codex-scale));
+  font-size: calc(0.74em * var(--codex-chat-scale));
 }
 
-.obsidian-codex-message-detail-text {
+.codex-chat-message-detail-text {
   display: block;
   min-width: 0;
   overflow: hidden;
@@ -779,45 +779,45 @@
   white-space: nowrap;
 }
 
-.obsidian-codex-loading {
-  font-size: var(--obsidian-codex-font-ui-small);
+.codex-chat-loading {
+  font-size: var(--codex-chat-font-ui-small);
 }
 
-.obsidian-codex-loading-bar {
+.codex-chat-loading-bar {
   height: 2px;
   margin-top: 8px;
 }
 
-.obsidian-codex-empty-state {
-  padding: calc(12px * var(--obsidian-codex-scale));
+.codex-chat-empty-state {
+  padding: calc(12px * var(--codex-chat-scale));
   border: 1px dashed color-mix(in srgb, var(--background-modifier-border) 68%, transparent);
-  border-radius: var(--obsidian-codex-radius);
+  border-radius: var(--codex-chat-radius);
   color: var(--text-muted);
   background: color-mix(in srgb, var(--background-secondary) 44%, var(--background-primary));
 }
 
-.obsidian-codex-send {
-  gap: calc(5px * var(--obsidian-codex-scale));
-  padding-top: var(--obsidian-codex-gap);
-  padding-bottom: calc(var(--status-bar-height, 22px) + calc(5px * var(--obsidian-codex-scale)));
+.codex-chat-send {
+  gap: calc(5px * var(--codex-chat-scale));
+  padding-top: var(--codex-chat-gap);
+  padding-bottom: calc(var(--status-bar-height, 22px) + calc(5px * var(--codex-chat-scale)));
 }
 
-.obsidian-codex-context {
-  border-radius: var(--obsidian-codex-radius);
-  padding: calc(4px * var(--obsidian-codex-scale)) calc(6px * var(--obsidian-codex-scale));
-  font-size: var(--obsidian-codex-font-ui-smaller);
+.codex-chat-context {
+  border-radius: var(--codex-chat-radius);
+  padding: calc(4px * var(--codex-chat-scale)) calc(6px * var(--codex-chat-scale));
+  font-size: var(--codex-chat-font-ui-smaller);
   border: 1px solid color-mix(in srgb, var(--background-modifier-border) 60%, transparent);
   background: color-mix(in srgb, var(--background-secondary) 52%, var(--background-primary));
 }
 
-.obsidian-codex-context-summary {
+.codex-chat-context-summary {
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
 }
 
-.obsidian-codex-context-line {
+.codex-chat-context-line {
   min-width: 0;
   display: flex;
   align-items: center;
@@ -825,7 +825,7 @@
   flex: 1 1 auto;
 }
 
-.obsidian-codex-context-icon {
+.codex-chat-context-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -841,17 +841,17 @@
   line-height: 1;
 }
 
-.obsidian-codex-context-icon.is-ready {
+.codex-chat-context-icon.is-ready {
   color: var(--interactive-accent);
 }
 
-.obsidian-codex-context-icon:hover,
-.obsidian-codex-context-icon:focus-visible {
+.codex-chat-context-icon:hover,
+.codex-chat-context-icon:focus-visible {
   color: var(--text-normal);
   background: var(--background-modifier-hover);
 }
 
-.obsidian-codex-context-text {
+.codex-chat-context-text {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -859,64 +859,64 @@
   color: var(--text-normal);
 }
 
-.obsidian-codex-context-kicker {
+.codex-chat-context-kicker {
   color: var(--text-faint);
-  font-size: calc(0.72em * var(--obsidian-codex-scale));
+  font-size: calc(0.72em * var(--codex-chat-scale));
   letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-.obsidian-codex-context-toggle {
+.codex-chat-context-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 3px;
-  min-width: var(--obsidian-codex-control-size-sm);
-  height: calc(28px * var(--obsidian-codex-scale));
+  min-width: var(--codex-chat-control-size-sm);
+  height: calc(28px * var(--codex-chat-scale));
   border: 1px solid color-mix(in srgb, var(--background-modifier-border) 72%, transparent);
-  border-radius: var(--obsidian-codex-radius);
+  border-radius: var(--codex-chat-radius);
   padding: 0 6px;
   background: color-mix(in srgb, var(--background-secondary) 78%, var(--background-primary));
 }
 
-.obsidian-codex-context-toggle-label {
-  font-size: var(--obsidian-codex-font-ui-smaller);
+.codex-chat-context-toggle-label {
+  font-size: var(--codex-chat-font-ui-smaller);
 }
 
-.obsidian-codex-context-title {
+.codex-chat-context-title {
   margin: 10px 0 6px;
   color: var(--text-muted);
-  font-size: calc(0.78em * var(--obsidian-codex-scale));
+  font-size: calc(0.78em * var(--codex-chat-scale));
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.obsidian-codex-context-grid {
+.codex-chat-context-grid {
   gap: 4px;
 }
 
-.obsidian-codex-context-item {
-  border-radius: var(--obsidian-codex-radius);
-  padding: calc(5px * var(--obsidian-codex-scale)) var(--obsidian-codex-gap);
+.codex-chat-context-item {
+  border-radius: var(--codex-chat-radius);
+  padding: calc(5px * var(--codex-chat-scale)) var(--codex-chat-gap);
   background: color-mix(in srgb, var(--background-primary) 76%, var(--background-secondary));
 }
 
-.obsidian-codex-mode-cards {
+.codex-chat-mode-cards {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--obsidian-codex-gap);
+  gap: var(--codex-chat-gap);
 }
 
-.obsidian-codex-mode-group {
+.codex-chat-mode-group {
   min-width: 0;
-  padding: calc(6px * var(--obsidian-codex-scale));
+  padding: calc(6px * var(--codex-chat-scale));
   border: 1px solid color-mix(in srgb, var(--background-modifier-border) 70%, transparent);
-  border-radius: var(--obsidian-codex-radius);
+  border-radius: var(--codex-chat-radius);
   background: color-mix(in srgb, var(--background-secondary) 70%, var(--background-primary));
 }
 
-.obsidian-codex-mode-group-header {
+.codex-chat-mode-group-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -924,142 +924,142 @@
   margin-bottom: 6px;
 }
 
-.obsidian-codex-mode-group-title {
+.codex-chat-mode-group-title {
   color: var(--text-muted);
-  font-size: calc(0.76em * var(--obsidian-codex-scale));
+  font-size: calc(0.76em * var(--codex-chat-scale));
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.obsidian-codex-mode-group-hint {
+.codex-chat-mode-group-hint {
   color: var(--text-faint);
-  font-size: calc(0.72em * var(--obsidian-codex-scale));
+  font-size: calc(0.72em * var(--codex-chat-scale));
   white-space: nowrap;
 }
 
-.obsidian-codex-mode-segmented {
+.codex-chat-mode-segmented {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
 }
 
-.obsidian-codex-mode-segment {
+.codex-chat-mode-segment {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
   min-width: 0;
-  min-height: calc(40px * var(--obsidian-codex-scale));
-  padding: calc(7px * var(--obsidian-codex-scale)) calc(8px * var(--obsidian-codex-scale));
+  min-height: calc(40px * var(--codex-chat-scale));
+  padding: calc(7px * var(--codex-chat-scale)) calc(8px * var(--codex-chat-scale));
   border: 1px solid transparent;
-  border-radius: calc(10px * var(--obsidian-codex-scale));
+  border-radius: calc(10px * var(--codex-chat-scale));
   background: transparent;
   color: var(--text-muted);
   text-align: left;
   cursor: pointer;
 }
 
-.obsidian-codex-mode-segment:hover {
+.codex-chat-mode-segment:hover {
   background: color-mix(in srgb, var(--background-secondary-alt) 72%, var(--background-primary));
   color: var(--text-normal);
 }
 
-.obsidian-codex-mode-segment.is-active {
+.codex-chat-mode-segment.is-active {
   border-color: color-mix(in srgb, var(--interactive-accent) 44%, var(--background-modifier-border));
   background: color-mix(in srgb, var(--interactive-accent) 11%, var(--background-primary));
   color: var(--text-normal);
 }
 
-.obsidian-codex-mode-segment.is-active .obsidian-codex-mode-segment-detail {
+.codex-chat-mode-segment.is-active .codex-chat-mode-segment-detail {
   color: var(--text-muted);
 }
 
-.obsidian-codex-mode-segment-label {
-  font-size: var(--obsidian-codex-font-ui-small);
+.codex-chat-mode-segment-label {
+  font-size: var(--codex-chat-font-ui-small);
   font-weight: 700;
 }
 
-.obsidian-codex-mode-segment-detail {
+.codex-chat-mode-segment-detail {
   color: var(--text-faint);
-  font-size: calc(0.72em * var(--obsidian-codex-scale));
+  font-size: calc(0.72em * var(--codex-chat-scale));
   line-height: 1.15;
 }
 
-.obsidian-codex-composer-row {
-  grid-template-columns: minmax(0, 1fr) var(--obsidian-codex-control-size);
-  gap: var(--obsidian-codex-gap);
+.codex-chat-composer-row {
+  grid-template-columns: minmax(0, 1fr) var(--codex-chat-control-size);
+  gap: var(--codex-chat-gap);
 }
 
-.obsidian-codex-send textarea {
-  min-height: var(--obsidian-codex-control-size);
-  border-radius: var(--obsidian-codex-radius);
-  padding: calc(8px * var(--obsidian-codex-scale)) calc(9px * var(--obsidian-codex-scale));
-  font-size: var(--obsidian-codex-font-text);
+.codex-chat-send textarea {
+  min-height: var(--codex-chat-control-size);
+  border-radius: var(--codex-chat-radius);
+  padding: calc(8px * var(--codex-chat-scale)) calc(9px * var(--codex-chat-scale));
+  font-size: var(--codex-chat-font-text);
 }
 
-.obsidian-codex-send-button {
+.codex-chat-send-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  min-width: var(--obsidian-codex-control-size);
-  width: var(--obsidian-codex-control-size);
-  min-height: var(--obsidian-codex-control-size);
-  height: var(--obsidian-codex-control-size);
+  min-width: var(--codex-chat-control-size);
+  width: var(--codex-chat-control-size);
+  min-height: var(--codex-chat-control-size);
+  height: var(--codex-chat-control-size);
   padding: 0;
-  border-radius: var(--obsidian-codex-radius);
+  border-radius: var(--codex-chat-radius);
 }
 
-.obsidian-codex-send-button.is-sending svg {
-  animation: obsidian-codex-spin 900ms linear infinite;
+.codex-chat-send-button.is-sending svg {
+  animation: codex-chat-spin 900ms linear infinite;
 }
 
-.obsidian-codex-input-hint {
+.codex-chat-input-hint {
   padding: 0 1px;
-  font-size: calc(0.78em * var(--obsidian-codex-scale));
+  font-size: calc(0.78em * var(--codex-chat-scale));
   line-height: 1.25;
   color: var(--text-faint);
 }
 
-.obsidian-codex-settings-textarea {
+.codex-chat-settings-textarea {
   min-height: 96px;
   width: 100%;
   resize: vertical;
 }
 
-@keyframes obsidian-codex-spin {
+@keyframes codex-chat-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
 @media (max-width: 380px) {
-  .obsidian-codex-quick-actions {
+  .codex-chat-quick-actions {
     justify-content: space-between;
     gap: 4px;
   }
 
-  .obsidian-codex-context-toggle-label {
+  .codex-chat-context-toggle-label {
     display: none;
   }
 
-  .obsidian-codex-mode-cards {
+  .codex-chat-mode-cards {
     grid-template-columns: 1fr;
   }
 
-  .obsidian-codex-mode-group-header {
+  .codex-chat-mode-group-header {
     flex-wrap: wrap;
     gap: 4px 8px;
   }
 
-  .obsidian-codex-mode-segment-detail {
+  .codex-chat-mode-segment-detail {
     display: none;
   }
 
-  .obsidian-codex-message {
+  .codex-chat-message {
     max-width: 100%;
   }
 
-  .obsidian-codex-message-actions {
+  .codex-chat-message-actions {
     opacity: 1;
     pointer-events: auto;
   }
