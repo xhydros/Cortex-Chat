@@ -13,6 +13,43 @@ const {
   setIcon,
   requestUrl
 } = require("obsidian");
+const {
+  createTranslator,
+  getDefaultSystemPromptSections,
+  resolveLanguage
+} = require("./lib/i18n");
+const {
+  formatFolderRoots,
+  isForeignWindowsUserPath,
+  isLocalBackendUrl: isLocalBackendUrlValue,
+  normalizeFolderRoots,
+  parseFolderRootsInput,
+  validateBackendUrl: validateBackendUrlValue
+} = require("./lib/security");
+const {
+  isInsideConfiguredRoot,
+  rootForPath,
+  wantsFolderContext
+} = require("./lib/context");
+const {
+  agentPaths,
+  sessionBackupRoot
+} = require("./lib/agent-store");
+const {
+  buildCodexExecCommand: buildCodexExecCommandSafe,
+  classifyLocalCodexFailure: classifyLocalCodexFailureSafe
+} = require("./lib/codex-cli");
+const {
+  AGENT_SCHEMA_VERSION,
+  LOCAL_SETTING_KEYS,
+  LOCAL_STATE_VERSION,
+  MEMORY_CATEGORIES,
+  SHARED_SETTING_KEYS,
+  buildDefaultSettings,
+  normalizeLanguageMode,
+  normalizeSettings,
+  normalizeSystemPromptSections
+} = require("./lib/settings");
 
 function optionalRequire(moduleName) {
   try {
@@ -38,72 +75,7 @@ const LEGACY_PLUGIN_IDS = [
 ];
 const LEGACY_DEVICE_TOKEN_SECRET_NAMES = LEGACY_PLUGIN_IDS.map((pluginId) => `${pluginId}-device-token`);
 const VIEW_TYPE = `${PLUGIN_ID}-view`;
-const MEMORY_CATEGORIES = ["preferences", "projects", "people", "decisions", "recent"];
-const AGENT_SCHEMA_VERSION = "2";
-const LOCAL_STATE_VERSION = "1";
-const SHARED_SETTING_KEYS = [
-  "backendUrl",
-  "allowRemoteBackend",
-  "maxContextChars",
-  "defaultInteractionMode",
-  "showDiagnostics",
-  "localFallbackDelayMs",
-  "maxFolderReferences",
-  "systemPromptSections",
-  "uiScale"
-];
-const LOCAL_SETTING_KEYS = [
-  "deviceId",
-  "deviceLabel",
-  "deviceTokenSecretName",
-  "localBootstrapToken",
-  "localBackendBootstrapScript",
-  "localCodexCommand",
-  "codexSetupPrompted",
-  "codexSetupCompleted",
-  "codexStatus",
-  "codexVersion",
-  "codexLastCheck",
-  "codexInstalledOk",
-  "codexLoginOk",
-  "codexExecutionOk",
-  "deviceRegisteredOk"
-];
-const DEFAULT_SYSTEM_PROMPT_SECTIONS = {
-  role: "Actúa como un agente integrado en una bóveda personal de Obsidian. Tu trabajo es ayudar a pensar, organizar, escribir y ejecutar tareas dentro del contexto de la vault.",
-  context: "Responde en el idioma del usuario. Usa primero el contexto explícito: nota activa, selección, referencias @, enlaces salientes, memoria compartida y sesiones recientes. No inventes contenido de notas que no se hayan proporcionado.",
-  behavior: "Si falta contexto crítico, dilo y pide lo mínimo necesario. Distingue hechos observados, inferencias y recomendaciones. Prioriza respuestas accionables, breves y útiles para continuar trabajando.",
-  safety: "Protege datos sensibles y evita persistir secretos. Si una acción puede modificar contenido importante o borrar información, explica el riesgo y busca una intención clara antes de actuar.",
-  output: "Da respuestas claras, con estructura ligera cuando ayude. Referencia notas, rutas o secciones cuando proceda. Evita relleno y no muestres razonamiento oculto; resume solo las razones necesarias.",
-  memory: "Usa la memoria como contexto auxiliar, no como fuente absoluta. Si detectas preferencias, decisiones o estado de proyectos, intégralo con cuidado y evita duplicar información obsoleta."
-};
-
-const DEFAULT_SETTINGS = {
-  backendUrl: "http://127.0.0.1:8787",
-  deviceId: "",
-  deviceLabel: "",
-  deviceTokenSecretName: `${PLUGIN_ID}-device-token`,
-  allowRemoteBackend: false,
-  maxContextChars: 2000,
-  localBootstrapToken: "",
-  localBackendBootstrapScript: "",
-  defaultInteractionMode: "plan",
-  showDiagnostics: true,
-  localFallbackDelayMs: 900,
-  maxFolderReferences: 24,
-  localCodexCommand: "codex",
-  codexSetupPrompted: false,
-  codexSetupCompleted: false,
-  codexStatus: "No comprobado",
-  codexVersion: "",
-  codexLastCheck: "",
-  codexInstalledOk: false,
-  codexLoginOk: false,
-  codexExecutionOk: false,
-  deviceRegisteredOk: false,
-  systemPromptSections: DEFAULT_SYSTEM_PROMPT_SECTIONS,
-  uiScale: 1
-};
+const DEFAULT_SETTINGS = buildDefaultSettings(PLUGIN_ID);
 
 const MIN_UI_SCALE = 0.85;
 const MAX_UI_SCALE = 1.75;
@@ -188,15 +160,6 @@ function sessionFingerprint(session) {
   );
 }
 
-function normalizeSystemPromptSections(value) {
-  const current = value && typeof value === "object" ? value : {};
-  const normalized = {};
-  for (const key of Object.keys(DEFAULT_SYSTEM_PROMPT_SECTIONS)) {
-    normalized[key] = typeof current[key] === "string" ? current[key] : DEFAULT_SYSTEM_PROMPT_SECTIONS[key];
-  }
-  return normalized;
-}
-
 function composeSystemPrompt(sections) {
   const normalized = normalizeSystemPromptSections(sections);
   const lines = [];
@@ -212,12 +175,12 @@ function composeSystemPrompt(sections) {
   return lines.join("\n").trim();
 }
 
-function workModeLabel(interactionMode) {
-  return interactionMode === "execute" ? "Ejecutar" : "Planificador";
+function workModeLabel(interactionMode, t = createTranslator("en")) {
+  return interactionMode === "execute" ? t("execute") : t("planner");
 }
 
-function workModeDetail(interactionMode) {
-  return interactionMode === "execute" ? "Sin restricciones" : "Copiloto";
+function workModeDetail(interactionMode, t = createTranslator("en")) {
+  return interactionMode === "execute" ? t("unrestricted") : t("copilot");
 }
 
 function classifyEffort(message, context = {}, interactionMode = "plan") {
@@ -393,75 +356,9 @@ function parseLastJsonObject(output) {
   return JSON.parse(matches[matches.length - 1]);
 }
 
-function isForeignWindowsUserPath(value) {
-  const current = String(value || "").toLowerCase();
-  const homeDir = os?.homedir ? os.homedir().toLowerCase() : "";
-  return current.startsWith("c:\\users\\") && Boolean(homeDir) && !current.startsWith(homeDir);
-}
-
 function isPortableCodexCommand(value) {
   const current = String(value || "").trim().toLowerCase();
   return !current || current === "codex";
-}
-
-function codexSandboxForMode(runOptions = {}) {
-  return runOptions.interactionMode === "execute" ? "workspace-write" : "read-only";
-}
-
-function codexReasoningForEffort(runOptions = {}) {
-  return runOptions.effort === "fast" ? "medium" : "high";
-}
-
-function hasNonAscii(value) {
-  return /[^\x00-\x7F]/.test(String(value || ""));
-}
-
-function classifyLocalCodexFailure(detail, context = {}) {
-  const source = String(detail || "");
-  const lower = source.toLowerCase();
-  const notePath = String(context.notePath || "");
-  const hasUnicodePath = hasNonAscii(notePath);
-
-  if (
-    /login required|not authenticated|oauth pendiente|error loading configuration|not logged|not signed/i.test(source)
-  ) {
-    return "Codex local no está autenticado con ChatGPT en este equipo.";
-  }
-  if (/timeout waiting for child process to exit|timed out|operation timed out/i.test(lower)) {
-    return hasUnicodePath
-      ? "Codex local agotó el tiempo durante la ejecución. Hay indicios de fragilidad con rutas o contenido Unicode en Windows."
-      : "Codex local agotó el tiempo durante la ejecución.";
-  }
-  if (/constrainedlanguage|propertysetter not supported in constrainedlanguage/i.test(lower)) {
-    return "PowerShell está ejecutándose en modo restringido y ha bloqueado comandos internos de Codex.";
-  }
-  if (/blocked by policy|rejected: blocked by policy|executionpolicy/i.test(lower)) {
-    return "La política local ha bloqueado comandos internos que Codex intentó ejecutar.";
-  }
-  if (/\?\?/.test(source) || /visi\?\?|c\?\?maras|t\?\?cnica/i.test(source)) {
-    return "Se detecta degradación de codificación Unicode en rutas o contexto inyectado durante la ejecución local.";
-  }
-  return "Codex local falló al responder sobre el contexto inyectado.";
-}
-
-function buildCodexExecCommand(options) {
-  const codexCommand = escapePowerShellSingleQuoted(options.codexCommand || "codex");
-  const promptPath = escapePowerShellSingleQuoted(options.promptPath);
-  const outputPath = escapePowerShellSingleQuoted(options.outputPath);
-  const vaultRoot = escapePowerShellSingleQuoted(options.vaultRoot);
-  const sandbox = codexSandboxForMode(options.runOptions);
-  const effort = codexReasoningForEffort(options.runOptions);
-
-  return [
-    "$ErrorActionPreference = 'Stop'",
-    "[Console]::InputEncoding = [System.Text.Encoding]::UTF8",
-    "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8",
-    `$codexCommand = '${codexCommand}'`,
-    `$promptPath = '${promptPath}'`,
-    `$outputPath = '${outputPath}'`,
-    `$vaultRoot = '${vaultRoot}'`,
-    `Get-Content -Raw -Encoding utf8 -LiteralPath $promptPath | & $codexCommand --ask-for-approval never exec -C $vaultRoot --skip-git-repo-check --sandbox ${sandbox} -c 'model_reasoning_effort="${effort}"' --output-last-message $outputPath -`
-  ].join("\n");
 }
 
 function toFrontmatter(data) {
@@ -1088,7 +985,7 @@ function buildImprovementAnswer(source, message, runOptions) {
         ];
   const riskLines = [
     "El mayor riesgo es mezclar cierre beta con funcionalidades nuevas y perder capacidad de validacion.",
-    "La nota ya contiene bastante contexto; ahora conviene convertirlo en decisiones operativas pequenas.",
+    "This note already contains enough context; the next step is to convert it into small operational decisions.",
     facts.tools.length ? `Usaria ${formatHumanList(facts.tools)} solo cuando cada herramienta tenga una responsabilidad clara.` : ""
   ].filter(Boolean);
 
@@ -1156,10 +1053,10 @@ function buildHeuristicAnswer(message, context, recentSessions, runOptions = {})
 
   if (!activeSource) {
     return [
-      "No he podido usar Codex local y tampoco tengo contenido suficiente para responder bien.",
-      "Prueba una de estas dos opciones:",
-      "- abre la nota antes de preguntar",
-      "- usa una referencia como `@PRY-Speech`"
+      "I could not use local Codex and there is not enough content to answer well.",
+      "Try one of these options:",
+      "- open the note before asking",
+      "- use an @ reference"
     ].join("\n");
   }
 
@@ -1173,7 +1070,7 @@ function buildHeuristicAnswer(message, context, recentSessions, runOptions = {})
   }
 
   return [
-    "He encontrado este contexto relevante:",
+    "I found this relevant context:",
     "",
     activeSource.slice(0, 1800),
     "",
@@ -1204,26 +1101,27 @@ function mergeReferences(...groups) {
 }
 
 class MemoryContextModal extends Modal {
-  constructor(app, payload) {
+  constructor(app, payload, t = createTranslator("en")) {
     super(app);
     this.payload = payload || { documents: [], recentSessions: [] };
+    this.t = t;
   }
 
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl("h2", { text: "Memoria usada" });
+    contentEl.createEl("h2", { text: this.t("memoryUsed") });
 
     const docs = this.payload.documents || [];
     const sessions = this.payload.recentSessions || [];
 
     if (!docs.length && !sessions.length) {
-      contentEl.createEl("p", { text: "No hay contexto de memoria disponible para esta respuesta." });
+      contentEl.createEl("p", { text: this.t("noMemoryContext") });
       return;
     }
 
     if (docs.length) {
-      contentEl.createEl("h3", { text: "Archivos de memoria" });
+      contentEl.createEl("h3", { text: this.t("memoryFiles") });
       const list = contentEl.createEl("ul");
       for (const doc of docs) {
         list.createEl("li", { text: `${doc.category || "memory"}: ${doc.path}` });
@@ -1253,12 +1151,12 @@ class CodexSetupModal extends Modal {
     contentEl.empty();
     contentEl.addClass("codex-chat-setup-modal");
     const mobile = this.plugin.isMobileRuntime();
-    contentEl.createEl("h2", { text: mobile ? "Configurar backend móvil" : "Configurar Codex OAuth" });
+    contentEl.createEl("h2", { text: mobile ? this.plugin.t("setupMobileTitle") : this.plugin.t("setupDesktopTitle") });
     contentEl.createEl("p", {
       text:
         mobile
-          ? "En móvil/iOS este plugin no puede ejecutar Codex CLI local. Necesita un backend remoto HTTPS configurado en los ajustes."
-          : "Este plugin necesita Codex CLI actualizado y autenticado con ChatGPT para dar respuestas reales. Si Codex no está listo, solo puede usar respaldo local."
+          ? this.plugin.t("remoteHttpsRequiredMobile")
+          : this.plugin.t("setupDesktopDesc")
     });
 
     this.statusEl = contentEl.createDiv({ cls: "codex-chat-setup-status" });
@@ -1266,32 +1164,32 @@ class CodexSetupModal extends Modal {
 
     const actionsEl = contentEl.createDiv({ cls: "codex-chat-setup-actions" });
     if (mobile) {
-      this.addAction(actionsEl, "Abrir ajustes", "allowRemoteBackend", async () => {
+      this.addAction(actionsEl, this.plugin.t("openAssistant"), "allowRemoteBackend", async () => {
         this.plugin.openPluginSettings();
       });
-      this.addAction(actionsEl, "Comprobar backend", "codexSetupCompleted", async () => {
+      this.addAction(actionsEl, this.plugin.t("check"), "codexSetupCompleted", async () => {
         await this.plugin.checkRemoteBackendForMobile({ notify: true });
         this.renderStatus();
       });
       return;
     }
-    this.addAction(actionsEl, "1. Instalar/actualizar", "codexInstalledOk", async () => {
+    this.addAction(actionsEl, this.plugin.t("setupInstall"), "codexInstalledOk", async () => {
       await this.plugin.installOrUpdateCodex();
       this.renderStatus();
     });
-    this.addAction(actionsEl, "2. Iniciar OAuth", "codexLoginOk", async () => {
+    this.addAction(actionsEl, this.plugin.t("setupLogin"), "codexLoginOk", async () => {
       await this.plugin.launchCodexLogin();
       this.renderStatus();
     });
-    this.addAction(actionsEl, "3. Probar Codex", "codexExecutionOk", async () => {
+    this.addAction(actionsEl, this.plugin.t("setupTest"), "codexExecutionOk", async () => {
       await this.plugin.testCodexExecution();
       this.renderStatus();
     });
-    this.addAction(actionsEl, "Reparar dispositivo", "deviceRegisteredOk", async () => {
+    this.addAction(actionsEl, this.plugin.t("setupRegister"), "deviceRegisteredOk", async () => {
       await this.plugin.repairLocalProvisioning();
       this.renderStatus();
     });
-    this.addAction(actionsEl, "Recomprobar", "codexSetupCompleted", async () => {
+    this.addAction(actionsEl, this.plugin.t("setupRefresh"), "codexSetupCompleted", async () => {
       await this.plugin.autoCheckCodexSetup({ notify: true });
       this.renderStatus();
     });
@@ -1303,21 +1201,22 @@ class CodexSetupModal extends Modal {
     }
     this.statusEl.empty();
     if (this.plugin.isMobileRuntime()) {
-      this.statusEl.createDiv({ text: `Estado: ${this.plugin.getMobileBackendStatus()}` });
-      this.statusEl.createDiv({ text: `Backend: ${this.plugin.settings.backendUrl || "(sin configurar)"}` });
+      this.statusEl.createDiv({ text: this.plugin.t("status", { status: this.plugin.getMobileBackendStatus() }) });
+      this.statusEl.createDiv({ text: this.plugin.t("backendStatus", { url: this.plugin.settings.backendUrl || "(unset)" }) });
       return;
     }
-    this.statusEl.createDiv({ text: `Estado: ${this.plugin.settings.codexStatus || "No comprobado"}` });
+    this.statusEl.createDiv({ text: this.plugin.t("status", { status: this.plugin.settings.codexStatus || this.plugin.t("pending") }) });
     this.statusEl.createDiv({
-      text: `Dispositivo: ${this.plugin.settings.deviceRegisteredOk ? "registrado" : "pendiente"} · ${
-        this.plugin.settings.deviceId || "(se generará automáticamente)"
-      }`
+      text: this.plugin.t("deviceStateDesc", {
+        state: this.plugin.settings.deviceRegisteredOk ? this.plugin.t("registered") : this.plugin.t("pending"),
+        id: this.plugin.settings.deviceId || this.plugin.t("generatedAutomatically")
+      })
     });
     if (this.plugin.settings.codexVersion) {
-      this.statusEl.createDiv({ text: `Versión: ${this.plugin.settings.codexVersion}` });
+      this.statusEl.createDiv({ text: this.plugin.t("version", { version: this.plugin.settings.codexVersion }) });
     }
     if (this.plugin.settings.codexLastCheck) {
-      this.statusEl.createDiv({ text: `Última comprobación: ${this.plugin.settings.codexLastCheck}` });
+      this.statusEl.createDiv({ text: this.plugin.t("lastCheck", { time: this.plugin.settings.codexLastCheck }) });
     }
   }
 
@@ -1326,7 +1225,7 @@ class CodexSetupModal extends Modal {
     this.renderActionButton(button, label, statusKey);
     button.addEventListener("click", async () => {
       button.disabled = true;
-      this.renderActionButton(button, "Trabajando...", statusKey);
+      this.renderActionButton(button, this.plugin.t("preparingResponse"), statusKey);
       try {
         await onClick();
       } finally {
@@ -1372,7 +1271,7 @@ class CodexChatView extends ItemView {
   }
 
   getDisplayText() {
-    return "Codex";
+    return this.plugin.t("appTitle");
   }
 
   getIcon() {
@@ -1460,22 +1359,22 @@ class CodexChatView extends ItemView {
     const folderReference = (context?.references || []).find((reference) => reference.source === "folder");
     if (!folderReference) {
       const normalizedMessage = String(message || "").toLowerCase();
-      if (
-        !/(carpeta|folder|directorio).{0,30}proyectos/.test(normalizedMessage) &&
-        !/(todos|todas).{0,35}(archivos|notas).{0,35}proyectos/.test(normalizedMessage) &&
-        !/200\s+proyectos/.test(normalizedMessage)
-      ) {
+      if (!wantsFolderContext(normalizedMessage, this.plugin.settings.folderReferenceRoots)) {
         return "";
       }
-      return "Codex está revisando la carpeta 200 Proyectos";
+      const roots = normalizeFolderRoots(this.plugin.settings.folderReferenceRoots);
+      if (!roots.length) {
+        return "";
+      }
+      return this.plugin.t("folderReview", { folder: roots[0] });
     }
     const firstSegment = String(folderReference.path || "")
       .split("/")
       .filter(Boolean)
       .slice(0, 2)
       .join("/");
-    const label = firstSegment || folderReference.token || folderReference.title || "carpeta";
-    return `Codex está revisando la carpeta ${label}`;
+    const label = firstSegment || folderReference.token || folderReference.title || this.plugin.t("configuredFolderToken");
+    return this.plugin.t("folderReview", { folder: label });
   }
 
   setPendingStatus(id, status, meta = {}) {
@@ -1511,7 +1410,7 @@ class CodexChatView extends ItemView {
     this.composerRowEl = this.sendEl.createDiv({ cls: "codex-chat-composer-row" });
     this.inputEl = this.composerRowEl.createEl("textarea", {
       attr: {
-        placeholder: "Pregunta a Codex..."
+        placeholder: this.plugin.t("askPlaceholder")
       }
     });
     this.inputEl.addClass("codex-chat-input");
@@ -1542,7 +1441,7 @@ class CodexChatView extends ItemView {
 
     this.sendButtonEl = this.composerRowEl.createEl("button", {
       cls: "codex-chat-send-button",
-      attr: { "aria-label": "Enviar mensaje" }
+      attr: { "aria-label": this.plugin.t("sendMessage") }
     });
     setIcon(this.sendButtonEl, "send-horizontal");
     this.sendButtonEl.addEventListener("click", async () => {
@@ -1550,7 +1449,7 @@ class CodexChatView extends ItemView {
     });
     this.sendHintEl = this.sendEl.createDiv({
       cls: "codex-chat-input-hint",
-      text: "Enter envía · Shift+Enter línea · @nota"
+      text: this.plugin.t("inputHint")
     });
 
     this.renderHeader();
@@ -1568,10 +1467,10 @@ class CodexChatView extends ItemView {
     this.modeCardsEl.empty();
     this.addSegmentedSetting({
       settingKey: "defaultInteractionMode",
-      title: "Modo de trabajo",
+      title: this.plugin.t("defaultWorkMode"),
       values: {
-        plan: { label: "Planificador", detail: "Copiloto" },
-        execute: { label: "Ejecutar", detail: "Sin restricciones" }
+        plan: { label: this.plugin.t("planner"), detail: this.plugin.t("copilot") },
+        execute: { label: this.plugin.t("execute"), detail: this.plugin.t("unrestricted") }
       }
     });
   }
@@ -1617,15 +1516,15 @@ class CodexChatView extends ItemView {
     }
     this.headerEl.empty();
     const leftEl = this.headerEl.createDiv({ cls: "codex-chat-header-left" });
-    leftEl.createDiv({ cls: "codex-chat-title", text: "Codex" });
+    leftEl.createDiv({ cls: "codex-chat-title", text: this.plugin.t("appTitle") });
     const state = this.getCodexState();
     const stateEl = leftEl.createDiv({ cls: `codex-chat-state is-${state.kind}` });
     stateEl.createSpan({ cls: "codex-chat-state-dot" });
     stateEl.createSpan({ text: state.label });
     if ((this.plugin.settings.defaultInteractionMode || DEFAULT_SETTINGS.defaultInteractionMode) === "execute") {
-      leftEl.createDiv({ cls: "codex-chat-header-mode-chip is-unrestricted", text: "Sin restricciones" });
+      leftEl.createDiv({ cls: "codex-chat-header-mode-chip is-unrestricted", text: this.plugin.t("unrestricted") });
     }
-    const actionsButton = this.createIconButton(this.headerEl, "settings", "Opciones y diagnostico", "codex-chat-icon-button");
+    const actionsButton = this.createIconButton(this.headerEl, "settings", this.plugin.t("consistencyDiagnostics"), "codex-chat-icon-button");
     actionsButton.addEventListener("click", (event) => this.openActionsMenu(event));
     if (this.plugin.settings.showDiagnostics) {
       this.headerEl.createDiv({
@@ -1638,17 +1537,17 @@ class CodexChatView extends ItemView {
   getCodexState() {
     if (this.plugin.isMobileRuntime()) {
       return this.plugin.canUseRemoteBackend()
-        ? { kind: "ready", label: "Remoto" }
-        : { kind: "pending", label: "Móvil" };
+        ? { kind: "ready", label: this.plugin.t("backendProvider") }
+        : { kind: "pending", label: this.plugin.t("setup") };
     }
     const status = String(this.plugin.settings.codexStatus || "").toLowerCase();
     if (this.plugin.settings.codexSetupCompleted || /probado correctamente|oauth detectado/.test(status)) {
-      return { kind: "ready", label: "Listo" };
+      return { kind: "ready", label: this.plugin.t("ready") };
     }
     if (/error|no disponible|no pudo|no se pudo/.test(status)) {
-      return { kind: "error", label: "Revisar" };
+      return { kind: "error", label: this.plugin.t("error") };
     }
-    return { kind: "pending", label: "Pendiente" };
+    return { kind: "pending", label: this.plugin.t("pending") };
   }
 
   renderQuickActions() {
@@ -1656,17 +1555,17 @@ class CodexChatView extends ItemView {
       return;
     }
     this.quickActionsEl.empty();
-    this.createQuickAction("message-square-plus", "Nuevo chat", () => this.startNewChat());
-    this.createQuickAction("file-text", "Cargar nota actual", async () => this.loadCurrentNoteContext());
-    const selectionButton = this.createQuickAction("text-select", "Cargar selección", async () => this.loadSelectionContext());
+    this.createQuickAction("message-square-plus", this.plugin.t("newChatReady"), () => this.startNewChat());
+    this.createQuickAction("file-text", this.plugin.t("activeNote"), async () => this.loadCurrentNoteContext());
+    const selectionButton = this.createQuickAction("text-select", this.plugin.t("selection"), async () => this.loadSelectionContext());
     const hasSelection = this.hasActiveSelection();
     selectionButton.classList.toggle("is-muted", !hasSelection);
     selectionButton.disabled = !hasSelection;
     selectionButton.setAttribute("aria-disabled", String(!hasSelection));
-    this.createQuickAction("copy", "Copiar última respuesta", async () => {
+    this.createQuickAction("copy", this.plugin.t("copyResponse"), async () => {
       await this.plugin.copyLastResponse();
     });
-    this.createQuickAction("corner-down-left", "Insertar última respuesta", async () => {
+    this.createQuickAction("corner-down-left", this.plugin.t("insertResponse"), async () => {
       await this.plugin.insertLastResponseIntoNote();
     });
   }
@@ -1697,7 +1596,7 @@ class CodexChatView extends ItemView {
   async loadCurrentNoteContext() {
     const context = await this.plugin.captureCurrentContext(false);
     await this.prepareContext(context);
-    new Notice(context.path ? `Contexto cargado: ${context.path}` : "No he encontrado una nota Markdown abierta.");
+    new Notice(context.path ? this.plugin.t("contextLoaded", { path: context.path }) : this.plugin.t("noMarkdownOpen"));
   }
 
   async loadSelectionContext() {
@@ -1706,14 +1605,14 @@ class CodexChatView extends ItemView {
       const notePath = this.plugin.lastMarkdownFile?.path || this.plugin.refreshLastMarkdownView()?.file?.path || "";
       new Notice(
         notePath
-          ? `No hay una selección activa válida en esta nota: ${notePath}`
-          : "No he encontrado una nota Markdown abierta."
+          ? this.plugin.t("noValidSelectionInNote", { path: notePath })
+          : this.plugin.t("noMarkdownOpen")
       );
       this.renderQuickActions();
       return;
     }
     await this.prepareContext(context);
-    new Notice(`Selección cargada desde ${context.path}`);
+    new Notice(this.plugin.t("selectionLoaded", { path: context.path }));
   }
 
   insertMentionTrigger() {
@@ -1740,35 +1639,35 @@ class CodexChatView extends ItemView {
     this.messages = [];
     this.plugin.setLastResponse(null);
     this.renderMessages();
-    new Notice("Chat nuevo preparado.");
+    new Notice(this.plugin.t("newChatReady"));
   }
 
   openActionsMenu(event) {
     const menu = new Menu();
     menu.addItem((item) =>
-      item.setTitle("Ver memoria usada").setIcon("database").onClick(async () => {
+      item.setTitle(this.plugin.t("viewMemoryUsed")).setIcon("database").onClick(async () => {
         await this.plugin.showMemoryUsed();
       })
     );
     menu.addItem((item) =>
-      item.setTitle(this.plugin.isMobileRuntime() ? "Configurar backend remoto" : "Configurar Codex OAuth").setIcon("key").onClick(() => {
+      item.setTitle(this.plugin.t("configureCodex")).setIcon("key").onClick(() => {
         new CodexSetupModal(this.app, this.plugin).open();
       })
     );
     menu.addItem((item) =>
-      item.setTitle(this.plugin.isMobileRuntime() ? "Comprobar backend" : "Recomprobar Codex").setIcon("refresh-cw").onClick(async () => {
+      item.setTitle(this.plugin.t("check")).setIcon("refresh-cw").onClick(async () => {
         await this.plugin.autoCheckCodexSetup({ notify: true });
         this.renderHeader();
       })
     );
     menu.addItem((item) =>
-      item.setTitle("Diagnóstico de consistencia").setIcon("shield-alert").onClick(async () => {
+      item.setTitle(this.plugin.t("consistencyDiagnostics")).setIcon("shield-alert").onClick(async () => {
         await this.plugin.openConsistencyDiagnostics();
       })
     );
     menu.addSeparator();
     menu.addItem((item) =>
-      item.setTitle("Abrir ajustes del plugin").setIcon("settings").onClick(() => {
+      item.setTitle(this.plugin.t("openAssistant")).setIcon("settings").onClick(() => {
         this.plugin.openPluginSettings();
       })
     );
@@ -1782,10 +1681,10 @@ class CodexChatView extends ItemView {
   }
 
   getContextSummary() {
-    const note = this.context?.title || this.plugin.lastMarkdownFile?.basename || "sin nota";
+    const note = this.context?.title || this.plugin.lastMarkdownFile?.basename || this.plugin.t("noNote");
     const referenceCount = this.context?.references?.length || 0;
-    const selection = this.context?.selection ? "con selección" : "sin selección";
-    const referenceLabel = `${referenceCount} ${referenceCount === 1 ? "referencia" : "referencias"}`;
+    const selection = this.context?.selection ? this.plugin.t("withSelection") : this.plugin.t("noSelection");
+    const referenceLabel = referenceCount ? this.plugin.t("referenceCount", { count: referenceCount }) : this.plugin.t("noRefs");
     return `${note} · ${referenceLabel} · ${selection}`;
   }
 
@@ -1811,9 +1710,9 @@ class CodexChatView extends ItemView {
     const referenceReady = Boolean(this.context?.references?.length);
     const selectionReady = Boolean(this.context?.selection);
     const indicators = [
-      ["file-text", noteReady, "Cargar nota actual", async () => this.loadCurrentNoteContext()],
-      ["at-sign", referenceReady, "Referenciar nota con @", () => this.insertMentionTrigger()],
-      ["text-select", selectionReady, "Cargar selección", async () => this.loadSelectionContext()]
+      ["file-text", noteReady, this.plugin.t("activeNote"), async () => this.loadCurrentNoteContext()],
+      ["at-sign", referenceReady, "@", () => this.insertMentionTrigger()],
+      ["text-select", selectionReady, this.plugin.t("selection"), async () => this.loadSelectionContext()]
     ];
     for (const [icon, ready, label, handler] of indicators) {
       const indicatorEl = summaryTextEl.createEl("button", {
@@ -1827,18 +1726,18 @@ class CodexChatView extends ItemView {
         await handler();
       });
     }
-    summaryTextEl.createSpan({ cls: "codex-chat-context-kicker", text: this.context?.path ? "Contexto activo" : "Contexto" });
+    summaryTextEl.createSpan({ cls: "codex-chat-context-kicker", text: this.context?.path ? this.plugin.t("activeContext") : this.plugin.t("context") });
     summaryTextEl.createSpan({ cls: "codex-chat-context-text", text: this.getContextSummary() });
     const toggleButton = this.createIconButton(
       summaryEl,
       this.contextExpanded ? "chevron-down" : "chevron-right",
-      this.contextExpanded ? "Ocultar detalles de contexto" : "Ver detalles de contexto",
+      this.contextExpanded ? this.plugin.t("hideContextDetails") : this.plugin.t("viewContextDetails"),
       "codex-chat-context-toggle"
     );
     toggleButton.setAttribute("aria-expanded", String(this.contextExpanded));
     toggleButton.createSpan({
       cls: "codex-chat-context-toggle-label",
-      text: this.contextExpanded ? "Ocultar" : "Detalles"
+      text: this.contextExpanded ? this.plugin.t("hide") : this.plugin.t("details")
     });
     toggleButton.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -1850,11 +1749,11 @@ class CodexChatView extends ItemView {
     }
 
     if (!this.context) {
-      const lastNote = this.plugin.lastMarkdownFile?.path || "(ninguna detectada)";
-      this.contextEl.createDiv({ cls: "codex-chat-context-title", text: "Contexto pendiente" });
+      const lastNote = this.plugin.lastMarkdownFile?.path || this.plugin.t("noNote");
+      this.contextEl.createDiv({ cls: "codex-chat-context-title", text: this.plugin.t("contextPending") });
       this.contextEl.createDiv({
         cls: "codex-chat-context-help",
-        text: `Última nota vista: ${lastNote}. Usa @NombreNota o las acciones rápidas para anclar el contexto.`
+        text: this.plugin.t("lastNoteHelp", { note: lastNote })
       });
       return;
     }
@@ -1864,23 +1763,23 @@ class CodexChatView extends ItemView {
     const linked = references.filter((reference) => reference.source === "outgoing-link").length;
     const folders = references.filter((reference) => reference.source === "folder").length;
     const referenceSummary = references.length
-      ? `${references.length} cargadas (${mentions} @, ${linked} enlaces, ${folders} carpeta)`
-      : "(ninguna)";
+      ? `${this.plugin.t("referenceCount", { count: references.length })} (${mentions} @, ${linked} links, ${folders} folders)`
+      : this.plugin.t("noRefs");
     const selectionSummary = this.context.selection
-      ? `${this.context.selection.length} caracteres seleccionados`
-      : "(ninguna)";
+      ? `${this.context.selection.length} chars`
+      : this.plugin.t("noSelection");
     const outgoingSummary = this.context.outgoingLinks?.length
       ? `${this.context.outgoingLinks.length}: ${this.context.outgoingLinks.slice(0, 4).join(", ")}${
           this.context.outgoingLinks.length > 4 ? "..." : ""
         }`
-      : "(ninguno)";
+      : this.plugin.t("noRefs");
 
-    this.contextEl.createDiv({ cls: "codex-chat-context-title", text: "Contexto que se enviará" });
+    this.contextEl.createDiv({ cls: "codex-chat-context-title", text: this.plugin.t("contextToSend") });
     const gridEl = this.contextEl.createDiv({ cls: "codex-chat-context-grid" });
-    this.createContextItem(gridEl, "Nota", this.context.path || "(ninguna)", this.context.path ? "is-ready" : "");
-    this.createContextItem(gridEl, "Selección", selectionSummary, this.context.selection ? "is-ready" : "");
-    this.createContextItem(gridEl, "Enlaces salientes", outgoingSummary, this.context.outgoingLinks?.length ? "is-ready" : "");
-    this.createContextItem(gridEl, "Referencias", referenceSummary, references.length ? "is-ready" : "");
+    this.createContextItem(gridEl, this.plugin.t("activeNote"), this.context.path || this.plugin.t("noNote"), this.context.path ? "is-ready" : "");
+    this.createContextItem(gridEl, this.plugin.t("selection"), selectionSummary, this.context.selection ? "is-ready" : "");
+    this.createContextItem(gridEl, "Links", outgoingSummary, this.context.outgoingLinks?.length ? "is-ready" : "");
+    this.createContextItem(gridEl, this.plugin.t("references"), referenceSummary, references.length ? "is-ready" : "");
 
     if (references.length) {
       this.contextEl.createDiv({
@@ -1902,7 +1801,7 @@ class CodexChatView extends ItemView {
     if (!this.messages.length) {
       this.messagesEl.createEl("div", {
         cls: "codex-chat-empty-state",
-        text: "La conversación aparecerá aquí. El chat prioriza el contexto de la nota activa y sus referencias."
+        text: this.plugin.t("chatEmpty")
       });
       return;
     }
@@ -1916,30 +1815,30 @@ class CodexChatView extends ItemView {
       const metaEl = headerEl.createDiv({ cls: "codex-chat-message-meta" });
       metaEl.createDiv({
         cls: "codex-chat-role",
-        text: isAssistant ? "Codex" : "Tú"
+        text: isAssistant ? "Codex" : this.plugin.t("you")
       });
       if (message.meta?.label) {
         metaEl.createDiv({ cls: "codex-chat-message-chip", text: message.meta.label });
       }
       if (isAssistant && !message.meta?.loading && message.content) {
         const actionsEl = headerEl.createDiv({ cls: "codex-chat-message-actions" });
-        const copyButton = this.createIconButton(actionsEl, "copy", "Copiar esta respuesta", "codex-chat-message-action");
+        const copyButton = this.createIconButton(actionsEl, "copy", this.plugin.t("copyResponse"), "codex-chat-message-action");
         copyButton.addEventListener("click", async () => {
           await navigator.clipboard.writeText(message.content);
-          new Notice("Respuesta copiada.");
+          new Notice(this.plugin.t("responseCopied"));
         });
-        const insertButton = this.createIconButton(actionsEl, "corner-down-left", "Insertar esta respuesta", "codex-chat-message-action");
+        const insertButton = this.createIconButton(actionsEl, "corner-down-left", this.plugin.t("insertResponse"), "codex-chat-message-action");
         insertButton.addEventListener("click", async () => {
           await this.insertTextIntoActiveNote(message.content);
         });
-        const useButton = this.createIconButton(actionsEl, "message-square-plus", "Usar como contexto", "codex-chat-message-action");
+        const useButton = this.createIconButton(actionsEl, "message-square-plus", this.plugin.t("useAsContext"), "codex-chat-message-action");
         useButton.addEventListener("click", () => {
           this.appendToComposer(`Contexto de respuesta anterior:\n${message.content}`);
         });
       }
       const bodyEl = messageEl.createDiv({ cls: "codex-chat-message-body" });
       if (message.meta?.loading) {
-        bodyEl.createDiv({ cls: "codex-chat-loading", text: message.meta.status || "Preparando respuesta" });
+        bodyEl.createDiv({ cls: "codex-chat-loading", text: message.meta.status || this.plugin.t("preparingResponse") });
         bodyEl.createDiv({ cls: "codex-chat-loading-bar" });
       } else if (isAssistant) {
         void this.renderAssistantMessage(bodyEl, message.content);
@@ -1967,11 +1866,11 @@ class CodexChatView extends ItemView {
   async insertTextIntoActiveNote(content) {
     const view = this.plugin.refreshLastMarkdownView();
     if (!view || !view.editor) {
-      new Notice("Abre una nota editable antes de insertar la respuesta.");
+      new Notice(this.plugin.t("openEditableNote"));
       return;
     }
     view.editor.replaceRange(`\n\n${content}\n`, view.editor.getCursor());
-    new Notice("Respuesta insertada en la nota.");
+    new Notice(this.plugin.t("responseInserted"));
   }
 
   appendToComposer(content) {
@@ -2167,15 +2066,15 @@ class CodexChatView extends ItemView {
   responseMetaFor(response, elapsedMs, runOptions) {
     const rawProvider = response.raw?.provider || "";
     const label = response.localFallback
-      ? "Codex local"
+      ? this.plugin.t("codexLocalProvider")
       : rawProvider === "heuristic-fallback"
-        ? "Respaldo servidor"
+        ? this.plugin.t("serverFallbackProvider")
         : rawProvider === "codex-cli"
-        ? "Codex OAuth"
-        : "Servidor";
+        ? this.plugin.t("codexOauthProvider")
+        : this.plugin.t("serverProvider");
     const detailParts = [
-      `${runOptions.effort === "fast" ? "Rápido" : "Pensar"}`,
-      `${workModeLabel(runOptions.interactionMode)}`,
+      `${runOptions.effort === "fast" ? this.plugin.t("fast") : this.plugin.t("thinking")}`,
+      `${workModeLabel(runOptions.interactionMode, this.plugin.t)}`,
       `${Math.max(1, Math.round(elapsedMs / 100) / 10)}s`
     ];
     if (response.sessionPath) {
@@ -2190,7 +2089,7 @@ class CodexChatView extends ItemView {
   async sendMessage() {
     const message = this.inputEl?.value?.trim();
     if (!message) {
-      new Notice("Escribe un mensaje antes de enviar.");
+      new Notice(this.plugin.t("writeMessageFirst"));
       return;
     }
     if (this.isSending) {
@@ -2207,12 +2106,12 @@ class CodexChatView extends ItemView {
     const activeWorkMode = this.plugin.settings.defaultInteractionMode || DEFAULT_SETTINGS.defaultInteractionMode;
     const pendingId = this.appendMessage("assistant", "", {
       loading: true,
-      label: workModeDetail(activeWorkMode),
-      status: "Enviando mensaje al agente"
+      label: workModeDetail(activeWorkMode, this.plugin.t),
+      status: this.plugin.t("sendingToAgent")
     });
-    this.lastPendingStatus = "Enviando mensaje al agente";
+    this.lastPendingStatus = this.plugin.t("sendingToAgent");
     if (!this.context?.path && !this.context?.references?.length) {
-      this.setPendingStatus(pendingId, "Preparando contexto");
+      this.setPendingStatus(pendingId, this.plugin.t("preparingContext"));
       this.context = await this.plugin.captureCurrentContext(false);
       this.renderHeader();
       this.renderQuickActions();
@@ -2224,15 +2123,15 @@ class CodexChatView extends ItemView {
       if (folderStatus) {
         this.setPendingStatus(pendingId, folderStatus);
       }
-      this.setPendingStatus(pendingId, "Codex está pensando");
+      this.setPendingStatus(pendingId, this.plugin.t("codexThinking"));
       const response = await this.plugin.sendMessageToAgent(this.threadId, message, this.context || {}, runOptions);
       const isFallback = response.localFallback || response.raw?.provider === "heuristic-fallback";
-      this.setPendingStatus(pendingId, "Codex está preparando la respuesta", {
+      this.setPendingStatus(pendingId, this.plugin.t("codexPreparingResponse"), {
         detail:
           runOptions.interactionMode === "execute"
-            ? "Sin restricciones activo: si hay cambios, se ejecutarán sin pedir confirmación adicional."
+            ? this.plugin.t("unrestrictedActive")
             : isFallback
-              ? "El backend no respondió; se ha usado el modo local."
+              ? this.plugin.t("localFallbackProvider")
               : ""
       });
       await this.waitForMinimumDuration(startedAt, isFallback ? this.plugin.settings.localFallbackDelayMs : 350);
@@ -2248,21 +2147,21 @@ class CodexChatView extends ItemView {
       this.plugin.setLastResponse(response);
 
       if (response.unresolvedReferences?.length) {
-        new Notice(`No he podido resolver estas referencias @: ${response.unresolvedReferences.join(", ")}`);
+        new Notice(this.plugin.t("unresolvedReferences", { refs: response.unresolvedReferences.join(", ") }));
       }
 
       if (response.security?.redacted) {
         new Notice(
-          `Se han redactado datos sensibles antes de persistir o reenviar contexto: ${response.security.detectedTypes.join(", ")}`
+          this.plugin.t("sensitiveContextRedacted", { types: response.security.detectedTypes.join(", ") })
         );
       }
     } catch (error) {
       this.updateMessage(pendingId, `Error: ${error.message}`, {
         loading: false,
-        label: "Error",
+        label: this.plugin.t("error"),
         detail: `Fase: ${this.lastPendingStatus || "desconocida"} · La respuesta no se ha persistido como salida válida.`
       });
-      new Notice(`No se pudo completar la petición: ${error.message}`);
+      new Notice(this.plugin.t("requestFailed", { error: error.message }));
     } finally {
       this.setSending(false);
     }
@@ -2270,16 +2169,17 @@ class CodexChatView extends ItemView {
 }
 
 class ConsistencyDiagnosticsModal extends Modal {
-  constructor(app, report) {
+  constructor(app, report, t = createTranslator("en")) {
     super(app);
     this.report = report;
+    this.t = t;
   }
 
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.addClass("codex-chat-setup-modal");
-    contentEl.createEl("h3", { text: "Diagnóstico de consistencia" });
+    contentEl.createEl("h3", { text: this.t("consistencyDiagnostics") });
     contentEl.createEl("p", {
       text: this.report.summary
     });
@@ -2290,7 +2190,7 @@ class ConsistencyDiagnosticsModal extends Modal {
         list.createEl("li", { text: `${item.severity.toUpperCase()}: ${item.message}` });
       }
     } else {
-      contentEl.createEl("p", { text: "No se han detectado incidencias de consistencia." });
+      contentEl.createEl("p", { text: this.t("noConsistencyIssues") });
     }
   }
 }
@@ -2303,12 +2203,13 @@ class CodexChatSettingTab extends PluginSettingTab {
 
   display() {
     const { containerEl } = this;
+    const t = this.plugin.t;
     containerEl.empty();
-    containerEl.createEl("h3", { text: "Conexión y seguridad" });
+    containerEl.createEl("h3", { text: t("connectionSecurity") });
 
     new Setting(containerEl)
-      .setName("Backend URL")
-      .setDesc("Dirección del backend central. Si falla y el backend es local, el plugin intentará usar un modo local directo.")
+      .setName(t("backendUrl"))
+      .setDesc(t("backendUrlDesc"))
       .addText((text) =>
         text
           .setPlaceholder("http://127.0.0.1:8787")
@@ -2320,36 +2221,37 @@ class CodexChatSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Estado de dispositivo")
+      .setName(t("deviceState"))
       .setDesc(
-        `Dispositivo: ${this.plugin.settings.deviceRegisteredOk ? "registrado" : "pendiente"} · ID: ${
-          this.plugin.settings.deviceId || "(se generará automáticamente)"
-        }`
+        t("deviceStateDesc", {
+          state: this.plugin.settings.deviceRegisteredOk ? t("registered") : t("pending"),
+          id: this.plugin.settings.deviceId || t("generatedAutomatically")
+        })
       )
       .addButton((button) =>
-        button.setButtonText("Reparar configuración local").onClick(async () => {
+        button.setButtonText(t("repairLocalConfig")).onClick(async () => {
           await this.plugin.repairLocalProvisioning();
           this.display();
         })
       )
       .addButton((button) =>
-        button.setButtonText("Registrar ahora").onClick(async () => {
+        button.setButtonText(t("registerNow")).onClick(async () => {
           await this.plugin.registerLocalDeviceIfPossible({ notify: true });
           this.display();
         })
       );
 
     new Setting(containerEl)
-      .setName("Device ID")
-      .setDesc("Identificador estable local generado automáticamente. No se sincroniza por Obsidian Sync.")
+      .setName(t("deviceId"))
+      .setDesc(t("deviceIdDesc"))
       .addText((text) => {
-        text.setValue(this.plugin.settings.deviceId || "(pendiente)");
+        text.setValue(this.plugin.settings.deviceId || `(${t("pending")})`);
         text.inputEl.disabled = true;
       });
 
     new Setting(containerEl)
-      .setName("Allow remote backend")
-      .setDesc("Déjalo desactivado salvo que vayas a usar un backend remoto por HTTPS bajo tu control.")
+      .setName(t("allowRemoteBackend"))
+      .setDesc(t("allowRemoteBackendDesc"))
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.allowRemoteBackend).onChange(async (value) => {
           this.plugin.settings.allowRemoteBackend = value;
@@ -2357,15 +2259,15 @@ class CodexChatSettingTab extends PluginSettingTab {
         })
       );
 
-    containerEl.createEl("h3", { text: "Respuesta" });
+    containerEl.createEl("h3", { text: t("response") });
 
     new Setting(containerEl)
-      .setName("Modo de trabajo por defecto")
-      .setDesc("Planificador actúa como copiloto sin modificar nada por su cuenta. Ejecutar trabaja sin pedir permisos adicionales y exige backups previos si toca archivos.")
+      .setName(t("defaultWorkMode"))
+      .setDesc(t("defaultWorkModeDesc"))
       .addDropdown((dropdown) =>
         dropdown
-          .addOption("plan", "Planificador")
-          .addOption("execute", "Ejecutar")
+          .addOption("plan", t("planner"))
+          .addOption("execute", t("execute"))
           .setValue(this.plugin.settings.defaultInteractionMode || DEFAULT_SETTINGS.defaultInteractionMode)
           .onChange(async (value) => {
             this.plugin.settings.defaultInteractionMode = value;
@@ -2374,8 +2276,8 @@ class CodexChatSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Mostrar diagnóstico en el panel")
-      .setDesc("Muestra backend, dispositivo y contexto actual en la cabecera del chat.")
+      .setName(t("showDiagnostics"))
+      .setDesc(t("showDiagnosticsDesc"))
       .addToggle((toggle) =>
         toggle.setValue(Boolean(this.plugin.settings.showDiagnostics)).onChange(async (value) => {
           this.plugin.settings.showDiagnostics = value;
@@ -2384,8 +2286,37 @@ class CodexChatSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Notas máximas al resumir una carpeta")
-      .setDesc("Límite de notas que se añaden como contexto al pedir resúmenes de carpetas como 200 Proyectos.")
+      .setName(t("language"))
+      .setDesc(t("languageDesc"))
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("auto", t("languageAuto"))
+          .addOption("en", t("languageEnglish"))
+          .addOption("es", t("languageSpanish"))
+          .setValue(this.plugin.settings.languageMode || DEFAULT_SETTINGS.languageMode)
+          .onChange(async (value) => {
+            this.plugin.settings.languageMode = normalizeLanguageMode(value);
+            if (!this.plugin.settings.systemPromptSections) {
+              this.plugin.settings.systemPromptSections = getDefaultSystemPromptSections(value);
+            }
+            await this.plugin.saveSettings();
+            this.display();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName(t("folderRoots"))
+      .setDesc(t("folderRootsDesc"))
+      .addText((text) =>
+        text.setValue(formatFolderRoots(this.plugin.settings.folderReferenceRoots)).onChange(async (value) => {
+          this.plugin.settings.folderReferenceRoots = parseFolderRootsInput(value);
+          await this.plugin.saveSettings();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName(t("maxFolderReferences"))
+      .setDesc(t("maxFolderReferencesDesc"))
       .addText((text) =>
         text.setValue(String(this.plugin.settings.maxFolderReferences || DEFAULT_SETTINGS.maxFolderReferences)).onChange(async (value) => {
           const numeric = Number(value);
@@ -2395,18 +2326,18 @@ class CodexChatSettingTab extends PluginSettingTab {
         })
       );
 
-    containerEl.createEl("h3", { text: "System Prompt" });
+    containerEl.createEl("h3", { text: t("systemPrompt") });
     containerEl.createEl("p", {
-      text: "Estas secciones se combinan en orden fijo y se comparten entre equipos mediante data.json."
+      text: t("systemPromptDesc")
     });
 
     const promptFieldMeta = [
-      ["role", "Rol", "Identidad base y ámbito del agente dentro de la vault."],
-      ["context", "Contexto", "Cómo debe priorizar nota activa, referencias, memoria y sesiones."],
-      ["behavior", "Comportamiento", "Criterios de respuesta, tono operativo y nivel de iniciativa."],
-      ["safety", "Seguridad", "Límites al tratar datos sensibles, acciones riesgosas o persistencia."],
-      ["output", "Salida", "Formato y estilo esperados en las respuestas."],
-      ["memory", "Memoria", "Cómo utilizar la memoria compartida sin sobreconfiar en ella."]
+      ["role", t("promptRole"), t("promptRoleDesc")],
+      ["context", t("promptContext"), t("promptContextDesc")],
+      ["behavior", t("promptBehavior"), t("promptBehaviorDesc")],
+      ["safety", t("promptSafety"), t("promptSafetyDesc")],
+      ["output", t("promptOutput"), t("promptOutputDesc")],
+      ["memory", t("promptMemory"), t("promptMemoryDesc")]
     ];
 
     for (const [key, name, description] of promptFieldMeta) {
@@ -2419,7 +2350,7 @@ class CodexChatSettingTab extends PluginSettingTab {
           text.inputEl.addClass("codex-chat-settings-textarea");
           text.onChange(async (value) => {
             this.plugin.settings.systemPromptSections = {
-              ...normalizeSystemPromptSections(this.plugin.settings.systemPromptSections),
+              ...normalizeSystemPromptSections(this.plugin.settings.systemPromptSections, this.plugin.settings.languageMode),
               [key]: value
             };
             await this.plugin.saveSettings();
@@ -2427,11 +2358,11 @@ class CodexChatSettingTab extends PluginSettingTab {
         });
     }
 
-    containerEl.createEl("h3", { text: "Escala del plugin" });
+    containerEl.createEl("h3", { text: t("pluginScale") });
 
     new Setting(containerEl)
-      .setName("Escala visual")
-      .setDesc("Escala propia del panel. También puedes usar Ctrl/Cmd +, Ctrl/Cmd - y Ctrl/Cmd 0 dentro del chat.")
+      .setName(t("visualScale"))
+      .setDesc(t("visualScaleDesc"))
       .addText((text) => {
         text.setPlaceholder("1.0").setValue(this.plugin.getUiScale().toFixed(2));
         text.onChange(async (value) => {
@@ -2441,25 +2372,25 @@ class CodexChatSettingTab extends PluginSettingTab {
         });
       })
       .addButton((button) =>
-        button.setButtonText("Reset 100%").onClick(async () => {
+        button.setButtonText(t("reset100")).onClick(async () => {
           await this.plugin.resetUiScale();
           this.display();
         })
       );
 
-    containerEl.createEl("h3", { text: "Avanzado local" });
+    containerEl.createEl("h3", { text: t("advancedLocal") });
 
     new Setting(containerEl)
-      .setName("Local bootstrap token")
-      .setDesc("Diagnóstico avanzado. Se autogenera si SecretStorage no está disponible. No se sincroniza.")
+      .setName(t("localBootstrapToken"))
+      .setDesc(t("localBootstrapTokenDesc"))
       .addText((text) => {
-        text.setValue(this.plugin.settings.localBootstrapToken ? "configurado" : "no usado");
+        text.setValue(this.plugin.settings.localBootstrapToken ? t("registered") : t("pending"));
         text.inputEl.disabled = true;
       });
 
     new Setting(containerEl)
-      .setName("Local backend bootstrap script")
-      .setDesc("Script local que el plugin puede lanzar si el backend en localhost no está activo. No se sincroniza.")
+      .setName(t("localBackendBootstrapScript"))
+      .setDesc(t("localBackendBootstrapScriptDesc"))
       .addText((text) =>
         text.setValue(this.plugin.settings.localBackendBootstrapScript || "").onChange(async (value) => {
           this.plugin.settings.localBackendBootstrapScript = value.trim();
@@ -2468,8 +2399,28 @@ class CodexChatSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Local Codex command")
-      .setDesc("Comando local de Codex. Usa `codex` para el CLI oficial instalado por npm; evita rutas WindowsApps si dan permisos denegados. No se sincroniza.")
+      .setName(t("allowLocalBootstrapScript"))
+      .setDesc(t("allowLocalBootstrapScriptDesc"))
+      .addToggle((toggle) =>
+        toggle.setValue(Boolean(this.plugin.settings.localBackendBootstrapAllowed)).onChange(async (value) => {
+          this.plugin.settings.localBackendBootstrapAllowed = Boolean(value);
+          await this.plugin.saveSettings();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName(t("trustCodexVault"))
+      .setDesc(t("trustCodexVaultDesc"))
+      .addToggle((toggle) =>
+        toggle.setValue(Boolean(this.plugin.settings.allowCodexVaultTrust)).onChange(async (value) => {
+          this.plugin.settings.allowCodexVaultTrust = Boolean(value);
+          await this.plugin.saveSettings();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName(t("localCodexCommand"))
+      .setDesc(t("localCodexCommandDesc"))
       .addText((text) =>
         text.setValue(this.plugin.settings.localCodexCommand || "").onChange(async (value) => {
           this.plugin.settings.localCodexCommand = value.trim();
@@ -2479,14 +2430,14 @@ class CodexChatSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Codex OAuth")
-      .setDesc(`Estado: ${this.plugin.settings.codexStatus || "No comprobado"}${this.plugin.settings.codexVersion ? ` · ${this.plugin.settings.codexVersion}` : ""}`)
+      .setDesc(t("status", { status: this.plugin.settings.codexStatus || t("pending") }) + (this.plugin.settings.codexVersion ? ` · ${this.plugin.settings.codexVersion}` : ""))
       .addButton((button) =>
-        button.setButtonText("Abrir asistente").onClick(() => {
+        button.setButtonText(t("openAssistant")).onClick(() => {
           new CodexSetupModal(this.app, this.plugin).open();
         })
       )
       .addButton((button) =>
-        button.setButtonText("Comprobar").onClick(async () => {
+        button.setButtonText(t("check")).onClick(async () => {
           await this.plugin.checkCodexStatus();
           this.display();
         })
@@ -2494,8 +2445,8 @@ class CodexChatSettingTab extends PluginSettingTab {
 
     if (SecretComponent) {
       new Setting(containerEl)
-        .setName("Token secret")
-        .setDesc("Nombre local del secreto en SecretStorage que contiene el token del dispositivo. No se sincroniza.")
+        .setName(t("tokenSecret"))
+        .setDesc(t("tokenSecretDesc"))
         .addComponent((el) =>
           new SecretComponent(this.app, el)
             .setValue(this.plugin.settings.deviceTokenSecretName)
@@ -2506,8 +2457,8 @@ class CodexChatSettingTab extends PluginSettingTab {
         );
     } else {
       new Setting(containerEl)
-        .setName("Token secret")
-        .setDesc("Nombre local del secreto en SecretStorage. No se sincroniza.")
+        .setName(t("tokenSecret"))
+        .setDesc(t("tokenSecretDesc"))
         .addText((text) =>
           text.setValue(this.plugin.settings.deviceTokenSecretName).onChange(async (value) => {
             this.plugin.settings.deviceTokenSecretName = value.trim();
@@ -2517,8 +2468,8 @@ class CodexChatSettingTab extends PluginSettingTab {
     }
 
     new Setting(containerEl)
-      .setName("Max context chars")
-      .setDesc("Número máximo de caracteres de la nota activa que se enviarán al agente en cada consulta.")
+      .setName(t("maxContextChars"))
+      .setDesc(t("maxContextCharsDesc"))
       .addText((text) =>
         text.setValue(String(this.plugin.settings.maxContextChars)).onChange(async (value) => {
           const numeric = Number(value);
@@ -2533,6 +2484,7 @@ class CodexChatSettingTab extends PluginSettingTab {
 module.exports = class CodexChatPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
+    this.t = createTranslator(() => this.getLanguage());
     this.lastResponse = null;
     this.lastMarkdownView = null;
     this.lastMarkdownFile = null;
@@ -2546,13 +2498,13 @@ module.exports = class CodexChatPlugin extends Plugin {
     this.registerView(VIEW_TYPE, (leaf) => new CodexChatView(leaf, this));
     this.addSettingTab(new CodexChatSettingTab(this.app, this));
 
-    this.addRibbonIcon("bot", "Abrir Codex Chat", async () => {
+    this.addRibbonIcon("bot", this.t("openChat"), async () => {
       await this.activateView();
     });
 
     this.addCommand({
       id: "open-codex-chat",
-      name: "Abrir Codex Chat",
+      name: this.t("openChat"),
       callback: async () => {
         await this.activateView();
       }
@@ -2560,7 +2512,7 @@ module.exports = class CodexChatPlugin extends Plugin {
 
     this.addCommand({
       id: "ask-about-current-note",
-      name: "Preguntar sobre nota actual",
+      name: this.t("askCurrentNote"),
       callback: async () => {
         const context = await this.captureCurrentContext(false);
         const view = await this.activateView();
@@ -2570,11 +2522,11 @@ module.exports = class CodexChatPlugin extends Plugin {
 
     this.addCommand({
       id: "ask-about-selection",
-      name: "Preguntar sobre selección",
+      name: this.t("askSelection"),
       editorCallback: async () => {
         const context = await this.captureSelectionContext();
         if (!context?.selection) {
-          new Notice("No hay una selección activa válida en esta nota.");
+          new Notice(this.t("noValidSelection"));
           return;
         }
         const view = await this.activateView();
@@ -2584,7 +2536,7 @@ module.exports = class CodexChatPlugin extends Plugin {
 
     this.addCommand({
       id: "insert-last-response",
-      name: "Insertar respuesta en la nota",
+      name: this.t("insertLastResponse"),
       editorCallback: async () => {
         await this.insertLastResponseIntoNote();
       }
@@ -2592,7 +2544,7 @@ module.exports = class CodexChatPlugin extends Plugin {
 
     this.addCommand({
       id: "view-memory-used",
-      name: "Ver memoria usada para la última respuesta",
+      name: this.t("viewMemoryUsed"),
       callback: async () => {
         await this.showMemoryUsed();
       }
@@ -2600,7 +2552,7 @@ module.exports = class CodexChatPlugin extends Plugin {
 
     this.addCommand({
       id: "open-codex-setup",
-      name: "Configurar Codex OAuth",
+      name: this.t("configureCodex"),
       callback: () => {
         new CodexSetupModal(this.app, this).open();
       }
@@ -2608,7 +2560,7 @@ module.exports = class CodexChatPlugin extends Plugin {
 
     this.addCommand({
       id: "run-consistency-diagnostics",
-      name: "Diagnóstico de consistencia de Codex Chat",
+      name: this.t("consistencyDiagnostics"),
       callback: async () => {
         await this.openConsistencyDiagnostics();
       }
@@ -2659,14 +2611,23 @@ module.exports = class CodexChatPlugin extends Plugin {
     this.app.workspace.detachLeavesOfType(VIEW_TYPE);
   }
 
+  getLanguage() {
+    return resolveLanguage(this.settings?.languageMode || DEFAULT_SETTINGS.languageMode);
+  }
+
   async loadSettings() {
     const currentShared = Object.assign({}, await this.loadData());
     const legacyShared = await this.loadLegacySharedSettings(currentShared);
     const shared = Object.assign({}, legacyShared, currentShared);
     const local = await this.loadLocalRuntimeState(shared);
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, shared, local);
-    this.settings.systemPromptSections = normalizeSystemPromptSections(this.settings.systemPromptSections);
+    this.settings = normalizeSettings(Object.assign({}, shared, local), DEFAULT_SETTINGS);
+    this.settings.languageMode = normalizeLanguageMode(this.settings.languageMode);
+    this.settings.systemPromptSections = normalizeSystemPromptSections(
+      this.settings.systemPromptSections,
+      this.settings.languageMode
+    );
     this.settings.uiScale = clampUiScale(this.settings.uiScale);
+    this.settings.folderReferenceRoots = normalizeFolderRoots(this.settings.folderReferenceRoots);
     this.normalizePortableSettings();
   }
 
@@ -2702,8 +2663,13 @@ module.exports = class CodexChatPlugin extends Plugin {
   }
 
   async saveSettings() {
-    this.settings.systemPromptSections = normalizeSystemPromptSections(this.settings.systemPromptSections);
+    this.settings.languageMode = normalizeLanguageMode(this.settings.languageMode);
+    this.settings.systemPromptSections = normalizeSystemPromptSections(
+      this.settings.systemPromptSections,
+      this.settings.languageMode
+    );
     this.settings.uiScale = clampUiScale(this.settings.uiScale);
+    this.settings.folderReferenceRoots = normalizeFolderRoots(this.settings.folderReferenceRoots);
     this.normalizePortableSettings();
     await this.saveData(this.pickSettings(SHARED_SETTING_KEYS));
     await this.saveLocalRuntimeState(this.pickSettings(LOCAL_SETTING_KEYS));
@@ -2849,8 +2815,8 @@ module.exports = class CodexChatPlugin extends Plugin {
       return this.settings.codexStatus || "No comprobado";
     }
     return this.canUseRemoteBackend()
-      ? "Modo móvil listo para backend remoto HTTPS."
-      : "Modo móvil: requiere backend remoto HTTPS.";
+      ? this.t("remoteBackendReady")
+      : this.t("remoteHttpsRequiredMobile");
   }
 
   async checkRemoteBackendForMobile(options = {}) {
@@ -2860,7 +2826,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     const notify = options.notify !== false;
     try {
       if (!this.canUseRemoteBackend()) {
-        throw new Error("Configura un backend remoto HTTPS y activa backends remotos. En móvil no se admite localhost ni Codex CLI local.");
+        throw new Error(this.t("remoteHttpsRequiredMobile"));
       }
       const health = await requestUrl({
         url: `${this.settings.backendUrl.replace(/\/$/, "")}/health`,
@@ -2868,16 +2834,16 @@ module.exports = class CodexChatPlugin extends Plugin {
       });
       const ok = health.status < 400;
       this.settings.codexSetupCompleted = ok;
-      this.settings.codexStatus = ok ? "Backend remoto HTTPS disponible." : `Backend remoto respondió HTTP ${health.status}.`;
+      this.settings.codexStatus = ok ? this.t("remoteBackendReady") : `HTTP ${health.status}`;
       this.settings.codexLastCheck = new Date().toISOString();
       await this.saveSettings();
       if (notify) {
-        new Notice(ok ? "Backend remoto disponible." : "El backend remoto no está listo.");
+        new Notice(ok ? this.t("remoteBackendReady") : this.t("remoteBackendNotReady"));
       }
       return ok;
     } catch (error) {
       this.settings.codexSetupCompleted = false;
-      this.settings.codexStatus = `Modo móvil no disponible: ${error.message}`;
+      this.settings.codexStatus = this.t("mobileUnavailable", { error: error.message });
       this.settings.codexLastCheck = new Date().toISOString();
       await this.saveSettings();
       if (notify) {
@@ -2892,13 +2858,13 @@ module.exports = class CodexChatPlugin extends Plugin {
       this.app.setting.open();
       this.app.setting.openTabById(this.manifest.id);
     } else {
-      new Notice("Abre los ajustes de Obsidian y selecciona Codex Chat.");
+      new Notice(this.t("openSettingsSelectPlugin"));
     }
   }
 
   async openConsistencyDiagnostics() {
     const report = await this.collectConsistencyDiagnostics();
-    new ConsistencyDiagnosticsModal(this.app, report).open();
+    new ConsistencyDiagnosticsModal(this.app, report, this.t).open();
   }
 
   async collectConsistencyDiagnostics() {
@@ -2908,7 +2874,10 @@ module.exports = class CodexChatPlugin extends Plugin {
       if (Object.prototype.hasOwnProperty.call(shared, key)) {
         items.push({
           severity: "warn",
-          message: `\`.obsidian/plugins/codex-chat/data.json\` aún contiene \`${key}\`, que debería ser local y no sincronizarse.`
+          message: this.t("dataJsonHasLocalKey", {
+            path: ".obsidian/plugins/codex-chat/data.json",
+            key
+          })
         });
       }
     }
@@ -2916,7 +2885,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     const vaultRoot = this.getVaultRoot();
     if (!vaultRoot || !fs || !path) {
       return {
-        summary: items.length ? `Se han detectado ${items.length} incidencias.` : "Diagnóstico local no disponible en este entorno.",
+        summary: items.length ? this.t("issuesDetected", { count: items.length }) : this.t("diagnosticsUnavailable"),
         items
       };
     }
@@ -2925,7 +2894,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     if (duplicateCount > 0) {
       items.push({
         severity: "warn",
-        message: `Hay ${duplicateCount} sesiones duplicadas lógicamente por conflictos de Sync en \`_agent/sessions\`.`
+        message: this.t("duplicateSessionsDetected", { count: duplicateCount })
       });
     }
 
@@ -2941,14 +2910,14 @@ module.exports = class CodexChatPlugin extends Plugin {
     if (this.localStatePortabilityReset) {
       items.push({
         severity: "info",
-        message: "Se han reseteado rutas locales no portables al cargar este equipo."
+        message: this.t("localBackendReset")
       });
     }
 
     return {
       summary: items.length
-        ? `Se han detectado ${items.length} incidencias o avisos de consistencia.`
-        : "No se han detectado incidencias de consistencia.",
+        ? this.t("issuesDetected", { count: items.length })
+        : this.t("noConsistencyIssues"),
       items
     };
   }
@@ -2994,13 +2963,13 @@ module.exports = class CodexChatPlugin extends Plugin {
       if (!parsed.data.schema_version) {
         issues.push({
           severity: "info",
-          message: `\`_agent/memory/${category}.md\` sigue en esquema antiguo y se leerá en modo compatible.`
+          message: this.t("memoryFileLegacySchema", { category })
         });
       }
       if (sanitization.issues.length) {
         issues.push({
           severity: "warn",
-          message: `\`_agent/memory/${category}.md\` contiene ${sanitization.issues.length} entradas no canónicas que el plugin ignorará al usar memoria compartida.`
+          message: this.t("memoryFileNonCanonical", { category, count: sanitization.issues.length })
         });
       }
     }
@@ -3015,13 +2984,13 @@ module.exports = class CodexChatPlugin extends Plugin {
       if (!entries.length) {
         issues.push({
           severity: "info",
-          message: "`_agent/index` está vacío o no se está usando todavía."
+          message: this.t("indexEmpty")
         });
       }
     } catch {
       issues.push({
         severity: "warn",
-        message: "`_agent/index` no existe o no se puede leer."
+        message: this.t("indexUnreadable")
       });
     }
     return issues;
@@ -3046,7 +3015,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     if (staleCount > 0) {
       issues.push({
         severity: "info",
-        message: `\`_agent/outbox\` conserva ${staleCount} temporales con más de 24h.`
+        message: this.t("outboxStale", { count: staleCount })
       });
     }
     return issues;
@@ -3060,8 +3029,7 @@ module.exports = class CodexChatPlugin extends Plugin {
 
   normalizeCodexCommand() {
     const current = String(this.settings.localCodexCommand || "").toLowerCase();
-    const foreignWindowsUserPath =
-      isForeignWindowsUserPath(current);
+    const foreignWindowsUserPath = isForeignWindowsUserPath(current, os?.homedir?.() || "");
     if (current.includes("\\windowsapps\\") || current.endsWith("\\codex.exe") || foreignWindowsUserPath) {
       this.settings.localCodexCommand = "codex";
       this.localStatePortabilityReset = true;
@@ -3069,7 +3037,7 @@ module.exports = class CodexChatPlugin extends Plugin {
   }
 
   normalizeLocalBackendBootstrapScript() {
-    if (isForeignWindowsUserPath(this.settings.localBackendBootstrapScript)) {
+    if (isForeignWindowsUserPath(this.settings.localBackendBootstrapScript, os?.homedir?.() || "")) {
       this.settings.localBackendBootstrapScript = "";
       this.localStatePortabilityReset = true;
     }
@@ -3197,22 +3165,13 @@ module.exports = class CodexChatPlugin extends Plugin {
 
   getConfiguredSystemPrompt(runOptions = {}, backupRoot = "") {
     const basePrompt = composeSystemPrompt(this.settings.systemPromptSections);
+    const backupInstruction = backupRoot
+      ? this.t("workModeExecuteBackupPath", { backupRoot })
+      : this.t("workModeExecuteBackupGeneric");
     const modeLines =
       runOptions.interactionMode === "execute"
-        ? [
-            "[work-mode]",
-            "Modo de trabajo activo: Ejecutar / Sin restricciones.",
-            "Puedes actuar sin pedir permiso adicional, pero antes de editar o borrar cualquier archivo o nota debes crear una copia de seguridad del archivo afectado.",
-            backupRoot
-              ? `Guarda esas copias dentro de: ${backupRoot} preservando la ruta relativa del archivo dentro de la vault.`
-              : "Guarda esas copias dentro de una carpeta de backup de la sesion preservando la ruta relativa del archivo dentro de la vault.",
-            "Si no puedes crear la copia previa, no modifiques ni borres el archivo y explica el bloqueo."
-          ]
-        : [
-            "[work-mode]",
-            "Modo de trabajo activo: Planificador / Copiloto.",
-            "No modifiques, borres, renombres ni reescribas archivos de la vault salvo que el usuario lo pida de forma clara y explícita."
-          ];
+        ? ["[work-mode]", this.t("workModeExecutePrompt", { backupInstruction })]
+        : ["[work-mode]", this.t("workModePlannerPrompt")];
     return [basePrompt, modeLines.join("\n")].filter(Boolean).join("\n\n").trim();
   }
 
@@ -3249,16 +3208,16 @@ module.exports = class CodexChatPlugin extends Plugin {
 
   async copyLastResponse() {
     if (!this.lastResponse?.answer) {
-      new Notice("Todavía no hay una respuesta para copiar.");
+      new Notice(this.t("noLastResponseCopy"));
       return;
     }
     await navigator.clipboard.writeText(this.lastResponse.answer);
-    new Notice("Respuesta copiada.");
+    new Notice(this.t("responseCopied"));
   }
 
   async runPowerShell(command, timeout = 120000) {
     if (!this.canUseLocalCodex()) {
-      throw new Error("Codex CLI local solo está disponible en escritorio.");
+      throw new Error(this.t("localOnlyDesktop"));
     }
     const { stdout, stderr } = await execFileAsync(
       "powershell.exe",
@@ -3313,7 +3272,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     const install = await this.checkCodexStatus({ notify: false });
     if (!install) {
       if (notify) {
-        new Notice("Codex CLI no está instalado o no se puede ejecutar.");
+        new Notice(this.t("codexNotReady"));
       }
       return { ready: false, installed: false, login: false, execution: false };
     }
@@ -3323,7 +3282,7 @@ module.exports = class CodexChatPlugin extends Plugin {
       this.settings.codexSetupCompleted = false;
       await this.saveSettings();
       if (notify) {
-        new Notice("Codex CLI está instalado, pero falta OAuth.");
+        new Notice(this.t("codexInstalledNoOauth"));
       }
       return { ready: false, installed: true, login: false, execution: false };
     }
@@ -3332,11 +3291,11 @@ module.exports = class CodexChatPlugin extends Plugin {
     const ready = Boolean(execution);
     this.settings.codexSetupCompleted = ready;
     if (ready) {
-      this.settings.codexStatus = "Codex OAuth probado correctamente.";
+      this.settings.codexStatus = this.t("codexOauthOk");
     }
     await this.saveSettings();
     if (notify) {
-      new Notice(ready ? "Codex está listo." : "Codex tiene OAuth, pero no ejecuta correctamente.");
+      new Notice(ready ? this.t("codexReady") : this.t("codexExecutionFailed"));
     }
     return { ready, installed: true, login: true, execution: ready };
   }
@@ -3345,7 +3304,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     const notify = options.notify !== false;
     try {
       if (!this.canUseLocalCodex()) {
-        throw new Error("Codex CLI local solo está disponible en escritorio.");
+        throw new Error(this.t("localOnlyDesktop"));
       }
       this.normalizeCodexCommand();
       const configuredCodexCommand = this.settings.localCodexCommand || "codex";
@@ -3366,12 +3325,12 @@ module.exports = class CodexChatPlugin extends Plugin {
         this.settings.localCodexCommand = parsed.Path;
       }
       this.settings.codexVersion = parsed.Version || "";
-      this.settings.codexStatus = `Codex encontrado en ${parsed.Path || "PATH"}`;
+      this.settings.codexStatus = `${this.t("codexFound")} ${parsed.Path || "PATH"}`;
       this.settings.codexLastCheck = new Date().toISOString();
       this.settings.codexInstalledOk = true;
       await this.saveSettings();
       if (notify) {
-        new Notice("Codex CLI encontrado.");
+        new Notice(this.t("codexFound"));
       }
       return parsed;
     } catch (error) {
@@ -3383,7 +3342,7 @@ module.exports = class CodexChatPlugin extends Plugin {
       this.settings.codexSetupCompleted = false;
       await this.saveSettings();
       if (notify) {
-        new Notice("Codex CLI no está listo. Usa Instalar/actualizar.");
+        new Notice(this.t("codexNotReady"));
       }
       return null;
     }
@@ -3393,13 +3352,13 @@ module.exports = class CodexChatPlugin extends Plugin {
     const notify = options.notify !== false;
     try {
       if (!this.canUseLocalCodex()) {
-        throw new Error("OAuth local solo está disponible en escritorio.");
+        throw new Error(this.t("localOnlyDesktop"));
       }
       const codexCommand = escapePowerShellSingleQuoted(this.settings.localCodexCommand || "codex");
       const output = await this.runPowerShell(`& '${codexCommand}' login status`, 30000);
       const loginOk = !/(not logged|not signed|no auth|login required|error loading configuration|not authenticated)/i.test(output);
       this.settings.codexLoginOk = loginOk;
-      this.settings.codexStatus = loginOk ? "Codex OAuth detectado." : "Codex instalado, OAuth pendiente.";
+      this.settings.codexStatus = loginOk ? this.t("codexLoginDetected") : this.t("codexLoginPending");
       this.settings.codexLastCheck = new Date().toISOString();
       if (!loginOk) {
         this.settings.codexExecutionOk = false;
@@ -3407,18 +3366,18 @@ module.exports = class CodexChatPlugin extends Plugin {
       }
       await this.saveSettings();
       if (notify) {
-        new Notice(loginOk ? "OAuth de Codex detectado." : "OAuth de Codex pendiente.");
+        new Notice(loginOk ? this.t("codexLoginDetected") : this.t("codexLoginPending"));
       }
       return loginOk;
     } catch (error) {
       this.settings.codexLoginOk = false;
       this.settings.codexExecutionOk = false;
       this.settings.codexSetupCompleted = false;
-      this.settings.codexStatus = `No se pudo comprobar OAuth: ${error.message}`;
+      this.settings.codexStatus = `${this.t("oauthCheckFailed")} ${error.message}`;
       this.settings.codexLastCheck = new Date().toISOString();
       await this.saveSettings();
       if (notify) {
-        new Notice("No se pudo comprobar OAuth de Codex.");
+        new Notice(this.t("oauthCheckFailed"));
       }
       return false;
     }
@@ -3426,7 +3385,10 @@ module.exports = class CodexChatPlugin extends Plugin {
 
   async ensureCodexVaultTrust() {
     if (!this.canUseLocalCodex()) {
-      throw new Error("La confianza de vault de Codex solo aplica en escritorio.");
+      throw new Error(this.t("localOnlyDesktop"));
+    }
+    if (!this.settings.allowCodexVaultTrust) {
+      return false;
     }
     const vaultRoot = this.getVaultRoot();
     if (!vaultRoot) {
@@ -3457,53 +3419,53 @@ module.exports = class CodexChatPlugin extends Plugin {
 
   async installOrUpdateCodex() {
     if (!this.canUseLocalCodex()) {
-      new Notice("En móvil/iOS no se puede instalar Codex CLI local. Configura un backend remoto HTTPS.");
-      throw new Error("Codex CLI local no está disponible en móvil.");
+      new Notice(this.t("localOnlyDesktop"));
+      throw new Error(this.t("localOnlyDesktop"));
     }
-    new Notice("Instalando o actualizando Codex CLI. Puede tardar unos minutos.");
+    new Notice(this.t("installingCodex"));
     try {
       const output = await this.runPowerShell("npm install -g @openai/codex", 300000);
-      this.settings.codexStatus = "Codex CLI instalado/actualizado. Ejecuta la comprobación y después OAuth.";
+      this.settings.codexStatus = this.t("codexInstalled");
       this.settings.codexLastCheck = new Date().toISOString();
       await this.saveSettings();
-      new Notice("Codex CLI instalado o actualizado.");
+      new Notice(this.t("codexInstalled"));
       await this.checkCodexStatus();
       return output;
     } catch (error) {
-      this.settings.codexStatus = `No se pudo instalar Codex: ${error.message}`;
+      this.settings.codexStatus = `${this.t("codexInstallFailed")} ${error.message}`;
       this.settings.codexLastCheck = new Date().toISOString();
       this.settings.codexSetupCompleted = false;
       await this.saveSettings();
-      new Notice("No se pudo instalar Codex CLI desde Obsidian.");
+      new Notice(this.t("codexInstallFailed"));
       throw error;
     }
   }
 
   async launchCodexLogin() {
     if (!this.canUseLocalCodex()) {
-      new Notice("En móvil/iOS no se puede iniciar OAuth local. Configura un backend remoto HTTPS.");
-      throw new Error("OAuth local no está disponible en móvil.");
+      new Notice(this.t("localOnlyDesktop"));
+      throw new Error(this.t("localOnlyDesktop"));
     }
     const codexCommand = escapePowerShellSingleQuoted(this.settings.localCodexCommand || "codex");
     const loginCommand = `& '${codexCommand}' login`;
     const command = `Start-Process -FilePath powershell.exe -ArgumentList @('-NoExit','-ExecutionPolicy','Bypass','-Command','${escapePowerShellSingleQuoted(loginCommand)}')`;
     await this.runPowerShell(command, 30000);
-    this.settings.codexStatus = "OAuth lanzado. Completa el login en la ventana de terminal/navegador y después pulsa Probar Codex.";
+    this.settings.codexStatus = this.t("oauthLaunched");
     this.settings.codexLastCheck = new Date().toISOString();
     await this.saveSettings();
-    new Notice("OAuth de Codex lanzado en una ventana externa.");
+    new Notice(this.t("oauthLaunched"));
   }
 
   async testCodexExecution(options = {}) {
     const notify = options.notify !== false;
     if (!this.canUseLocalCodex()) {
       if (notify) {
-        new Notice("En móvil/iOS no se puede probar Codex CLI local.");
+        new Notice(this.t("localOnlyDesktop"));
       }
-      throw new Error("Codex CLI local no está disponible en móvil.");
+      throw new Error(this.t("localOnlyDesktop"));
     }
     if (notify) {
-      new Notice("Probando Codex con una petición mínima.");
+      new Notice(this.t("testingCodex"));
     }
     try {
       await this.ensureCodexVaultTrust();
@@ -3514,7 +3476,7 @@ module.exports = class CodexChatPlugin extends Plugin {
       await fs.mkdir(tempRoot, { recursive: true });
       await fs.writeFile(promptPath, "Responde exactamente: OK", "utf8");
       const output = await this.runPowerShellScript(
-        buildCodexExecCommand({
+        buildCodexExecCommandSafe({
           codexCommand: this.settings.localCodexCommand || "codex",
           promptPath,
           outputPath,
@@ -3531,28 +3493,28 @@ module.exports = class CodexChatPlugin extends Plugin {
       }
       if (!/OK/i.test(output)) {
         if (!/OK/i.test(finalMessage)) {
-          throw new Error(finalMessage || output || "Codex no devolvió OK.");
+          throw new Error(finalMessage || output || this.t("codexNoOk"));
         }
       }
       await Promise.allSettled([fs.unlink(promptPath), fs.unlink(outputPath)]);
       this.settings.codexSetupCompleted = true;
       this.settings.codexLoginOk = true;
       this.settings.codexExecutionOk = true;
-      this.settings.codexStatus = "Codex OAuth probado correctamente.";
+      this.settings.codexStatus = this.t("codexOauthOk");
       this.settings.codexLastCheck = new Date().toISOString();
       await this.saveSettings();
       if (notify) {
-        new Notice("Codex OAuth funciona correctamente.");
+        new Notice(this.t("codexOauthOk"));
       }
       return output;
     } catch (error) {
       this.settings.codexSetupCompleted = false;
       this.settings.codexExecutionOk = false;
-      this.settings.codexStatus = `Codex no pudo ejecutar una prueba: ${error.message}`;
+      this.settings.codexStatus = `${this.t("codexExecutionFailed")} ${error.message}`;
       this.settings.codexLastCheck = new Date().toISOString();
       await this.saveSettings();
       if (notify) {
-        new Notice("Codex todavía no ejecuta correctamente.");
+        new Notice(this.t("codexExecutionFailed"));
         throw error;
       }
       return null;
@@ -3788,7 +3750,7 @@ module.exports = class CodexChatPlugin extends Plugin {
         if (left.score !== right.score) {
           return left.score - right.score;
         }
-        return left.file.path.localeCompare(right.file.path, "es", { sensitivity: "base" });
+        return left.file.path.localeCompare(right.file.path, this.getLanguage(), { sensitivity: "base" });
       })
       .slice(0, 8)
       .map((entry) => entry.file);
@@ -3881,20 +3843,20 @@ module.exports = class CodexChatPlugin extends Plugin {
         throw new Error(response.text || `HTTP ${response.status}`);
       }
       this.settings.deviceRegisteredOk = true;
-      if (!this.settings.codexStatus || /token|configuración local pendiente/i.test(this.settings.codexStatus)) {
-        this.settings.codexStatus = "Dispositivo local registrado.";
+      if (!this.settings.codexStatus || /token|configuración local pendiente|local configuration pending/i.test(this.settings.codexStatus)) {
+        this.settings.codexStatus = this.t("localDeviceRegisteredStatus");
       }
       await this.saveSettings();
       if (options.notify) {
-        new Notice("Dispositivo local registrado correctamente.");
+        new Notice(this.t("deviceRegistered"));
       }
       return true;
     } catch (error) {
       this.settings.deviceRegisteredOk = false;
-      this.settings.codexStatus = `Configuración local pendiente: ${error.message}`;
+      this.settings.codexStatus = this.t("localDevicePendingStatus", { error: error.message });
       await this.saveSettings();
       if (options.notify) {
-        new Notice("No se pudo registrar el dispositivo local. Arranca el backend y vuelve a intentarlo.");
+        new Notice(this.t("deviceRegisterFailed"));
       }
       return false;
     }
@@ -3925,7 +3887,7 @@ module.exports = class CodexChatPlugin extends Plugin {
       return this.settings.localBootstrapToken;
     }
 
-    throw new Error("Configuración local pendiente: no hay token de dispositivo disponible.");
+    throw new Error(this.t("noDeviceToken"));
   }
 
   async getLegacySecretToken() {
@@ -3943,7 +3905,7 @@ module.exports = class CodexChatPlugin extends Plugin {
 
   async apiRequest(method, endpoint, body) {
     if (this.isMobileRuntime() && !this.canUseRemoteBackend()) {
-      throw new Error("Configura un backend remoto HTTPS y activa backends remotos para usar el plugin en móvil/iOS.");
+      throw new Error(this.t("remoteHttpsRequired"));
     }
     await this.ensureLocalBackendRunning();
     if (this.isLocalBackendUrl(this.settings.backendUrl)) {
@@ -3991,7 +3953,7 @@ module.exports = class CodexChatPlugin extends Plugin {
       // Try bootstrapping below.
     }
 
-    if (!this.settings.localBackendBootstrapScript) {
+    if (!this.settings.localBackendBootstrapScript || !this.settings.localBackendBootstrapAllowed) {
       return;
     }
 
@@ -4014,30 +3976,20 @@ module.exports = class CodexChatPlugin extends Plugin {
   }
 
   validateBackendUrl(value) {
-    const parsed = new URL(value);
-    const isLocal = this.isLocalBackendUrl(value);
-    if (this.isMobileRuntime() && isLocal) {
-      throw new Error("En móvil/iOS el backend debe ser remoto HTTPS; localhost no está disponible.");
-    }
-    if (isLocal) {
-      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-        throw new Error("El backend local debe usar http o https.");
+    validateBackendUrlValue(value, {
+      allowRemoteBackend: this.settings.allowRemoteBackend,
+      isMobile: this.isMobileRuntime(),
+      messages: {
+        mobileLocal: this.t("remoteHttpsRequiredMobile"),
+        localProtocol: "Local backend must use http or https.",
+        remoteDisabled: "Remote backends are disabled in plugin settings.",
+        remoteHttps: "Remote backend must use HTTPS."
       }
-      return;
-    }
-
-    if (!this.settings.allowRemoteBackend) {
-      throw new Error("Los backends remotos están desactivados por seguridad en la configuración del plugin.");
-    }
-
-    if (parsed.protocol !== "https:") {
-      throw new Error("Un backend remoto debe usar HTTPS.");
-    }
+    });
   }
 
   isLocalBackendUrl(value) {
-    const parsed = new URL(value);
-    return ["127.0.0.1", "localhost", "::1"].includes(parsed.hostname);
+    return isLocalBackendUrlValue(value);
   }
 
   async sendMessageToAgent(threadId, message, baseContext, preparedRunOptions = null) {
@@ -4136,34 +4088,26 @@ module.exports = class CodexChatPlugin extends Plugin {
   }
 
   async resolveFolderReferences(text, existingReferences = []) {
-    const source = String(text || "").toLowerCase();
-    const wantsProjectFolder =
-      /(carpeta|folder|directorio).{0,30}proyectos/.test(source) ||
-      /(todos|todas).{0,35}(archivos|notas).{0,35}proyectos/.test(source) ||
-      /200\s+proyectos/.test(source);
+    const roots = normalizeFolderRoots(this.settings.folderReferenceRoots);
 
-    if (!wantsProjectFolder) {
+    if (!wantsFolderContext(text, roots)) {
       return [];
     }
 
     const existingPaths = new Set((existingReferences || []).map((reference) => reference.path));
     const files = this.app.vault
       .getMarkdownFiles()
-      .filter((file) => file.path.startsWith("200 Proyectos/"))
+      .filter((file) => isInsideConfiguredRoot(file.path, roots))
       .filter((file) => !existingPaths.has(file.path))
       .sort((left, right) => {
-        const leftIsProject = left.basename.startsWith("PRY-") ? 0 : 1;
-        const rightIsProject = right.basename.startsWith("PRY-") ? 0 : 1;
-        if (leftIsProject !== rightIsProject) {
-          return leftIsProject - rightIsProject;
-        }
-        return left.path.localeCompare(right.path, "es", { sensitivity: "base" });
+        return left.path.localeCompare(right.path, this.getLanguage(), { sensitivity: "base" });
       })
       .slice(0, this.settings.maxFolderReferences || DEFAULT_SETTINGS.maxFolderReferences);
 
     const references = [];
     for (const file of files) {
-      references.push(await this.buildReferenceFromFile(file, "folder", "200 Proyectos"));
+      const root = rootForPath(file.path, roots);
+      references.push(await this.buildReferenceFromFile(file, "folder", root || this.t("configuredFolderToken")));
     }
 
     return references;
@@ -4171,11 +4115,11 @@ module.exports = class CodexChatPlugin extends Plugin {
 
   async sendLocalMessage(threadId, message, context, runOptions) {
     if (!this.canUseLocalCodex()) {
-      throw new Error("El respaldo local con Codex CLI solo está disponible en escritorio.");
+      throw new Error(this.t("localFallbackDesktopOnly"));
     }
     const vaultRoot = this.getVaultRoot();
     if (!vaultRoot) {
-      throw new Error("No he podido resolver la ruta local de la vault para usar el modo local.");
+      throw new Error(this.t("vaultPathUnavailable"));
     }
 
     await this.ensureAgentStructure(vaultRoot);
@@ -4275,11 +4219,7 @@ module.exports = class CodexChatPlugin extends Plugin {
   }
 
   async ensureAgentStructure(vaultRoot) {
-    const agentRoot = path.join(vaultRoot, "_agent");
-    const memoryRoot = path.join(agentRoot, "memory");
-    const sessionsRoot = path.join(agentRoot, "sessions");
-    const outboxRoot = path.join(agentRoot, "outbox");
-    const indexRoot = path.join(agentRoot, "index");
+    const { memoryRoot, sessionsRoot, outboxRoot, indexRoot } = agentPaths(vaultRoot);
 
     await Promise.all([
       fs.mkdir(memoryRoot, { recursive: true }),
@@ -4366,21 +4306,17 @@ module.exports = class CodexChatPlugin extends Plugin {
   }
 
   getSessionBackupRoot(createdAt, threadId, sessionId) {
-    const date = new Date(createdAt || new Date().toISOString());
-    const year = String(date.getUTCFullYear());
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-    return path.join("_agent", "backups", year, month, day, `${threadId}-${sessionId}`).replaceAll("\\", "/");
+    return sessionBackupRoot(createdAt, threadId, sessionId);
   }
 
   async backupVaultFile(filePath, options = {}) {
     const normalizedPath = String(filePath || "").replaceAll("\\", "/").replace(/^\/+/, "");
     if (!normalizedPath) {
-      throw new Error("No he podido resolver la ruta del archivo para crear la copia de seguridad.");
+      throw new Error(this.t("backupFilePathUnavailable"));
     }
     const vaultRoot = this.getVaultRoot();
     if (!vaultRoot) {
-      throw new Error("No he podido resolver la ruta local de la vault para crear la copia de seguridad.");
+      throw new Error(this.t("backupVaultPathUnavailable"));
     }
     const sourcePath = path.join(vaultRoot, normalizedPath);
     const relativeBackupRoot =
@@ -4461,7 +4397,7 @@ module.exports = class CodexChatPlugin extends Plugin {
       await this.ensureCodexVaultTrust();
       await fs.mkdir(path.dirname(promptPath), { recursive: true });
       await fs.writeFile(promptPath, prompt, "utf8");
-      const command = buildCodexExecCommand({
+      const command = buildCodexExecCommandSafe({
         codexCommand: this.settings.localCodexCommand || "codex",
         promptPath,
         outputPath,
@@ -4478,16 +4414,14 @@ module.exports = class CodexChatPlugin extends Plugin {
 
       const answer = String(finalMessage || output || "").trim();
       if (!answer) {
-        throw new Error("Codex no devolvió salida.");
+        throw new Error(this.t("codexNoOutput"));
       }
 
       return answer;
     } catch (error) {
       const detail = [error.message, error.stdout, error.stderr].filter(Boolean).join(" | ");
-      const classified = classifyLocalCodexFailure(detail, { notePath: context.path || "" });
-      throw new Error(
-        `${classified} El backend no está accesible y el modo local tampoco ha podido usar Codex. Detalle: ${detail}`
-      );
+      const classified = classifyLocalCodexFailureSafe(detail, { notePath: context.path || "" });
+      throw new Error(this.t("localCodexUnavailableDetail", { classification: classified, detail }));
     } finally {
       try {
         await fs.unlink(promptPath);
@@ -4550,13 +4484,13 @@ module.exports = class CodexChatPlugin extends Plugin {
 
   async insertLastResponseIntoNote() {
     if (!this.lastResponse?.answer) {
-      new Notice("Todavía no hay una respuesta para insertar.");
+      new Notice(this.t("noLastResponseInsert"));
       return;
     }
 
     const view = this.refreshLastMarkdownView();
     if (!view || !view.editor) {
-      new Notice("Abre una nota editable antes de insertar la respuesta.");
+      new Notice(this.t("openEditableNote"));
       return;
     }
 
@@ -4568,19 +4502,19 @@ module.exports = class CodexChatPlugin extends Plugin {
           sessionId: this.lastResponse.sessionId || makeId("manual")
         });
       } catch (error) {
-        new Notice(`No se ha podido crear la copia previa de la nota: ${error.message}`);
+        new Notice(this.t("backupFailed", { error: error.message }));
         return;
       }
     }
 
     const insertion = `\n\n${this.lastResponse.answer}\n`;
     view.editor.replaceRange(insertion, view.editor.getCursor());
-    new Notice("Respuesta insertada en la nota.");
+    new Notice(this.t("responseInserted"));
   }
 
   async showMemoryUsed() {
     if (!this.lastResponse?.threadId) {
-      new Notice("Todavía no hay una respuesta con contexto de memoria.");
+      new Notice(this.t("noLastResponseMemory"));
       return;
     }
 
@@ -4588,7 +4522,7 @@ module.exports = class CodexChatPlugin extends Plugin {
       new MemoryContextModal(this.app, {
         documents: this.lastResponse.memoryContext?.documents || [],
         recentSessions: []
-      }).open();
+      }, this.t).open();
       return;
     }
 
@@ -4597,9 +4531,9 @@ module.exports = class CodexChatPlugin extends Plugin {
         "GET",
         `/memory/context/${encodeURIComponent(this.lastResponse.threadId)}`
       );
-      new MemoryContextModal(this.app, context).open();
+      new MemoryContextModal(this.app, context, this.t).open();
     } catch (error) {
-      new Notice(`No se pudo cargar la memoria usada: ${error.message}`);
+      new Notice(this.t("memoryLoadFailed", { error: error.message }));
     }
   }
 };

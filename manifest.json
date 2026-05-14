@@ -1,9 +1,9 @@
 {
     "id":  "codex-chat",
     "name":  "Codex Chat",
-    "version":  "0.7.0",
+    "version":  "0.8.0",
     "minAppVersion":  "1.8.0",
     "description":  "Codex sidebar for Obsidian with vault context, shared memory, and local CLI fallback.",
     "author":  "OpenAI Codex",
-    "isDesktopOnly":  false
+    "isDesktopOnly":  true
 }

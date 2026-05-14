@@ -1,6 +1,8 @@
 # Codex Chat
 
-Private Obsidian plugin distribution for a Codex-powered chat sidebar with shared vault context, local Codex CLI fallback, session persistence, and `_agent` memory support.
+Private Obsidian plugin distribution for a desktop Codex-powered chat sidebar with vault context, local Codex CLI fallback, session persistence, and `_agent` memory support.
+
+This release is desktop-only. It uses Obsidian desktop APIs, Node.js, and optional Codex CLI execution.
 
 ## Installation
 
@@ -10,12 +12,14 @@ Private Obsidian plugin distribution for a Codex-powered chat sidebar with share
    .obsidian/plugins/codex-chat/
    ```
 
-2. Copy these files into that folder:
+2. Copy these files and folders into that folder:
 
    ```text
    main.js
    styles.css
    manifest.json
+   README.md
+   lib/
    ```
 
 3. Enable `Codex Chat` from Obsidian community plugins.
@@ -39,9 +43,9 @@ On first load, the plugin attempts to import compatible settings from prior Code
 ## Requirements
 
 - Obsidian `1.8.0` or newer.
-- Desktop usage is recommended for local Codex CLI fallback.
+- Obsidian desktop. Mobile is intentionally unsupported in this release.
 - Codex CLI must be installed and authenticated with ChatGPT if local fallback is used.
-- A remote HTTPS backend is required for mobile usage.
+- A remote backend may be configured for desktop use, but the plugin never ships backend credentials.
 
 ## Security Notes
 
@@ -49,10 +53,12 @@ On first load, the plugin attempts to import compatible settings from prior Code
 - `_agent/` is vault data, not plugin source. Do not commit it here.
 - `data.json` may contain local preferences, backend URLs, UI scale, prompt customizations, and runtime state. It must remain untracked.
 - Backend device registrations live in local runtime files such as `backend/.runtime/devices.json`; do not commit them.
+- Folder-wide context roots are configured per vault. The plugin does not assume any specific vault structure.
 - In `Ejecutar / Sin restricciones`, the agent can act without asking for additional confirmation. The plugin instructs the agent to create backups before editing or deleting files, and plugin-owned note insertion creates a backup first.
 
 ## Included Files
 
 - `main.js`: plugin runtime.
+- `lib/`: local CommonJS modules for settings, i18n, context, storage, security, and Codex CLI execution.
 - `styles.css`: plugin UI styles.
 - `manifest.json`: Obsidian plugin manifest.
