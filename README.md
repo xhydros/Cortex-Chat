@@ -58,7 +58,14 @@ On first load, the plugin attempts to import compatible settings from prior Code
 
 ## Included Files
 
-- `main.js`: plugin runtime.
-- `lib/`: local CommonJS modules for settings, i18n, context, storage, security, and Codex CLI execution.
+- `main.js`: self-contained plugin runtime loaded by Obsidian.
+- `lib/`: local CommonJS source modules for settings, i18n, context, storage, security, and Codex CLI execution.
+- `scripts/bundle-main.js`: dependency-free build script that embeds `lib/` into `main.js` for Obsidian's plugin loader.
 - `styles.css`: plugin UI styles.
 - `manifest.json`: Obsidian plugin manifest.
+
+After changing files in `lib/`, run:
+
+```bash
+node scripts/bundle-main.js
+```
