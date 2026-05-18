@@ -33,7 +33,7 @@ function __codexChatRequire(id) {
   return __codexChatModuleCache[id].exports;
 }
 
-__codexChatDefine("./lib/i18n", function(module, exports, require) {
+__codexChatDefine('./lib/i18n', function(module, exports, require) {
 const DEFAULT_LANGUAGE = "en";
 const SUPPORTED_LANGUAGES = ["en", "es"];
 
@@ -42,7 +42,7 @@ const PROMPTS = {
     role:
       "Act as an assistant embedded in a personal Obsidian vault. Your job is to help think, organize, write, and execute tasks using the vault context.",
     context:
-      "Answer in the user's language. Prioritize explicit context: active note, selection, @ references, outgoing links, shared memory, and recent sessions. Do not invent note content that was not provided.",
+      "Answer in the user's language. Prioritize explicit context: active note, @ references, outgoing links, shared memory, and recent sessions. Do not invent note content that was not provided.",
     behavior:
       "If critical context is missing, say so and ask for the minimum needed. Distinguish observed facts, inferences, and recommendations. Prefer actionable, concise, useful answers.",
     safety:
@@ -56,7 +56,7 @@ const PROMPTS = {
     role:
       "Actúa como un asistente integrado en una bóveda personal de Obsidian. Tu trabajo es ayudar a pensar, organizar, escribir y ejecutar tareas usando el contexto de la bóveda.",
     context:
-      "Responde en el idioma del usuario. Usa primero el contexto explícito: nota activa, selección, referencias @, enlaces salientes, memoria compartida y sesiones recientes. No inventes contenido de notas que no se hayan proporcionado.",
+      "Responde en el idioma del usuario. Usa primero el contexto explícito: nota activa, referencias @, enlaces salientes, memoria compartida y sesiones recientes. No inventes contenido de notas que no se hayan proporcionado.",
     behavior:
       "Si falta contexto crítico, dilo y pide lo mínimo necesario. Distingue hechos observados, inferencias y recomendaciones. Prioriza respuestas accionables, breves y útiles.",
     safety:
@@ -76,7 +76,6 @@ const I18N = {
     appTitle: "Codex",
     openChat: "Open Codex Chat",
     askCurrentNote: "Ask about current note",
-    askSelection: "Ask about selection",
     insertLastResponse: "Insert response into note",
     viewMemoryUsed: "View memory used for last response",
     configureCodex: "Configure Codex OAuth",
@@ -159,19 +158,14 @@ const I18N = {
     contextToSend: "Context that will be sent",
     contextLoaded: "Context loaded: {path}",
     noMarkdownOpen: "No open Markdown note found.",
-    noValidSelection: "No valid active selection in this note.",
-    noValidSelectionInNote: "No valid active selection in this note: {path}",
-    selectionLoaded: "Selection loaded from {path}",
     newChatReady: "New chat ready.",
     hide: "Hide",
     details: "Details",
     hideContextDetails: "Hide context details",
     viewContextDetails: "View context details",
     activeNote: "Active note",
-    selection: "Selection",
+    links: "Links",
     references: "References",
-    noSelection: "no selection",
-    withSelection: "with selection",
     noNote: "no note",
     noRefs: "0 references",
     referenceCount: "{count} references",
@@ -267,7 +261,7 @@ const I18N = {
     workModePlannerPrompt:
       "Active work mode: Planner / Copilot.\nDo not modify, delete, rename, or rewrite vault files unless the user asks for it clearly and explicitly.",
     noCodexNoContext:
-      "I could not use local Codex and there is not enough content to answer well.\n\nNext steps:\n- open a note with relevant context\n- select the fragment you want to analyze\n- use an @ reference to add a note",
+      "I could not use local Codex and there is not enough content to answer well.\n\nNext steps:\n- open a note with relevant context\n- use an @ reference to add a note",
     localBackupModeNote: "Note: this response uses local backup mode, not the full Codex flow.",
     relevantContextFound: "I found this relevant context:",
     referenceDocument: "Reference document: {doc}.",
@@ -292,7 +286,6 @@ const I18N = {
     appTitle: "Codex",
     openChat: "Abrir Codex Chat",
     askCurrentNote: "Preguntar sobre nota actual",
-    askSelection: "Preguntar sobre selección",
     insertLastResponse: "Insertar respuesta en la nota",
     viewMemoryUsed: "Ver memoria usada para la última respuesta",
     configureCodex: "Configurar Codex OAuth",
@@ -375,19 +368,14 @@ const I18N = {
     contextToSend: "Contexto que se enviará",
     contextLoaded: "Contexto cargado: {path}",
     noMarkdownOpen: "No he encontrado una nota Markdown abierta.",
-    noValidSelection: "No hay una selección activa válida en esta nota.",
-    noValidSelectionInNote: "No hay una selección activa válida en esta nota: {path}",
-    selectionLoaded: "Selección cargada desde {path}",
     newChatReady: "Chat nuevo preparado.",
     hide: "Ocultar",
     details: "Detalles",
     hideContextDetails: "Ocultar detalles de contexto",
     viewContextDetails: "Ver detalles de contexto",
     activeNote: "Nota",
-    selection: "Selección",
+    links: "Enlaces",
     references: "Referencias",
-    noSelection: "sin selección",
-    withSelection: "con selección",
     noNote: "sin nota",
     noRefs: "0 referencias",
     referenceCount: "{count} referencias",
@@ -483,7 +471,7 @@ const I18N = {
     workModePlannerPrompt:
       "Modo de trabajo activo: Planificador / Copiloto.\nNo modifiques, borres, renombres ni reescribas archivos de la vault salvo que el usuario lo pida de forma clara y explícita.",
     noCodexNoContext:
-      "No he podido usar Codex local y tampoco tengo contenido suficiente para responder bien.\n\nSiguientes pasos:\n- abre una nota con contexto relevante\n- selecciona el fragmento que quieres analizar\n- usa una referencia @ para añadir una nota",
+      "No he podido usar Codex local y tampoco tengo contenido suficiente para responder bien.\n\nSiguientes pasos:\n- abre una nota con contexto relevante\n- usa una referencia @ para añadir una nota",
     localBackupModeNote: "Nota: esta respuesta usa un modo local de respaldo, no el flujo completo con Codex.",
     relevantContextFound: "He encontrado este contexto relevante:",
     referenceDocument: "Documento de referencia: {doc}.",
@@ -576,7 +564,7 @@ module.exports = {
 };
 });
 
-__codexChatDefine("./lib/security", function(module, exports, require) {
+__codexChatDefine('./lib/security', function(module, exports, require) {
 function isForeignWindowsUserPath(value, homeDir = "") {
   const current = String(value || "").toLowerCase();
   const home = String(homeDir || "").toLowerCase();
@@ -638,9 +626,32 @@ function formatFolderRoots(value) {
   return normalizeFolderRoots(value).join(", ");
 }
 
+const DEFAULT_EXCLUDED_PATH_SEGMENTS = new Set([
+  "node_modules",
+  ".git",
+  ".obsidian",
+  "_agent",
+  "dist",
+  "build",
+  ".cache",
+  ".vite",
+  "coverage"
+]);
+
+function isIgnoredVaultPath(filePath, extraSegments = []) {
+  const extras = Array.isArray(extraSegments) ? extraSegments : [];
+  const excluded = new Set([...DEFAULT_EXCLUDED_PATH_SEGMENTS, ...extras].map((item) => String(item).toLowerCase()));
+  return String(filePath || "")
+    .replaceAll("\\", "/")
+    .split("/")
+    .some((segment) => excluded.has(segment.toLowerCase()));
+}
+
 module.exports = {
+  DEFAULT_EXCLUDED_PATH_SEGMENTS,
   formatFolderRoots,
   isForeignWindowsUserPath,
+  isIgnoredVaultPath,
   isLocalBackendUrl,
   normalizeFolderRoots,
   parseFolderRootsInput,
@@ -648,8 +659,8 @@ module.exports = {
 };
 });
 
-__codexChatDefine("./lib/context", function(module, exports, require) {
-const { normalizeFolderRoots } = __codexChatRequire("./lib/security");
+__codexChatDefine('./lib/context', function(module, exports, require) {
+const { normalizeFolderRoots } = __codexChatRequire('./lib/security');
 
 function wantsFolderContext(message, roots = []) {
   const source = String(message || "").toLowerCase();
@@ -678,7 +689,7 @@ module.exports = {
 };
 });
 
-__codexChatDefine("./lib/agent-store", function(module, exports, require) {
+__codexChatDefine('./lib/agent-store', function(module, exports, require) {
 const path = require("node:path");
 
 function agentPaths(vaultRoot) {
@@ -706,7 +717,7 @@ module.exports = {
 };
 });
 
-__codexChatDefine("./lib/codex-cli", function(module, exports, require) {
+__codexChatDefine('./lib/codex-cli', function(module, exports, require) {
 function escapePowerShellSingleQuoted(value) {
   return String(value).replace(/'/g, "''");
 }
@@ -777,9 +788,9 @@ module.exports = {
 };
 });
 
-__codexChatDefine("./lib/settings", function(module, exports, require) {
-const { getDefaultSystemPromptSections, resolveLanguage } = __codexChatRequire("./lib/i18n");
-const { normalizeFolderRoots } = __codexChatRequire("./lib/security");
+__codexChatDefine('./lib/settings', function(module, exports, require) {
+const { getDefaultSystemPromptSections, resolveLanguage } = __codexChatRequire('./lib/i18n');
+const { normalizeFolderRoots } = __codexChatRequire('./lib/security');
 
 const MEMORY_CATEGORIES = ["preferences", "projects", "people", "decisions", "recent"];
 const AGENT_SCHEMA_VERSION = "2";
@@ -898,28 +909,29 @@ const {
   createTranslator,
   getDefaultSystemPromptSections,
   resolveLanguage
-} = __codexChatRequire("./lib/i18n");
+} = __codexChatRequire('./lib/i18n');
 const {
   formatFolderRoots,
   isForeignWindowsUserPath,
+  isIgnoredVaultPath,
   isLocalBackendUrl: isLocalBackendUrlValue,
   normalizeFolderRoots,
   parseFolderRootsInput,
   validateBackendUrl: validateBackendUrlValue
-} = __codexChatRequire("./lib/security");
+} = __codexChatRequire('./lib/security');
 const {
   isInsideConfiguredRoot,
   rootForPath,
   wantsFolderContext
-} = __codexChatRequire("./lib/context");
+} = __codexChatRequire('./lib/context');
 const {
   agentPaths,
   sessionBackupRoot
-} = __codexChatRequire("./lib/agent-store");
+} = __codexChatRequire('./lib/agent-store');
 const {
   buildCodexExecCommand: buildCodexExecCommandSafe,
   classifyLocalCodexFailure: classifyLocalCodexFailureSafe
-} = __codexChatRequire("./lib/codex-cli");
+} = __codexChatRequire('./lib/codex-cli');
 const {
   AGENT_SCHEMA_VERSION,
   LOCAL_SETTING_KEYS,
@@ -930,7 +942,7 @@ const {
   normalizeLanguageMode,
   normalizeSettings,
   normalizeSystemPromptSections
-} = __codexChatRequire("./lib/settings");
+} = __codexChatRequire('./lib/settings');
 
 function optionalRequire(moduleName) {
   try {
@@ -1069,7 +1081,6 @@ function classifyEffort(message, context = {}, interactionMode = "plan") {
   const normalizedMessage = String(message || "").trim();
   const references = context.references || [];
   const notePreview = String(context.content || "");
-  const selection = String(context.selection || "");
   const pdfReferences = references.filter((reference) => (reference.kind || reference.fileType) === "pdf").length;
 
   if (interactionMode === "execute") {
@@ -1089,9 +1100,6 @@ function classifyEffort(message, context = {}, interactionMode = "plan") {
   }
   if (pdfReferences > 0) {
     score += 2;
-  }
-  if (selection.length > 900) {
-    score += 1;
   }
   if (notePreview.length > 2200) {
     score += 1;
@@ -1291,7 +1299,6 @@ ${session.assistantMessage}
 ## Context
 
 - Note path: ${session.notePath || "(none)"}
-- Selection: ${session.selection ? "yes" : "no"}
 - References: ${(session.referencePaths || []).join(", ") || "(none)"}
 - Work mode: ${session.workMode || "plan"}
 - Effort: ${session.effort || "thinking"}
@@ -2438,11 +2445,6 @@ class CodexChatView extends ItemView {
     this.quickActionsEl.empty();
     this.createQuickAction("message-square-plus", this.plugin.t("newChatReady"), () => this.startNewChat());
     this.createQuickAction("file-text", this.plugin.t("activeNote"), async () => this.loadCurrentNoteContext());
-    const selectionButton = this.createQuickAction("text-select", this.plugin.t("selection"), async () => this.loadSelectionContext());
-    const hasSelection = this.hasActiveSelection();
-    selectionButton.classList.toggle("is-muted", !hasSelection);
-    selectionButton.disabled = !hasSelection;
-    selectionButton.setAttribute("aria-disabled", String(!hasSelection));
     this.createQuickAction("copy", this.plugin.t("copyResponse"), async () => {
       await this.plugin.copyLastResponse();
     });
@@ -2470,30 +2472,10 @@ class CodexChatView extends ItemView {
     return button;
   }
 
-  hasActiveSelection() {
-    return Boolean(this.plugin.getCurrentSelectionForActiveNote());
-  }
-
   async loadCurrentNoteContext() {
     const context = await this.plugin.captureCurrentContext(false);
     await this.prepareContext(context);
     new Notice(context.path ? this.plugin.t("contextLoaded", { path: context.path }) : this.plugin.t("noMarkdownOpen"));
-  }
-
-  async loadSelectionContext() {
-    const context = await this.plugin.captureSelectionContext();
-    if (!context?.selection) {
-      const notePath = this.plugin.lastMarkdownFile?.path || this.plugin.refreshLastMarkdownView()?.file?.path || "";
-      new Notice(
-        notePath
-          ? this.plugin.t("noValidSelectionInNote", { path: notePath })
-          : this.plugin.t("noMarkdownOpen")
-      );
-      this.renderQuickActions();
-      return;
-    }
-    await this.prepareContext(context);
-    new Notice(this.plugin.t("selectionLoaded", { path: context.path }));
   }
 
   insertMentionTrigger() {
@@ -2564,9 +2546,8 @@ class CodexChatView extends ItemView {
   getContextSummary() {
     const note = this.context?.title || this.plugin.lastMarkdownFile?.basename || this.plugin.t("noNote");
     const referenceCount = this.context?.references?.length || 0;
-    const selection = this.context?.selection ? this.plugin.t("withSelection") : this.plugin.t("noSelection");
     const referenceLabel = referenceCount ? this.plugin.t("referenceCount", { count: referenceCount }) : this.plugin.t("noRefs");
-    return `${note} · ${referenceLabel} · ${selection}`;
+    return `${note} · ${referenceLabel}`;
   }
 
   renderContext() {
@@ -2589,11 +2570,9 @@ class CodexChatView extends ItemView {
     const summaryTextEl = summaryEl.createDiv({ cls: "codex-chat-context-line" });
     const noteReady = Boolean(this.context?.path || this.plugin.lastMarkdownFile);
     const referenceReady = Boolean(this.context?.references?.length);
-    const selectionReady = Boolean(this.context?.selection);
     const indicators = [
       ["file-text", noteReady, this.plugin.t("activeNote"), async () => this.loadCurrentNoteContext()],
-      ["at-sign", referenceReady, "@", () => this.insertMentionTrigger()],
-      ["text-select", selectionReady, this.plugin.t("selection"), async () => this.loadSelectionContext()]
+      ["at-sign", referenceReady, "@", () => this.insertMentionTrigger()]
     ];
     for (const [icon, ready, label, handler] of indicators) {
       const indicatorEl = summaryTextEl.createEl("button", {
@@ -2646,9 +2625,6 @@ class CodexChatView extends ItemView {
     const referenceSummary = references.length
       ? `${this.plugin.t("referenceCount", { count: references.length })} (${mentions} @, ${linked} links, ${folders} folders)`
       : this.plugin.t("noRefs");
-    const selectionSummary = this.context.selection
-      ? `${this.context.selection.length} chars`
-      : this.plugin.t("noSelection");
     const outgoingSummary = this.context.outgoingLinks?.length
       ? `${this.context.outgoingLinks.length}: ${this.context.outgoingLinks.slice(0, 4).join(", ")}${
           this.context.outgoingLinks.length > 4 ? "..." : ""
@@ -2658,8 +2634,7 @@ class CodexChatView extends ItemView {
     this.contextEl.createDiv({ cls: "codex-chat-context-title", text: this.plugin.t("contextToSend") });
     const gridEl = this.contextEl.createDiv({ cls: "codex-chat-context-grid" });
     this.createContextItem(gridEl, this.plugin.t("activeNote"), this.context.path || this.plugin.t("noNote"), this.context.path ? "is-ready" : "");
-    this.createContextItem(gridEl, this.plugin.t("selection"), selectionSummary, this.context.selection ? "is-ready" : "");
-    this.createContextItem(gridEl, "Links", outgoingSummary, this.context.outgoingLinks?.length ? "is-ready" : "");
+    this.createContextItem(gridEl, this.plugin.t("links"), outgoingSummary, this.context.outgoingLinks?.length ? "is-ready" : "");
     this.createContextItem(gridEl, this.plugin.t("references"), referenceSummary, references.length ? "is-ready" : "");
 
     if (references.length) {
@@ -3369,7 +3344,6 @@ module.exports = class CodexChatPlugin extends Plugin {
     this.lastResponse = null;
     this.lastMarkdownView = null;
     this.lastMarkdownFile = null;
-    this.lastEditorSelection = null;
     this.normalizePortableSettings();
     await this.ensureLocalIdentity();
     if (this.hasLegacySharedLocalSettings) {
@@ -3396,20 +3370,6 @@ module.exports = class CodexChatPlugin extends Plugin {
       name: this.t("askCurrentNote"),
       callback: async () => {
         const context = await this.captureCurrentContext(false);
-        const view = await this.activateView();
-        await view.prepareContext(context);
-      }
-    });
-
-    this.addCommand({
-      id: "ask-about-selection",
-      name: this.t("askSelection"),
-      editorCallback: async () => {
-        const context = await this.captureSelectionContext();
-        if (!context?.selection) {
-          new Notice(this.t("noValidSelection"));
-          return;
-        }
         const view = await this.activateView();
         await view.prepareContext(context);
       }
@@ -3466,10 +3426,6 @@ module.exports = class CodexChatPlugin extends Plugin {
         }
       })
     );
-
-    this.registerDomEvent(document, "selectionchange", () => {
-      this.rememberCurrentSelection();
-    });
 
     this.app.workspace.onLayoutReady(async () => {
       this.refreshLastMarkdownView();
@@ -3941,78 +3897,6 @@ module.exports = class CodexChatPlugin extends Plugin {
     this.lastMarkdownFile = view.file;
   }
 
-  rememberCurrentSelection() {
-    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    const view = activeView || this.lastMarkdownView;
-    const file = activeView?.file || view?.file || this.lastMarkdownFile;
-    if (!file) {
-      return;
-    }
-
-    let selection = "";
-    try {
-      selection = view?.editor?.getSelection?.() || "";
-    } catch {
-      selection = "";
-    }
-
-    if (!selection) {
-      if (!activeView?.file) {
-        return;
-      }
-      const domSelection = window.getSelection?.();
-      const anchorNode = domSelection?.anchorNode;
-      const anchorEl = anchorNode?.nodeType === Node.ELEMENT_NODE ? anchorNode : anchorNode?.parentElement;
-      if (anchorEl?.closest?.(".codex-chat-view, .modal")) {
-        return;
-      }
-      selection = domSelection?.toString?.() || "";
-    }
-
-    selection = String(selection || "").trim();
-    if (!selection) {
-      return;
-    }
-
-    this.lastEditorSelection = {
-      text: selection,
-      path: file.path,
-      title: file.basename,
-      capturedAt: Date.now()
-    };
-  }
-
-  getCachedSelectionForCurrentNote() {
-    const view = this.refreshLastMarkdownView();
-    const file = view?.file || this.lastMarkdownFile || this.lastMarkdownView?.file;
-    return file ? this.getCachedSelectionForFile(file.path) : "";
-  }
-
-  getCurrentSelectionForFile(filePath) {
-    const view = this.refreshLastMarkdownView();
-    const directSelection =
-      view?.file?.path === filePath ? String(view?.editor?.getSelection?.() || "").trim() : "";
-    if (directSelection) {
-      return directSelection;
-    }
-    return this.getCachedSelectionForFile(filePath);
-  }
-
-  getCurrentSelectionForActiveNote() {
-    const view = this.refreshLastMarkdownView();
-    const file = view?.file || this.lastMarkdownFile || this.lastMarkdownView?.file;
-    return file ? this.getCurrentSelectionForFile(file.path) : "";
-  }
-
-  getCachedSelectionForFile(filePath) {
-    const cached = this.lastEditorSelection;
-    const maxAgeMs = 15 * 60 * 1000;
-    if (!cached?.text || cached.path !== filePath || Date.now() - cached.capturedAt > maxAgeMs) {
-      return "";
-    }
-    return cached.text;
-  }
-
   refreshLastMarkdownView() {
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (activeView?.file) {
@@ -4415,7 +4299,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     return leaf.view;
   }
 
-  async captureCurrentContext(includeSelection) {
+  async captureCurrentContext() {
     const view = this.refreshLastMarkdownView();
     const file = view?.file || this.lastMarkdownFile;
     if (!file) {
@@ -4423,7 +4307,6 @@ module.exports = class CodexChatPlugin extends Plugin {
         path: "",
         title: "",
         content: "",
-        selection: "",
         outgoingLinks: [],
         references: []
       };
@@ -4431,14 +4314,6 @@ module.exports = class CodexChatPlugin extends Plugin {
 
     const editor = view?.editor;
     const content = editor ? editor.getValue() : await this.app.vault.cachedRead(file);
-    let selection = "";
-    if (includeSelection) {
-      this.rememberCurrentSelection();
-      selection = editor ? editor.getSelection() : "";
-      if (!selection) {
-        selection = this.getCachedSelectionForFile(file.path);
-      }
-    }
     const outgoingLinks = this.extractOutgoingLinks(content);
     const references = await this.resolveOutgoingLinkReferences(outgoingLinks, file.path);
 
@@ -4446,27 +4321,8 @@ module.exports = class CodexChatPlugin extends Plugin {
       path: file.path,
       title: file.basename,
       content: content.slice(0, this.settings.maxContextChars),
-      selection,
       outgoingLinks,
       references
-    };
-  }
-
-  async captureSelectionContext() {
-    const context = await this.captureCurrentContext(false);
-    if (!context.path) {
-      return context;
-    }
-    const selection = this.getCurrentSelectionForFile(context.path);
-    if (!selection) {
-      return {
-        ...context,
-        selection: ""
-      };
-    }
-    return {
-      ...context,
-      selection
     };
   }
 
@@ -4490,7 +4346,7 @@ module.exports = class CodexChatPlugin extends Plugin {
   getReferenceableFiles() {
     return this.app.vault
       .getFiles()
-      .filter((file) => !file.path.startsWith("_agent/"))
+      .filter((file) => !isIgnoredVaultPath(file.path))
       .filter((file) => ["md", "pdf"].includes(String(file.extension || "").toLowerCase()));
   }
 
@@ -4979,6 +4835,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     const files = this.app.vault
       .getMarkdownFiles()
       .filter((file) => isInsideConfiguredRoot(file.path, roots))
+      .filter((file) => !isIgnoredVaultPath(file.path))
       .filter((file) => !existingPaths.has(file.path))
       .sort((left, right) => {
         return left.path.localeCompare(right.path, this.getLanguage(), { sensitivity: "base" });
@@ -5023,7 +4880,6 @@ module.exports = class CodexChatPlugin extends Plugin {
       noteTitle: context.title || "",
       userMessage: message,
       assistantMessage: answer,
-      selection: context.selection || "",
       referencePaths: (context.references || []).map((reference) => reference.path),
       workMode: runOptions.interactionMode,
       effort: runOptions.effort,
@@ -5239,7 +5095,6 @@ module.exports = class CodexChatPlugin extends Plugin {
         {
           path: context.path || "",
           title: context.title || "",
-          selection: context.selection || "",
           outgoing_links: context.outgoingLinks || [],
           note_preview: context.content || ""
         },

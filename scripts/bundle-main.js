@@ -16,7 +16,7 @@ const startMarker = "// BEGIN CODEX CHAT BUNDLED LIBS";
 const endMarker = "// END CODEX CHAT BUNDLED LIBS";
 
 function normalizeLibRequires(source) {
-  return source.replace(/require\("\.\/([^"]+)"\)/g, '__codexChatRequire("./lib/$1")');
+  return source.replace(/require\("\.\/([^"]+)"\)/g, "__codexChatRequire('./lib/$1')");
 }
 
 function stripExistingBundle(source) {
@@ -64,7 +64,7 @@ function buildBundle() {
     const id = `./lib/${name}`;
     const libPath = path.join(root, "lib", `${name}.js`);
     const code = normalizeLibRequires(fs.readFileSync(libPath, "utf8")).trimEnd();
-    parts.push(`__codexChatDefine("${id}", function(module, exports, require) {`);
+    parts.push(`__codexChatDefine('${id}', function(module, exports, require) {`);
     parts.push(code);
     parts.push("});");
     parts.push("");
