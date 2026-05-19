@@ -1064,3 +1064,211 @@
     pointer-events: auto;
   }
 }
+
+/* v1.1 Claudian-inspired sidebar polish */
+.cortex-chat-view {
+  gap: calc(5px * var(--cortex-chat-scale));
+  padding: calc(6px * var(--cortex-chat-scale));
+}
+
+.cortex-chat-header {
+  grid-template-columns: minmax(0, 1fr) repeat(4, var(--cortex-chat-control-size-sm));
+  padding: calc(5px * var(--cortex-chat-scale));
+  background: var(--background-primary);
+}
+
+.cortex-chat-header-left {
+  gap: 6px;
+}
+
+.cortex-chat-title {
+  font-size: calc(1.02em * var(--cortex-chat-scale));
+}
+
+.cortex-chat-diagnostics {
+  grid-column: 1 / -1;
+  padding-inline: 2px;
+}
+
+.cortex-chat-tabbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: calc(26px * var(--cortex-chat-scale));
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.cortex-chat-tabbar::-webkit-scrollbar {
+  display: none;
+}
+
+.cortex-chat-tabbar.is-hidden {
+  display: none;
+}
+
+.cortex-chat-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 150px;
+  min-height: calc(24px * var(--cortex-chat-scale));
+  padding: 0 calc(7px * var(--cortex-chat-scale));
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  background: var(--background-primary);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--cortex-chat-font-ui-smaller);
+}
+
+.cortex-chat-tab:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.cortex-chat-tab.is-active {
+  border-color: color-mix(in srgb, var(--interactive-accent) 60%, var(--background-modifier-border));
+  background: color-mix(in srgb, var(--interactive-accent) 12%, var(--background-primary));
+  color: var(--text-normal);
+  font-weight: 650;
+}
+
+.cortex-chat-tab.is-streaming {
+  border-color: var(--interactive-accent);
+}
+
+.cortex-chat-tab.needs-attention:not(.is-active) {
+  border-color: var(--color-yellow);
+}
+
+.cortex-chat-tab-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cortex-chat-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  color: var(--text-faint);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.cortex-chat-tab-close:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.cortex-chat-messages {
+  gap: calc(10px * var(--cortex-chat-scale));
+  padding: calc(8px * var(--cortex-chat-scale)) 0;
+}
+
+.cortex-chat-message {
+  box-shadow: none;
+  border: 0;
+  padding: calc(9px * var(--cortex-chat-scale)) calc(11px * var(--cortex-chat-scale));
+}
+
+.cortex-chat-message.is-user {
+  max-width: 82%;
+  border-right: 0;
+  border-end-end-radius: calc(4px * var(--cortex-chat-scale));
+  background: color-mix(in srgb, var(--interactive-accent) 18%, var(--background-secondary));
+}
+
+.cortex-chat-message.is-assistant {
+  width: 100%;
+  max-width: 100%;
+  border-left: 0;
+  background: transparent;
+}
+
+.cortex-chat-message-header {
+  margin-bottom: calc(5px * var(--cortex-chat-scale));
+}
+
+.cortex-chat-role {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: calc(0.78em * var(--cortex-chat-scale));
+}
+
+.cortex-chat-message-chip {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--background-modifier-border) 42%, transparent);
+}
+
+.cortex-chat-message-detail {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: calc(7px * var(--cortex-chat-scale));
+  font-style: italic;
+}
+
+.cortex-chat-send {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: calc(11px * var(--cortex-chat-scale));
+  padding: calc(6px * var(--cortex-chat-scale));
+  background: var(--background-primary);
+}
+
+.cortex-chat-context {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.cortex-chat-context-summary {
+  min-height: calc(26px * var(--cortex-chat-scale));
+}
+
+.cortex-chat-mode-cards {
+  margin-top: 2px;
+}
+
+.cortex-chat-mode-group {
+  padding: calc(4px * var(--cortex-chat-scale));
+  background: color-mix(in srgb, var(--background-secondary) 58%, transparent);
+}
+
+.cortex-chat-mode-group-header {
+  display: none;
+}
+
+.cortex-chat-mode-segment {
+  min-height: calc(30px * var(--cortex-chat-scale));
+  padding: calc(4px * var(--cortex-chat-scale)) calc(7px * var(--cortex-chat-scale));
+}
+
+.cortex-chat-mode-segment-detail {
+  display: none;
+}
+
+.cortex-chat-composer-row {
+  align-items: end;
+}
+
+.cortex-chat-send textarea {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: calc(8px * var(--cortex-chat-scale));
+}
+
+.cortex-chat-send textarea:focus {
+  box-shadow: none;
+}
+
+.cortex-chat-send-button {
+  min-width: var(--cortex-chat-control-size);
+  width: var(--cortex-chat-control-size);
+  border-radius: calc(10px * var(--cortex-chat-scale));
+}

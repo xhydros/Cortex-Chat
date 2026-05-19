@@ -75,6 +75,10 @@ const I18N = {
     languageAuto: "Automatic",
     appTitle: "Cortex",
     openChat: "Open Cortex Chat",
+    newTab: "New tab",
+    closeTab: "Close tab",
+    tabLimitReached: "Maximum {count} tabs allowed.",
+    untitledTab: "New chat",
     askCurrentNote: "Ask about current note",
     insertLastResponse: "Insert response into note",
     viewMemoryUsed: "View memory used for last response",
@@ -285,6 +289,10 @@ const I18N = {
     languageAuto: "Automático",
     appTitle: "Cortex",
     openChat: "Abrir Cortex Chat",
+    newTab: "Nueva pestaña",
+    closeTab: "Cerrar pestaña",
+    tabLimitReached: "Máximo {count} pestañas permitidas.",
+    untitledTab: "Chat nuevo",
     askCurrentNote: "Preguntar sobre nota actual",
     insertLastResponse: "Insertar respuesta en la nota",
     viewMemoryUsed: "Ver memoria usada para la última respuesta",
@@ -815,7 +823,9 @@ const SHARED_SETTING_KEYS = [
   "folderReferenceRoots",
   "systemPromptSections",
   "uiScale",
-  "languageMode"
+  "languageMode",
+  "chatTabs",
+  "activeChatTabId"
 ];
 
 const LOCAL_SETTING_KEYS = [
@@ -867,7 +877,9 @@ function buildDefaultSettings(pluginId) {
     deviceRegisteredOk: false,
     systemPromptSections: getDefaultSystemPromptSections("auto"),
     uiScale: 1,
-    languageMode: "auto"
+    languageMode: "auto",
+    chatTabs: [],
+    activeChatTabId: ""
   };
 }
 
@@ -890,6 +902,8 @@ function normalizeSettings(settings, defaults) {
   next.languageMode = normalizeLanguageMode(next.languageMode);
   next.systemPromptSections = normalizeSystemPromptSections(next.systemPromptSections, next.languageMode);
   next.folderReferenceRoots = normalizeFolderRoots(next.folderReferenceRoots);
+  next.chatTabs = Array.isArray(next.chatTabs) ? next.chatTabs : [];
+  next.activeChatTabId = typeof next.activeChatTabId === "string" ? next.activeChatTabId : "";
   return next;
 }
 
@@ -977,6 +991,7 @@ const DEFAULT_SETTINGS = buildDefaultSettings(PLUGIN_ID);
 const MIN_UI_SCALE = 0.85;
 const MAX_UI_SCALE = 1.75;
 const UI_SCALE_STEP = 0.1;
+const MAX_CHAT_TABS = 3;
 const PDF_PREVIEW_MAX_CHARS = 24000;
 const PDF_STREAM_SCAN_LIMIT = 24;
 
@@ -1027,6 +1042,64 @@ function generateDeviceToken() {
 
 function summarize(text) {
   return String(text || "").replace(/\s+/g, " ").trim().slice(0, 160);
+}
+
+function createDefaultChatTab(t = createTranslator("en")) {
+  const now = new Date().toISOString();
+  return {
+    id: makeId("tab"),
+    threadId: null,
+    title: t("untitledTab"),
+    createdAt: now,
+    updatedAt: now,
+    messages: [],
+    context: null,
+    contextSummary: "",
+    isActive: true,
+    isStreaming: false,
+    needsAttention: false
+  };
+}
+
+function normalizeChatMessage(message) {
+  if (!message || typeof message !== "object") {
+    return null;
+  }
+  const role = message.role === "assistant" ? "assistant" : "user";
+  return {
+    id: typeof message.id === "string" && message.id ? message.id : makeId("msg"),
+    role,
+    content: typeof message.content === "string" ? message.content : "",
+    meta: message.meta && typeof message.meta === "object" ? message.meta : {}
+  };
+}
+
+function normalizeChatTab(tab, t = createTranslator("en")) {
+  if (!tab || typeof tab !== "object") {
+    return createDefaultChatTab(t);
+  }
+  const fallback = createDefaultChatTab(t);
+  const messages = Array.isArray(tab.messages)
+    ? tab.messages.map(normalizeChatMessage).filter(Boolean).slice(-40)
+    : [];
+  return {
+    id: typeof tab.id === "string" && tab.id ? tab.id : fallback.id,
+    threadId: typeof tab.threadId === "string" ? tab.threadId : null,
+    title: typeof tab.title === "string" && tab.title.trim() ? tab.title.trim().slice(0, 80) : fallback.title,
+    createdAt: typeof tab.createdAt === "string" ? tab.createdAt : fallback.createdAt,
+    updatedAt: typeof tab.updatedAt === "string" ? tab.updatedAt : fallback.updatedAt,
+    messages,
+    context: tab.context && typeof tab.context === "object" ? tab.context : null,
+    contextSummary: typeof tab.contextSummary === "string" ? tab.contextSummary : "",
+    isActive: Boolean(tab.isActive),
+    isStreaming: Boolean(tab.isStreaming),
+    needsAttention: Boolean(tab.needsAttention)
+  };
+}
+
+function titleFromMessage(message, fallback) {
+  const summary = summarize(message);
+  return summary ? summary.slice(0, 48) : fallback;
 }
 
 function normalizeForFingerprint(value) {
@@ -2142,6 +2215,8 @@ class CortexChatView extends ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
+    this.tabs = [];
+    this.activeTabId = "";
     this.messages = [];
     this.threadId = null;
     this.context = null;
@@ -2171,6 +2246,7 @@ class CortexChatView extends ItemView {
   }
 
   async onOpen() {
+    this.restoreTabs();
     this.render();
   }
 
@@ -2182,28 +2258,154 @@ class CortexChatView extends ItemView {
   }
 
   async prepareContext(context) {
-    this.context = context;
-    this.threadId = null;
-    this.messages = [];
+    this.setActiveTabState({
+      context,
+      threadId: null,
+      messages: [],
+      title: context?.title || context?.path || this.plugin.t("untitledTab"),
+      contextSummary: this.describeContext(context)
+    });
     this.plugin.setLastResponse(null);
     this.render();
   }
 
   appendMessage(role, content, meta = {}) {
     const id = makeId("msg");
-    this.messages.push({ id, role, content, meta });
+    const tab = this.getActiveTab();
+    tab.messages.push({ id, role, content, meta });
+    tab.messages = tab.messages.slice(-40);
+    tab.updatedAt = new Date().toISOString();
+    this.syncActiveFields();
+    void this.persistTabs();
     this.renderMessages();
+    this.renderTabBar();
     return id;
   }
 
   updateMessage(id, content, meta = {}) {
-    const message = this.messages.find((entry) => entry.id === id);
+    const tab = this.getActiveTab();
+    const message = tab.messages.find((entry) => entry.id === id);
     if (!message) {
       return;
     }
     message.content = content;
     message.meta = { ...(message.meta || {}), ...meta };
+    tab.updatedAt = new Date().toISOString();
+    this.syncActiveFields();
+    void this.persistTabs();
     this.renderMessages();
+    this.renderTabBar();
+  }
+
+  restoreTabs() {
+    const rawTabs = Array.isArray(this.plugin.settings.chatTabs) ? this.plugin.settings.chatTabs : [];
+    this.tabs = rawTabs.map((tab) => normalizeChatTab(tab, this.plugin.t)).slice(0, MAX_CHAT_TABS);
+    if (!this.tabs.length) {
+      this.tabs = [createDefaultChatTab(this.plugin.t)];
+    }
+    const configuredActiveId = this.plugin.settings.activeChatTabId;
+    const active = this.tabs.find((tab) => tab.id === configuredActiveId) || this.tabs.find((tab) => tab.isActive) || this.tabs[0];
+    this.activeTabId = active.id;
+    this.tabs.forEach((tab) => {
+      tab.isActive = tab.id === this.activeTabId;
+    });
+    this.syncActiveFields();
+    void this.persistTabs();
+  }
+
+  getActiveTab() {
+    let tab = this.tabs.find((entry) => entry.id === this.activeTabId);
+    if (!tab) {
+      tab = this.tabs[0] || createDefaultChatTab(this.plugin.t);
+      if (!this.tabs.length) {
+        this.tabs.push(tab);
+      }
+      this.activeTabId = tab.id;
+    }
+    return tab;
+  }
+
+  getTab(tabId) {
+    return this.tabs.find((entry) => entry.id === tabId) || null;
+  }
+
+  syncActiveFields() {
+    const tab = this.getActiveTab();
+    this.threadId = tab.threadId || null;
+    this.messages = tab.messages || [];
+    this.context = tab.context || null;
+  }
+
+  setActiveTabState(patch) {
+    const tab = this.getActiveTab();
+    this.setTabState(tab.id, patch);
+  }
+
+  setTabState(tabId, patch) {
+    const tab = this.getTab(tabId);
+    if (!tab) {
+      return;
+    }
+    Object.assign(tab, patch, {
+      updatedAt: new Date().toISOString()
+    });
+    tab.contextSummary = tab.contextSummary || this.describeContext(tab.context);
+    if (tab.id === this.activeTabId) {
+      this.syncActiveFields();
+    }
+    void this.persistTabs();
+  }
+
+  updateMessageInTab(tabId, id, content, meta = {}) {
+    const tab = this.getTab(tabId);
+    if (!tab) {
+      return;
+    }
+    const message = tab.messages.find((entry) => entry.id === id);
+    if (!message) {
+      return;
+    }
+    message.content = content;
+    message.meta = { ...(message.meta || {}), ...meta };
+    tab.updatedAt = new Date().toISOString();
+    if (tab.id === this.activeTabId) {
+      this.syncActiveFields();
+      this.renderMessages();
+    } else {
+      tab.needsAttention = true;
+    }
+    void this.persistTabs();
+    this.renderTabBar();
+  }
+
+  serializeTabs() {
+    return this.tabs.map((tab) => ({
+      id: tab.id,
+      threadId: tab.threadId || null,
+      title: tab.title || this.plugin.t("untitledTab"),
+      createdAt: tab.createdAt,
+      updatedAt: tab.updatedAt,
+      messages: (tab.messages || []).slice(-40),
+      context: tab.context || null,
+      contextSummary: tab.contextSummary || "",
+      isActive: tab.id === this.activeTabId,
+      isStreaming: Boolean(tab.isStreaming),
+      needsAttention: Boolean(tab.needsAttention)
+    }));
+  }
+
+  async persistTabs() {
+    this.plugin.settings.chatTabs = this.serializeTabs();
+    this.plugin.settings.activeChatTabId = this.activeTabId;
+    await this.plugin.saveSettings();
+  }
+
+  describeContext(context) {
+    if (!context) {
+      return "";
+    }
+    const refs = context.references?.length || 0;
+    return `${context.title || context.path || this.plugin.t("noNote")} · ${refs ? this.plugin.t("referenceCount", { count: refs }) : this.plugin.t("noRefs")}`;
   }
 
   applyUiScale() {
@@ -2269,9 +2471,9 @@ class CortexChatView extends ItemView {
     return this.plugin.t("folderReview", { folder: label });
   }
 
-  setPendingStatus(id, status, meta = {}) {
+  setPendingStatus(id, status, meta = {}, tabId = this.activeTabId) {
     this.lastPendingStatus = status;
-    this.updateMessage(id, "", {
+    this.updateMessageInTab(tabId, id, "", {
       loading: true,
       status,
       ...meta
@@ -2287,7 +2489,7 @@ class CortexChatView extends ItemView {
     this.registerScaleShortcuts();
 
     this.headerEl = contentEl.createDiv({ cls: "cortex-chat-header" });
-    this.quickActionsEl = contentEl.createDiv({ cls: "cortex-chat-quick-actions" });
+    this.tabBarEl = contentEl.createDiv({ cls: "cortex-chat-tabbar" });
     this.messagesEl = contentEl.createDiv({ cls: "cortex-chat-messages" });
     this.sendEl = contentEl.createDiv({ cls: "cortex-chat-send" });
     this.contextEl = this.sendEl.createDiv({ cls: "cortex-chat-context" });
@@ -2345,10 +2547,13 @@ class CortexChatView extends ItemView {
     });
 
     this.renderHeader();
-    this.renderQuickActions();
+    this.renderTabBar();
     this.renderContext();
     this.renderMessages();
     this.autoResizeInput();
+    if (this.isSending) {
+      this.setSending(true);
+    }
   }
 
   renderModeCards() {
@@ -2418,6 +2623,12 @@ class CortexChatView extends ItemView {
     }
     const actionsButton = this.createIconButton(this.headerEl, "settings", this.plugin.t("consistencyDiagnostics"), "cortex-chat-icon-button");
     actionsButton.addEventListener("click", (event) => this.openActionsMenu(event));
+    const newTabButton = this.createIconButton(this.headerEl, "square-plus", this.plugin.t("newTab"), "cortex-chat-icon-button");
+    newTabButton.addEventListener("click", () => this.createNewTab());
+    const newChatButton = this.createIconButton(this.headerEl, "square-pen", this.plugin.t("newChatReady"), "cortex-chat-icon-button");
+    newChatButton.addEventListener("click", () => this.startNewChat());
+    const noteButton = this.createIconButton(this.headerEl, "file-text", this.plugin.t("activeNote"), "cortex-chat-icon-button");
+    noteButton.addEventListener("click", async () => this.loadCurrentNoteContext());
     if (this.plugin.settings.showDiagnostics) {
       this.headerEl.createDiv({
         cls: "cortex-chat-diagnostics",
@@ -2440,6 +2651,85 @@ class CortexChatView extends ItemView {
       return { kind: "error", label: this.plugin.t("error") };
     }
     return { kind: "pending", label: this.plugin.t("pending") };
+  }
+
+  renderTabBar() {
+    if (!this.tabBarEl) {
+      return;
+    }
+    this.tabBarEl.empty();
+    if (this.tabs.length < 2) {
+      this.tabBarEl.addClass("is-hidden");
+      return;
+    }
+    this.tabBarEl.removeClass("is-hidden");
+    for (const tab of this.tabs) {
+      const button = this.tabBarEl.createEl("button", {
+        cls: `cortex-chat-tab${tab.id === this.activeTabId ? " is-active" : ""}${tab.isStreaming ? " is-streaming" : ""}${tab.needsAttention ? " needs-attention" : ""}`,
+        attr: {
+          "aria-pressed": String(tab.id === this.activeTabId),
+          title: tab.title || this.plugin.t("untitledTab")
+        }
+      });
+      button.createSpan({ cls: "cortex-chat-tab-title", text: tab.title || this.plugin.t("untitledTab") });
+      if (this.tabs.length > 1) {
+        const close = button.createSpan({ cls: "cortex-chat-tab-close", text: "×" });
+        close.setAttribute("aria-label", this.plugin.t("closeTab"));
+        close.addEventListener("click", async (event) => {
+          event.stopPropagation();
+          await this.closeTab(tab.id);
+        });
+      }
+      button.addEventListener("click", async () => {
+        await this.activateTab(tab.id);
+      });
+    }
+  }
+
+  async activateTab(tabId) {
+    if (!this.tabs.find((tab) => tab.id === tabId)) {
+      return;
+    }
+    this.activeTabId = tabId;
+    this.tabs.forEach((tab) => {
+      tab.isActive = tab.id === tabId;
+      if (tab.isActive) {
+        tab.needsAttention = false;
+      }
+    });
+    this.syncActiveFields();
+    await this.persistTabs();
+    this.render();
+  }
+
+  async createNewTab() {
+    if (this.tabs.length >= MAX_CHAT_TABS) {
+      new Notice(this.plugin.t("tabLimitReached", { count: MAX_CHAT_TABS }));
+      return;
+    }
+    const tab = createDefaultChatTab(this.plugin.t);
+    this.tabs.push(tab);
+    await this.activateTab(tab.id);
+  }
+
+  async closeTab(tabId) {
+    if (this.tabs.length <= 1) {
+      this.startNewChat();
+      return;
+    }
+    const index = this.tabs.findIndex((tab) => tab.id === tabId);
+    if (index === -1) {
+      return;
+    }
+    const wasActive = this.tabs[index].id === this.activeTabId;
+    this.tabs.splice(index, 1);
+    if (wasActive) {
+      const next = this.tabs[Math.max(0, index - 1)] || this.tabs[0];
+      this.activeTabId = next.id;
+    }
+    this.syncActiveFields();
+    await this.persistTabs();
+    this.render();
   }
 
   renderQuickActions() {
@@ -2502,10 +2792,17 @@ class CortexChatView extends ItemView {
   }
 
   startNewChat() {
-    this.threadId = null;
-    this.messages = [];
+    this.setActiveTabState({
+      threadId: null,
+      messages: [],
+      context: null,
+      contextSummary: "",
+      title: this.plugin.t("untitledTab"),
+      isStreaming: false,
+      needsAttention: false
+    });
     this.plugin.setLastResponse(null);
-    this.renderMessages();
+    this.render();
     new Notice(this.plugin.t("newChatReady"));
   }
 
@@ -2957,6 +3254,15 @@ class CortexChatView extends ItemView {
     }
 
     this.appendMessage("user", message);
+    const requestTabId = this.activeTabId;
+    const activeTab = this.getActiveTab();
+    if (!activeTab.threadId && activeTab.messages.length <= 1) {
+      activeTab.title = titleFromMessage(message, this.plugin.t("untitledTab"));
+    }
+    activeTab.isStreaming = true;
+    activeTab.updatedAt = new Date().toISOString();
+    void this.persistTabs();
+    this.renderTabBar();
     this.inputEl.value = "";
     this.autoResizeInput();
     this.hideMentionSuggestions();
@@ -2971,20 +3277,27 @@ class CortexChatView extends ItemView {
     });
     this.lastPendingStatus = this.plugin.t("sendingToAgent");
     if (!this.context?.path && !this.context?.references?.length) {
-      this.setPendingStatus(pendingId, this.plugin.t("preparingContext"));
+      this.setPendingStatus(pendingId, this.plugin.t("preparingContext"), {}, requestTabId);
       this.context = await this.plugin.captureCurrentContext(false);
-      this.renderHeader();
-      this.renderQuickActions();
-      this.renderContext();
+      this.setTabState(requestTabId, {
+        context: this.context,
+        contextSummary: this.describeContext(this.context)
+      });
+      if (requestTabId === this.activeTabId) {
+        this.renderHeader();
+        this.renderContext();
+      }
     }
     try {
-      const runOptions = this.plugin.getRunOptions(this.context || {}, message);
-      const folderStatus = this.getFolderReviewStatus(message, this.context || {});
+      const requestTab = this.getTab(requestTabId);
+      const requestContext = requestTab?.context || this.context || {};
+      const runOptions = this.plugin.getRunOptions(requestContext, message);
+      const folderStatus = this.getFolderReviewStatus(message, requestContext);
       if (folderStatus) {
-        this.setPendingStatus(pendingId, folderStatus);
+        this.setPendingStatus(pendingId, folderStatus, {}, requestTabId);
       }
-      this.setPendingStatus(pendingId, this.plugin.t("codexThinking"));
-      const response = await this.plugin.sendMessageToAgent(this.threadId, message, this.context || {}, runOptions);
+      this.setPendingStatus(pendingId, this.plugin.t("codexThinking"), {}, requestTabId);
+      const response = await this.plugin.sendMessageToAgent(requestTab?.threadId || null, message, requestContext, runOptions);
       const isFallback = response.localFallback || response.raw?.provider === "heuristic-fallback";
       this.setPendingStatus(pendingId, this.plugin.t("codexPreparingResponse"), {
         detail:
@@ -2993,14 +3306,21 @@ class CortexChatView extends ItemView {
             : isFallback
               ? this.plugin.t("localFallbackProvider")
               : ""
-      });
+      }, requestTabId);
       await this.waitForMinimumDuration(startedAt, isFallback ? this.plugin.settings.localFallbackDelayMs : 350);
-      this.threadId = response.threadId;
-      this.context = response.context || this.context;
-      this.renderHeader();
-      this.renderQuickActions();
-      this.renderContext();
-      this.updateMessage(pendingId, response.answer, {
+      const responseContext = response.context || requestContext;
+      this.setTabState(requestTabId, {
+        threadId: response.threadId,
+        context: responseContext,
+        contextSummary: this.describeContext(responseContext),
+        isStreaming: false,
+        needsAttention: false
+      });
+      if (requestTabId === this.activeTabId) {
+        this.renderHeader();
+        this.renderContext();
+      }
+      this.updateMessageInTab(requestTabId, pendingId, response.answer, {
         loading: false,
         ...this.responseMetaFor(response, Date.now() - startedAt, runOptions)
       });
@@ -3016,13 +3336,20 @@ class CortexChatView extends ItemView {
         );
       }
     } catch (error) {
-      this.updateMessage(pendingId, `Error: ${error.message}`, {
+      this.setTabState(requestTabId, {
+        isStreaming: false,
+        needsAttention: false
+      });
+      this.updateMessageInTab(requestTabId, pendingId, `Error: ${error.message}`, {
         loading: false,
         label: this.plugin.t("error"),
         detail: `Fase: ${this.lastPendingStatus || "desconocida"} · La respuesta no se ha persistido como salida válida.`
       });
       new Notice(this.plugin.t("requestFailed", { error: error.message }));
     } finally {
+      this.setTabState(requestTabId, {
+        isStreaming: false
+      });
       this.setSending(false);
     }
   }
