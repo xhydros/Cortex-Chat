@@ -6,7 +6,7 @@ data.json
 *.bak
 
 .obsidian/
-_agent/
+_cortex/
 node_modules/
 dist/
 build/

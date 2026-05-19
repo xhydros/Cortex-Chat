@@ -249,7 +249,7 @@ const I18N = {
     lastNoteHelp: "Last note seen: {note}. Use @NoteName or quick actions to pin context.",
     dataJsonHasLocalKey: "`{path}` still contains `{key}`, which should be local and not synced.",
     duplicateSessionsDetected: "{count} logically duplicated session(s) found from Sync conflicts in `_cortex/sessions`.",
-    memoryFileLegacySchema: "`_cortex/memory/{category}.md` uses an old schema and will be read in compatibility mode.",
+    memoryFileMissingSchema: "`_cortex/memory/{category}.md` is missing a schema version and will be treated as degraded.",
     memoryFileNonCanonical: "`_cortex/memory/{category}.md` contains {count} non-canonical entries that will be ignored when shared memory is used.",
     indexEmpty: "`_cortex/index` is empty or not being used yet.",
     indexUnreadable: "`_cortex/index` does not exist or cannot be read.",
@@ -459,7 +459,7 @@ const I18N = {
     lastNoteHelp: "Última nota vista: {note}. Usa @NombreNota o las acciones rápidas para anclar el contexto.",
     dataJsonHasLocalKey: "`{path}` aún contiene `{key}`, que debería ser local y no sincronizarse.",
     duplicateSessionsDetected: "Hay {count} sesiones duplicadas lógicamente por conflictos de Sync en `_cortex/sessions`.",
-    memoryFileLegacySchema: "`_cortex/memory/{category}.md` sigue en esquema antiguo y se leerá en modo compatible.",
+    memoryFileMissingSchema: "`_cortex/memory/{category}.md` no tiene versión de esquema y se tratará como degradado.",
     memoryFileNonCanonical: "`_cortex/memory/{category}.md` contiene {count} entradas no canónicas que el plugin ignorará al usar memoria compartida.",
     indexEmpty: "`_cortex/index` está vacío o no se está usando todavía.",
     indexUnreadable: "`_cortex/index` no existe o no se puede leer.",
@@ -613,8 +613,6 @@ function normalizeFolderRoots(value) {
       !normalized ||
       normalized.startsWith("_cortex/") ||
       normalized === "_cortex" ||
-      normalized.startsWith("_agent/") ||
-      normalized === "_agent" ||
       seen.has(normalized)
     ) {
       continue;
@@ -638,7 +636,6 @@ const DEFAULT_EXCLUDED_PATH_SEGMENTS = new Set([
   ".git",
   ".obsidian",
   "_cortex",
-  "_agent",
   "dist",
   "build",
   ".cache",
@@ -701,21 +698,9 @@ __cortexChatDefine('./lib/agent-store', function(module, exports, require) {
 const path = require("node:path");
 
 const CORTEX_DATA_ROOT = "_cortex";
-const LEGACY_AGENT_DATA_ROOT = "_agent";
 
 function agentPaths(vaultRoot) {
   const agentRoot = path.join(vaultRoot, CORTEX_DATA_ROOT);
-  return {
-    agentRoot,
-    memoryRoot: path.join(agentRoot, "memory"),
-    sessionsRoot: path.join(agentRoot, "sessions"),
-    outboxRoot: path.join(agentRoot, "outbox"),
-    indexRoot: path.join(agentRoot, "index")
-  };
-}
-
-function legacyAgentPaths(vaultRoot) {
-  const agentRoot = path.join(vaultRoot, LEGACY_AGENT_DATA_ROOT);
   return {
     agentRoot,
     memoryRoot: path.join(agentRoot, "memory"),
@@ -735,9 +720,7 @@ function sessionBackupRoot(createdAt, threadId, sessionId) {
 
 module.exports = {
   CORTEX_DATA_ROOT,
-  LEGACY_AGENT_DATA_ROOT,
   agentPaths,
-  legacyAgentPaths,
   sessionBackupRoot
 };
 });
@@ -818,7 +801,7 @@ const { getDefaultSystemPromptSections, resolveLanguage } = __cortexChatRequire(
 const { normalizeFolderRoots } = __cortexChatRequire('./lib/security');
 
 const MEMORY_CATEGORIES = ["preferences", "projects", "people", "decisions", "recent"];
-const AGENT_SCHEMA_VERSION = "2";
+const CORTEX_SCHEMA_VERSION = "3";
 const LOCAL_STATE_VERSION = "1";
 
 const SHARED_SETTING_KEYS = [
@@ -915,7 +898,7 @@ function getSettingsLanguage(settings) {
 }
 
 module.exports = {
-  AGENT_SCHEMA_VERSION,
+  CORTEX_SCHEMA_VERSION,
   LOCAL_SETTING_KEYS,
   LOCAL_STATE_VERSION,
   MEMORY_CATEGORIES,
@@ -951,9 +934,7 @@ const {
 } = __cortexChatRequire('./lib/context');
 const {
   CORTEX_DATA_ROOT,
-  LEGACY_AGENT_DATA_ROOT,
   agentPaths,
-  legacyAgentPaths,
   sessionBackupRoot
 } = __cortexChatRequire('./lib/agent-store');
 const {
@@ -961,7 +942,7 @@ const {
   classifyLocalCodexFailure: classifyLocalCodexFailureSafe
 } = __cortexChatRequire('./lib/codex-cli');
 const {
-  AGENT_SCHEMA_VERSION,
+  CORTEX_SCHEMA_VERSION,
   LOCAL_SETTING_KEYS,
   LOCAL_STATE_VERSION,
   MEMORY_CATEGORIES,
@@ -990,12 +971,6 @@ const util = optionalRequire("node:util");
 const execFileAsync =
   childProcess?.execFile && util?.promisify ? util.promisify(childProcess.execFile) : null;
 const PLUGIN_ID = "cortex-chat";
-const LEGACY_PLUGIN_IDS = [
-  ["codex", "chat"].join("-"),
-  ["obsidian", "codex"].join("-"),
-  ["agent", "memory", "sync"].join("-")
-];
-const LEGACY_DEVICE_TOKEN_SECRET_NAMES = LEGACY_PLUGIN_IDS.map((pluginId) => `${pluginId}-device-token`);
 const VIEW_TYPE = `${PLUGIN_ID}-view`;
 const DEFAULT_SETTINGS = buildDefaultSettings(PLUGIN_ID);
 
@@ -1297,8 +1272,8 @@ function toFrontmatter(data) {
 
 function buildSessionMarkdown(session) {
   return `${toFrontmatter({
-    kind: "agent-session",
-    schema_version: session.schemaVersion || AGENT_SCHEMA_VERSION,
+    kind: "cortex-session",
+    schema_version: session.schemaVersion || CORTEX_SCHEMA_VERSION,
     plugin_version: session.pluginVersion || "",
     session_id: session.sessionId,
     thread_id: session.threadId,
@@ -1338,11 +1313,11 @@ ${session.assistantMessage}
 
 function buildMemoryMarkdown(category, bullets) {
   return `${toFrontmatter({
-    kind: "agent-memory",
-    schema_version: AGENT_SCHEMA_VERSION,
+    kind: "cortex-memory",
+    schema_version: CORTEX_SCHEMA_VERSION,
     category,
     updated_at: new Date().toISOString(),
-    managed_by: "plugin-local-fallback"
+    managed_by: "cortex-chat-local-fallback"
   })}
 
 # ${category}
@@ -1364,14 +1339,14 @@ function buildMemoryCandidateMarkdown(candidate) {
   }
 
   return `${toFrontmatter({
-    kind: "agent-memory-candidate",
-    schema_version: AGENT_SCHEMA_VERSION,
+    kind: "cortex-memory-candidate",
+    schema_version: CORTEX_SCHEMA_VERSION,
     plugin_version: candidate.pluginVersion || "",
     session_id: candidate.sessionId || "",
     thread_id: candidate.threadId || "",
     created_at: candidate.createdAt || new Date().toISOString(),
     device_id: candidate.deviceId || "",
-    source: "plugin-local-fallback"
+    source: "cortex-chat-local-fallback"
   })}
 
 # memory-candidate
@@ -3375,9 +3350,6 @@ module.exports = class CortexChatPlugin extends Plugin {
     this.lastMarkdownFile = null;
     this.normalizePortableSettings();
     await this.ensureLocalIdentity();
-    if (this.hasLegacySharedLocalSettings) {
-      await this.saveSettings();
-    }
 
     this.registerView(VIEW_TYPE, (leaf) => new CortexChatView(leaf, this));
     this.addSettingTab(new CortexChatSettingTab(this.app, this));
@@ -3483,8 +3455,7 @@ module.exports = class CortexChatPlugin extends Plugin {
 
   async loadSettings() {
     const currentShared = Object.assign({}, await this.loadData());
-    const legacyShared = await this.loadLegacySharedSettings(currentShared);
-    const shared = Object.assign({}, legacyShared, currentShared);
+    const shared = Object.assign({}, currentShared);
     const local = await this.loadLocalRuntimeState(shared);
     this.settings = normalizeSettings(Object.assign({}, shared, local), DEFAULT_SETTINGS);
     this.settings.languageMode = normalizeLanguageMode(this.settings.languageMode);
@@ -3495,37 +3466,6 @@ module.exports = class CortexChatPlugin extends Plugin {
     this.settings.uiScale = clampUiScale(this.settings.uiScale);
     this.settings.folderReferenceRoots = normalizeFolderRoots(this.settings.folderReferenceRoots);
     this.normalizePortableSettings();
-  }
-
-  async loadLegacySharedSettings(currentShared = {}) {
-    const hasCurrentShared = SHARED_SETTING_KEYS.some((key) =>
-      Object.prototype.hasOwnProperty.call(currentShared, key)
-    );
-    if (hasCurrentShared || !fs || !path) {
-      return {};
-    }
-
-    const vaultRoot = this.getVaultRoot();
-    if (!vaultRoot) {
-      return {};
-    }
-
-    for (const legacyPluginId of LEGACY_PLUGIN_IDS) {
-      try {
-        const legacyPath = path.join(vaultRoot, ".obsidian", "plugins", legacyPluginId, "data.json");
-        const parsed = JSON.parse(await fs.readFile(legacyPath, "utf8"));
-        const legacyShared = {};
-        for (const key of SHARED_SETTING_KEYS) {
-          if (Object.prototype.hasOwnProperty.call(parsed, key)) {
-            legacyShared[key] = parsed[key];
-          }
-        }
-        return legacyShared;
-      } catch {
-        // Try the next known legacy identity.
-      }
-    }
-    return {};
   }
 
   async saveSettings() {
@@ -3590,7 +3530,6 @@ module.exports = class CortexChatPlugin extends Plugin {
     }
 
     if (!localStatePath || !fs) {
-      this.hasLegacySharedLocalSettings = migrated;
       return localState;
     }
 
@@ -3611,23 +3550,6 @@ module.exports = class CortexChatPlugin extends Plugin {
       // No local state yet.
     }
 
-    if (!Object.keys(localState).length) {
-      for (const legacyPluginId of LEGACY_PLUGIN_IDS) {
-        const legacyLocalStatePath = this.getLocalStatePath(legacyPluginId);
-        if (!legacyLocalStatePath || legacyLocalStatePath === localStatePath) {
-          continue;
-        }
-        try {
-          await mergeLocalStateFile(legacyLocalStatePath);
-          migrated = true;
-          break;
-        } catch {
-          // No local state for this legacy identity.
-        }
-      }
-    }
-
-    this.hasLegacySharedLocalSettings = migrated;
     return localState;
   }
 
@@ -3830,7 +3752,7 @@ module.exports = class CortexChatPlugin extends Plugin {
       if (!parsed.data.schema_version) {
         issues.push({
           severity: "info",
-          message: this.t("memoryFileLegacySchema", { category })
+          message: this.t("memoryFileMissingSchema", { category })
         });
       }
       if (sanitization.issues.length) {
@@ -4562,9 +4484,6 @@ module.exports = class CortexChatPlugin extends Plugin {
     }
 
     let token = await this.getSecretToken(this.settings.deviceTokenSecretName);
-    if (!token) {
-      token = await this.getLegacySecretToken();
-    }
     if (!token && this.settings.localBootstrapToken) {
       token = this.settings.localBootstrapToken;
     }
@@ -4645,29 +4564,12 @@ module.exports = class CortexChatPlugin extends Plugin {
     if (token) {
       return token;
     }
-    const legacyToken = await this.getLegacySecretToken();
-    if (legacyToken) {
-      return legacyToken;
-    }
 
     if (this.isLocalBackendUrl(this.settings.backendUrl) && this.settings.localBootstrapToken) {
       return this.settings.localBootstrapToken;
     }
 
     throw new Error(this.t("noDeviceToken"));
-  }
-
-  async getLegacySecretToken() {
-    for (const secretName of LEGACY_DEVICE_TOKEN_SECRET_NAMES) {
-      if (!secretName || secretName === this.settings.deviceTokenSecretName) {
-        continue;
-      }
-      const token = await this.getSecretToken(secretName);
-      if (token) {
-        return token;
-      }
-    }
-    return "";
   }
 
   async apiRequest(method, endpoint, body) {
@@ -4985,50 +4887,7 @@ module.exports = class CortexChatPlugin extends Plugin {
     return files.filter((filePath) => filePath.endsWith(".md"));
   }
 
-  async copyDirectoryIfMissing(sourceRoot, targetRoot) {
-    if (!sourceRoot || !targetRoot || sourceRoot === targetRoot) {
-      return false;
-    }
-    try {
-      await fs.access(targetRoot);
-      return false;
-    } catch {
-      // Target does not exist; continue with copy.
-    }
-    try {
-      await fs.access(sourceRoot);
-    } catch {
-      return false;
-    }
-
-    const copyRecursive = async (source, target) => {
-      const stat = await fs.stat(source);
-      if (stat.isDirectory()) {
-        await fs.mkdir(target, { recursive: true });
-        const entries = await fs.readdir(source, { withFileTypes: true });
-        for (const entry of entries) {
-          await copyRecursive(path.join(source, entry.name), path.join(target, entry.name));
-        }
-        return;
-      }
-      if (stat.isFile()) {
-        await fs.mkdir(path.dirname(target), { recursive: true });
-        await fs.copyFile(source, target);
-      }
-    };
-
-    await copyRecursive(sourceRoot, targetRoot);
-    return true;
-  }
-
-  async migrateLegacyAgentData(vaultRoot) {
-    const legacy = legacyAgentPaths(vaultRoot);
-    const current = agentPaths(vaultRoot);
-    return this.copyDirectoryIfMissing(legacy.agentRoot, current.agentRoot);
-  }
-
   async ensureAgentStructure(vaultRoot) {
-    await this.migrateLegacyAgentData(vaultRoot);
     const { memoryRoot, sessionsRoot, outboxRoot, indexRoot } = agentPaths(vaultRoot);
 
     await Promise.all([
@@ -5076,12 +4935,8 @@ module.exports = class CortexChatPlugin extends Plugin {
   }
 
   async readRecentSessions(vaultRoot, threadId, limit) {
-    const currentSessionsRoot = agentPaths(vaultRoot).sessionsRoot;
-    const legacySessionsRoot = legacyAgentPaths(vaultRoot).sessionsRoot;
-    let files = await this.walkMarkdownFiles(currentSessionsRoot);
-    if (!files.length) {
-      files = await this.walkMarkdownFiles(legacySessionsRoot);
-    }
+    const sessionsRoot = agentPaths(vaultRoot).sessionsRoot;
+    const files = await this.walkMarkdownFiles(sessionsRoot);
     const deduped = new Map();
 
     for (const filePath of files) {
@@ -5263,7 +5118,7 @@ module.exports = class CortexChatPlugin extends Plugin {
       absolutePath,
       buildSessionMarkdown({
         ...session,
-        schemaVersion: AGENT_SCHEMA_VERSION,
+        schemaVersion: CORTEX_SCHEMA_VERSION,
         pluginVersion: this.manifest?.version || "",
         contentFingerprint: session.contentFingerprint || sessionFingerprint(session)
       }),

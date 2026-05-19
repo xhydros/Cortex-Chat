@@ -6,7 +6,7 @@ This plugin is not affiliated with Obsidian or OpenAI.
 
 ## Features
 
-- Chat with Codex using the active note, outgoing links, `@` references, shared memory, and recent sessions.
+- Chat with the assistant using the active note, outgoing links, `@` references, shared memory, and recent sessions.
 - Load text from Markdown notes and text-based PDFs.
 - Use `Planificador / Copiloto` for read-only planning and `Ejecutar / Sin restricciones` for action-oriented work.
 - Store sessions, memory candidates, outbox data, and backups in `_cortex/`.
@@ -55,17 +55,12 @@ Do not commit or publish:
 
 - `data.json`
 - `_cortex/`
-- `_agent/` legacy data backups from previous private builds
 - `.obsidian/`
 - local runtime folders
 - backend runtime files
 - tokens, secrets, logs, sessions, or vault content
 
-Technical folders such as `node_modules`, `.git`, `.obsidian`, `_cortex`, `_agent`, `dist`, `build`, `.cache`, `.vite`, and `coverage` are ignored as context sources.
-
-## Legacy Data Migration
-
-If the vault contains legacy `_agent/` data and `_cortex/` does not exist yet, Cortex Chat copies `_agent/` to `_cortex/` on startup. The legacy `_agent/` folder is preserved as a backup and is not used as the primary write target after migration.
+Technical folders such as `node_modules`, `.git`, `.obsidian`, `_cortex`, `dist`, `build`, `.cache`, `.vite`, and `coverage` are ignored as context sources.
 
 ## Work Modes
 
