@@ -1,6 +1,6 @@
-# Codex Chat
+# Cortex Chat
 
-Codex Chat is an unofficial desktop-only Obsidian plugin that adds a Codex-powered chat sidebar with vault context, `@` references, PDF text extraction, local Codex CLI fallback, session history, shared `_agent` memory, and backups for agent-assisted edits.
+Cortex Chat is an unofficial desktop-only Obsidian plugin that adds an AI chat sidebar with vault context, `@` references, PDF text extraction, local Codex CLI fallback, session history, shared `_cortex` memory, and backups for agent-assisted edits.
 
 This plugin is not affiliated with Obsidian or OpenAI.
 
@@ -9,7 +9,7 @@ This plugin is not affiliated with Obsidian or OpenAI.
 - Chat with Codex using the active note, outgoing links, `@` references, shared memory, and recent sessions.
 - Load text from Markdown notes and text-based PDFs.
 - Use `Planificador / Copiloto` for read-only planning and `Ejecutar / Sin restricciones` for action-oriented work.
-- Store sessions, memory candidates, outbox data, and backups in `_agent/`.
+- Store sessions, memory candidates, outbox data, and backups in `_cortex/`.
 - Run on desktop with an optional local Codex CLI fallback.
 
 ## Requirements
@@ -24,7 +24,7 @@ This plugin is not affiliated with Obsidian or OpenAI.
 For beta testing, install with BRAT or copy the release files into:
 
 ```text
-.obsidian/plugins/codex-chat/
+.obsidian/plugins/cortex-chat/
 ```
 
 Required release files:
@@ -35,17 +35,17 @@ manifest.json
 styles.css
 ```
 
-Enable `Codex Chat` from Obsidian community plugins. The plugin creates its own local `data.json` on first run.
+Enable `Cortex Chat` from Obsidian community plugins. The plugin creates its own local `data.json` on first run.
 
 ## Security and Privacy
 
-Codex Chat does not include client-side telemetry, ads, or analytics.
+Cortex Chat does not include client-side telemetry, ads, or analytics.
 
 The plugin may access:
 
 - The active Obsidian vault, including notes and configured folder roots.
-- `_agent/` inside the vault for shared memory, sessions, candidates, outbox data, and backups.
-- `~/.codex-chat` for local runtime state that should not sync through Obsidian Sync.
+- `_cortex/` inside the vault for shared memory, sessions, candidates, outbox data, and backups.
+- `~/.cortex-chat` for local runtime state that should not sync through Obsidian Sync.
 - `~/.codex/config.toml` only if the user explicitly enables Codex vault trust.
 - Temporary OS folders for local Codex prompt/output files.
 - Network URLs configured by the user for a backend.
@@ -54,13 +54,18 @@ The plugin may access:
 Do not commit or publish:
 
 - `data.json`
-- `_agent/`
+- `_cortex/`
+- `_agent/` legacy data backups from previous private builds
 - `.obsidian/`
 - local runtime folders
 - backend runtime files
 - tokens, secrets, logs, sessions, or vault content
 
-Technical folders such as `node_modules`, `.git`, `.obsidian`, `_agent`, `dist`, `build`, `.cache`, `.vite`, and `coverage` are ignored as context sources.
+Technical folders such as `node_modules`, `.git`, `.obsidian`, `_cortex`, `_agent`, `dist`, `build`, `.cache`, `.vite`, and `coverage` are ignored as context sources.
+
+## Legacy Data Migration
+
+If the vault contains legacy `_agent/` data and `_cortex/` does not exist yet, Cortex Chat copies `_agent/` to `_cortex/` on startup. The legacy `_agent/` folder is preserved as a backup and is not used as the primary write target after migration.
 
 ## Work Modes
 

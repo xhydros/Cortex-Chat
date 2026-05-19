@@ -13,27 +13,27 @@ const {
   setIcon,
   requestUrl
 } = require("obsidian");
-// BEGIN CODEX CHAT BUNDLED LIBS
-const __codexChatModules = Object.create(null);
-const __codexChatModuleCache = Object.create(null);
+// BEGIN CORTEX CHAT BUNDLED LIBS
+const __cortexChatModules = Object.create(null);
+const __cortexChatModuleCache = Object.create(null);
 
-function __codexChatDefine(id, factory) {
-  __codexChatModules[id] = factory;
+function __cortexChatDefine(id, factory) {
+  __cortexChatModules[id] = factory;
 }
 
-function __codexChatRequire(id) {
-  if (!__codexChatModules[id]) {
+function __cortexChatRequire(id) {
+  if (!__cortexChatModules[id]) {
     return require(id);
   }
-  if (!__codexChatModuleCache[id]) {
+  if (!__cortexChatModuleCache[id]) {
     const module = { exports: {} };
-    __codexChatModuleCache[id] = module;
-    __codexChatModules[id](module, module.exports, __codexChatRequire);
+    __cortexChatModuleCache[id] = module;
+    __cortexChatModules[id](module, module.exports, __cortexChatRequire);
   }
-  return __codexChatModuleCache[id].exports;
+  return __cortexChatModuleCache[id].exports;
 }
 
-__codexChatDefine('./lib/i18n', function(module, exports, require) {
+__cortexChatDefine('./lib/i18n', function(module, exports, require) {
 const DEFAULT_LANGUAGE = "en";
 const SUPPORTED_LANGUAGES = ["en", "es"];
 
@@ -73,8 +73,8 @@ const I18N = {
     languageEnglish: "English",
     languageSpanish: "Spanish",
     languageAuto: "Automatic",
-    appTitle: "Codex",
-    openChat: "Open Codex Chat",
+    appTitle: "Cortex",
+    openChat: "Open Cortex Chat",
     askCurrentNote: "Ask about current note",
     insertLastResponse: "Insert response into note",
     viewMemoryUsed: "View memory used for last response",
@@ -105,7 +105,7 @@ const I18N = {
     showDiagnostics: "Show diagnostics in panel",
     showDiagnosticsDesc: "Shows backend, device, and current context in the chat header.",
     folderRoots: "Folder reference roots",
-    folderRootsDesc: "Comma-separated vault folders that Codex may load when the user asks to review a folder.",
+    folderRootsDesc: "Comma-separated vault folders that the assistant may load when the user asks to review a folder.",
     maxFolderReferences: "Maximum notes when summarizing a folder",
     maxFolderReferencesDesc: "Limit of notes added as context when folder roots are explicitly configured.",
     systemPrompt: "System Prompt",
@@ -146,7 +146,7 @@ const I18N = {
     maxContextCharsDesc: "Maximum active-note characters sent to the assistant on each request.",
     language: "Language",
     languageDesc: "Automatic uses Obsidian/browser language when available. Supported languages: English and Spanish.",
-    askPlaceholder: "Ask Codex...",
+    askPlaceholder: "Ask Cortex...",
     inputHint: "Enter sends · Shift+Enter new line · @note",
     sendMessage: "Send message",
     ready: "Ready",
@@ -181,8 +181,8 @@ const I18N = {
     writeMessageFirst: "Write a message before sending.",
     sendingToAgent: "Sending message to the assistant",
     preparingContext: "Preparing context",
-    codexThinking: "Codex is thinking",
-    codexPreparingResponse: "Codex is preparing the response",
+    codexThinking: "Cortex is thinking",
+    codexPreparingResponse: "Cortex is preparing the response",
     unrestrictedActive: "Unrestricted mode active: changes will not ask for additional confirmation.",
     unresolvedReferences: "Could not resolve these @ references: {refs}",
     requestFailed: "Could not complete the request: {error}",
@@ -193,7 +193,7 @@ const I18N = {
     noConsistencyIssues: "No consistency issues detected.",
     diagnosticsUnavailable: "Local diagnostics are not available in this environment.",
     issuesDetected: "{count} issue(s) detected.",
-    openSettingsSelectPlugin: "Open Obsidian settings and select Codex Chat.",
+    openSettingsSelectPlugin: "Open Obsidian settings and select Cortex Chat.",
     localBackendReset: "Non-portable local paths were reset on this device.",
     codexLocalProvider: "Codex local",
     codexOauthProvider: "Codex OAuth",
@@ -244,16 +244,16 @@ const I18N = {
     deviceRegisterFailed: "Could not register local device. Start the backend and try again.",
     backupFailed: "Could not create the note backup: {error}",
     sensitiveContextRedacted: "Sensitive data was redacted before persisting or sending context: {types}",
-    folderReview: "Codex is reviewing folder {folder}",
+    folderReview: "Cortex is reviewing folder {folder}",
     configuredFolderToken: "folder",
     lastNoteHelp: "Last note seen: {note}. Use @NoteName or quick actions to pin context.",
     dataJsonHasLocalKey: "`{path}` still contains `{key}`, which should be local and not synced.",
-    duplicateSessionsDetected: "{count} logically duplicated session(s) found from Sync conflicts in `_agent/sessions`.",
-    memoryFileLegacySchema: "`_agent/memory/{category}.md` uses an old schema and will be read in compatibility mode.",
-    memoryFileNonCanonical: "`_agent/memory/{category}.md` contains {count} non-canonical entries that will be ignored when shared memory is used.",
-    indexEmpty: "`_agent/index` is empty or not being used yet.",
-    indexUnreadable: "`_agent/index` does not exist or cannot be read.",
-    outboxStale: "`_agent/outbox` keeps {count} temporary file(s) older than 24h.",
+    duplicateSessionsDetected: "{count} logically duplicated session(s) found from Sync conflicts in `_cortex/sessions`.",
+    memoryFileLegacySchema: "`_cortex/memory/{category}.md` uses an old schema and will be read in compatibility mode.",
+    memoryFileNonCanonical: "`_cortex/memory/{category}.md` contains {count} non-canonical entries that will be ignored when shared memory is used.",
+    indexEmpty: "`_cortex/index` is empty or not being used yet.",
+    indexUnreadable: "`_cortex/index` does not exist or cannot be read.",
+    outboxStale: "`_cortex/outbox` keeps {count} temporary file(s) older than 24h.",
     workModeExecutePrompt:
       "Active work mode: Execute / Unrestricted.\nYou may act without asking for additional confirmation, but before editing or deleting any file or note you must create a backup of the affected file.\n{backupInstruction}\nIf the backup cannot be created first, do not modify or delete the file and explain the block.",
     workModeExecuteBackupPath: "Store those copies in: {backupRoot}, preserving the file path relative to the vault.",
@@ -283,8 +283,8 @@ const I18N = {
     languageEnglish: "Inglés",
     languageSpanish: "Español",
     languageAuto: "Automático",
-    appTitle: "Codex",
-    openChat: "Abrir Codex Chat",
+    appTitle: "Cortex",
+    openChat: "Abrir Cortex Chat",
     askCurrentNote: "Preguntar sobre nota actual",
     insertLastResponse: "Insertar respuesta en la nota",
     viewMemoryUsed: "Ver memoria usada para la última respuesta",
@@ -315,7 +315,7 @@ const I18N = {
     showDiagnostics: "Mostrar diagnóstico en el panel",
     showDiagnosticsDesc: "Muestra backend, dispositivo y contexto actual en la cabecera del chat.",
     folderRoots: "Raíces de carpetas referenciables",
-    folderRootsDesc: "Carpetas de la vault, separadas por comas, que Codex puede cargar cuando pidas revisar una carpeta.",
+    folderRootsDesc: "Carpetas de la vault, separadas por comas, que el asistente puede cargar cuando pidas revisar una carpeta.",
     maxFolderReferences: "Notas máximas al resumir una carpeta",
     maxFolderReferencesDesc: "Límite de notas añadidas como contexto cuando haya carpetas configuradas explícitamente.",
     systemPrompt: "System Prompt",
@@ -356,7 +356,7 @@ const I18N = {
     maxContextCharsDesc: "Número máximo de caracteres de la nota activa que se enviarán al asistente en cada consulta.",
     language: "Idioma",
     languageDesc: "Automático usa el idioma de Obsidian/navegador cuando está disponible. Idiomas soportados: inglés y español.",
-    askPlaceholder: "Pregunta a Codex...",
+    askPlaceholder: "Pregunta a Cortex...",
     inputHint: "Enter envía · Shift+Enter línea · @nota",
     sendMessage: "Enviar mensaje",
     ready: "Listo",
@@ -391,8 +391,8 @@ const I18N = {
     writeMessageFirst: "Escribe un mensaje antes de enviar.",
     sendingToAgent: "Enviando mensaje al asistente",
     preparingContext: "Preparando contexto",
-    codexThinking: "Codex está pensando",
-    codexPreparingResponse: "Codex está preparando la respuesta",
+    codexThinking: "Cortex está pensando",
+    codexPreparingResponse: "Cortex está preparando la respuesta",
     unrestrictedActive: "Sin restricciones activo: si hay cambios, se ejecutarán sin pedir confirmación adicional.",
     unresolvedReferences: "No he podido resolver estas referencias @: {refs}",
     requestFailed: "No se pudo completar la petición: {error}",
@@ -403,7 +403,7 @@ const I18N = {
     noConsistencyIssues: "No se han detectado incidencias de consistencia.",
     diagnosticsUnavailable: "Diagnóstico local no disponible en este entorno.",
     issuesDetected: "Se han detectado {count} incidencias.",
-    openSettingsSelectPlugin: "Abre los ajustes de Obsidian y selecciona Codex Chat.",
+    openSettingsSelectPlugin: "Abre los ajustes de Obsidian y selecciona Cortex Chat.",
     localBackendReset: "Se han reseteado rutas locales no portables al cargar este equipo.",
     codexLocalProvider: "Codex local",
     codexOauthProvider: "Codex OAuth",
@@ -454,16 +454,16 @@ const I18N = {
     deviceRegisterFailed: "No se pudo registrar el dispositivo local. Arranca el backend y vuelve a intentarlo.",
     backupFailed: "No se ha podido crear la copia previa de la nota: {error}",
     sensitiveContextRedacted: "Se han redactado datos sensibles antes de persistir o reenviar contexto: {types}",
-    folderReview: "Codex está revisando la carpeta {folder}",
+    folderReview: "Cortex está revisando la carpeta {folder}",
     configuredFolderToken: "carpeta",
     lastNoteHelp: "Última nota vista: {note}. Usa @NombreNota o las acciones rápidas para anclar el contexto.",
     dataJsonHasLocalKey: "`{path}` aún contiene `{key}`, que debería ser local y no sincronizarse.",
-    duplicateSessionsDetected: "Hay {count} sesiones duplicadas lógicamente por conflictos de Sync en `_agent/sessions`.",
-    memoryFileLegacySchema: "`_agent/memory/{category}.md` sigue en esquema antiguo y se leerá en modo compatible.",
-    memoryFileNonCanonical: "`_agent/memory/{category}.md` contiene {count} entradas no canónicas que el plugin ignorará al usar memoria compartida.",
-    indexEmpty: "`_agent/index` está vacío o no se está usando todavía.",
-    indexUnreadable: "`_agent/index` no existe o no se puede leer.",
-    outboxStale: "`_agent/outbox` conserva {count} temporales con más de 24h.",
+    duplicateSessionsDetected: "Hay {count} sesiones duplicadas lógicamente por conflictos de Sync en `_cortex/sessions`.",
+    memoryFileLegacySchema: "`_cortex/memory/{category}.md` sigue en esquema antiguo y se leerá en modo compatible.",
+    memoryFileNonCanonical: "`_cortex/memory/{category}.md` contiene {count} entradas no canónicas que el plugin ignorará al usar memoria compartida.",
+    indexEmpty: "`_cortex/index` está vacío o no se está usando todavía.",
+    indexUnreadable: "`_cortex/index` no existe o no se puede leer.",
+    outboxStale: "`_cortex/outbox` conserva {count} temporales con más de 24h.",
     workModeExecutePrompt:
       "Modo de trabajo activo: Ejecutar / Sin restricciones.\nPuedes actuar sin pedir permiso adicional, pero antes de editar o borrar cualquier archivo o nota debes crear una copia de seguridad del archivo afectado.\n{backupInstruction}\nSi no puedes crear la copia previa, no modifiques ni borres el archivo y explica el bloqueo.",
     workModeExecuteBackupPath: "Guarda esas copias dentro de: {backupRoot} preservando la ruta relativa del archivo dentro de la vault.",
@@ -564,7 +564,7 @@ module.exports = {
 };
 });
 
-__codexChatDefine('./lib/security', function(module, exports, require) {
+__cortexChatDefine('./lib/security', function(module, exports, require) {
 function isForeignWindowsUserPath(value, homeDir = "") {
   const current = String(value || "").toLowerCase();
   const home = String(homeDir || "").toLowerCase();
@@ -609,7 +609,14 @@ function normalizeFolderRoots(value) {
       .replaceAll("\\", "/")
       .replace(/^\/+|\/+$/g, "")
       .trim();
-    if (!normalized || normalized.startsWith("_agent/") || normalized === "_agent" || seen.has(normalized)) {
+    if (
+      !normalized ||
+      normalized.startsWith("_cortex/") ||
+      normalized === "_cortex" ||
+      normalized.startsWith("_agent/") ||
+      normalized === "_agent" ||
+      seen.has(normalized)
+    ) {
       continue;
     }
     seen.add(normalized);
@@ -630,6 +637,7 @@ const DEFAULT_EXCLUDED_PATH_SEGMENTS = new Set([
   "node_modules",
   ".git",
   ".obsidian",
+  "_cortex",
   "_agent",
   "dist",
   "build",
@@ -659,8 +667,8 @@ module.exports = {
 };
 });
 
-__codexChatDefine('./lib/context', function(module, exports, require) {
-const { normalizeFolderRoots } = __codexChatRequire('./lib/security');
+__cortexChatDefine('./lib/context', function(module, exports, require) {
+const { normalizeFolderRoots } = __cortexChatRequire('./lib/security');
 
 function wantsFolderContext(message, roots = []) {
   const source = String(message || "").toLowerCase();
@@ -689,11 +697,25 @@ module.exports = {
 };
 });
 
-__codexChatDefine('./lib/agent-store', function(module, exports, require) {
+__cortexChatDefine('./lib/agent-store', function(module, exports, require) {
 const path = require("node:path");
 
+const CORTEX_DATA_ROOT = "_cortex";
+const LEGACY_AGENT_DATA_ROOT = "_agent";
+
 function agentPaths(vaultRoot) {
-  const agentRoot = path.join(vaultRoot, "_agent");
+  const agentRoot = path.join(vaultRoot, CORTEX_DATA_ROOT);
+  return {
+    agentRoot,
+    memoryRoot: path.join(agentRoot, "memory"),
+    sessionsRoot: path.join(agentRoot, "sessions"),
+    outboxRoot: path.join(agentRoot, "outbox"),
+    indexRoot: path.join(agentRoot, "index")
+  };
+}
+
+function legacyAgentPaths(vaultRoot) {
+  const agentRoot = path.join(vaultRoot, LEGACY_AGENT_DATA_ROOT);
   return {
     agentRoot,
     memoryRoot: path.join(agentRoot, "memory"),
@@ -708,16 +730,19 @@ function sessionBackupRoot(createdAt, threadId, sessionId) {
   const year = String(date.getUTCFullYear());
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const day = String(date.getUTCDate()).padStart(2, "0");
-  return path.join("_agent", "backups", year, month, day, `${threadId}-${sessionId}`).replaceAll("\\", "/");
+  return path.join(CORTEX_DATA_ROOT, "backups", year, month, day, `${threadId}-${sessionId}`).replaceAll("\\", "/");
 }
 
 module.exports = {
+  CORTEX_DATA_ROOT,
+  LEGACY_AGENT_DATA_ROOT,
   agentPaths,
+  legacyAgentPaths,
   sessionBackupRoot
 };
 });
 
-__codexChatDefine('./lib/codex-cli', function(module, exports, require) {
+__cortexChatDefine('./lib/codex-cli', function(module, exports, require) {
 function escapePowerShellSingleQuoted(value) {
   return String(value).replace(/'/g, "''");
 }
@@ -788,9 +813,9 @@ module.exports = {
 };
 });
 
-__codexChatDefine('./lib/settings', function(module, exports, require) {
-const { getDefaultSystemPromptSections, resolveLanguage } = __codexChatRequire('./lib/i18n');
-const { normalizeFolderRoots } = __codexChatRequire('./lib/security');
+__cortexChatDefine('./lib/settings', function(module, exports, require) {
+const { getDefaultSystemPromptSections, resolveLanguage } = __cortexChatRequire('./lib/i18n');
+const { normalizeFolderRoots } = __cortexChatRequire('./lib/security');
 
 const MEMORY_CATEGORIES = ["preferences", "projects", "people", "decisions", "recent"];
 const AGENT_SCHEMA_VERSION = "2";
@@ -903,13 +928,13 @@ module.exports = {
 };
 });
 
-// END CODEX CHAT BUNDLED LIBS
+// END CORTEX CHAT BUNDLED LIBS
 
 const {
   createTranslator,
   getDefaultSystemPromptSections,
   resolveLanguage
-} = __codexChatRequire('./lib/i18n');
+} = __cortexChatRequire('./lib/i18n');
 const {
   formatFolderRoots,
   isForeignWindowsUserPath,
@@ -918,20 +943,23 @@ const {
   normalizeFolderRoots,
   parseFolderRootsInput,
   validateBackendUrl: validateBackendUrlValue
-} = __codexChatRequire('./lib/security');
+} = __cortexChatRequire('./lib/security');
 const {
   isInsideConfiguredRoot,
   rootForPath,
   wantsFolderContext
-} = __codexChatRequire('./lib/context');
+} = __cortexChatRequire('./lib/context');
 const {
+  CORTEX_DATA_ROOT,
+  LEGACY_AGENT_DATA_ROOT,
   agentPaths,
+  legacyAgentPaths,
   sessionBackupRoot
-} = __codexChatRequire('./lib/agent-store');
+} = __cortexChatRequire('./lib/agent-store');
 const {
   buildCodexExecCommand: buildCodexExecCommandSafe,
   classifyLocalCodexFailure: classifyLocalCodexFailureSafe
-} = __codexChatRequire('./lib/codex-cli');
+} = __cortexChatRequire('./lib/codex-cli');
 const {
   AGENT_SCHEMA_VERSION,
   LOCAL_SETTING_KEYS,
@@ -942,7 +970,7 @@ const {
   normalizeLanguageMode,
   normalizeSettings,
   normalizeSystemPromptSections
-} = __codexChatRequire('./lib/settings');
+} = __cortexChatRequire('./lib/settings');
 
 function optionalRequire(moduleName) {
   try {
@@ -961,8 +989,9 @@ const childProcess = optionalRequire("node:child_process");
 const util = optionalRequire("node:util");
 const execFileAsync =
   childProcess?.execFile && util?.promisify ? util.promisify(childProcess.execFile) : null;
-const PLUGIN_ID = "codex-chat";
+const PLUGIN_ID = "cortex-chat";
 const LEGACY_PLUGIN_IDS = [
+  ["codex", "chat"].join("-"),
   ["obsidian", "codex"].join("-"),
   ["agent", "memory", "sync"].join("-")
 ];
@@ -2037,7 +2066,7 @@ class CodexSetupModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.addClass("codex-chat-setup-modal");
+    contentEl.addClass("cortex-chat-setup-modal");
     const mobile = this.plugin.isMobileRuntime();
     contentEl.createEl("h2", { text: mobile ? this.plugin.t("setupMobileTitle") : this.plugin.t("setupDesktopTitle") });
     contentEl.createEl("p", {
@@ -2047,10 +2076,10 @@ class CodexSetupModal extends Modal {
           : this.plugin.t("setupDesktopDesc")
     });
 
-    this.statusEl = contentEl.createDiv({ cls: "codex-chat-setup-status" });
+    this.statusEl = contentEl.createDiv({ cls: "cortex-chat-setup-status" });
     this.renderStatus();
 
-    const actionsEl = contentEl.createDiv({ cls: "codex-chat-setup-actions" });
+    const actionsEl = contentEl.createDiv({ cls: "cortex-chat-setup-actions" });
     if (mobile) {
       this.addAction(actionsEl, this.plugin.t("openAssistant"), "allowRemoteBackend", async () => {
         this.plugin.openPluginSettings();
@@ -2109,7 +2138,7 @@ class CodexSetupModal extends Modal {
   }
 
   addAction(parentEl, label, statusKey, onClick) {
-    const button = parentEl.createEl("button", { cls: "codex-chat-setup-action" });
+    const button = parentEl.createEl("button", { cls: "cortex-chat-setup-action" });
     this.renderActionButton(button, label, statusKey);
     button.addEventListener("click", async () => {
       button.disabled = true;
@@ -2127,14 +2156,14 @@ class CodexSetupModal extends Modal {
     button.empty();
     const ok = Boolean(this.plugin.settings[statusKey]);
     button.createSpan({
-      cls: `codex-chat-setup-badge ${ok ? "is-ok" : "is-pending"}`,
+      cls: `cortex-chat-setup-badge ${ok ? "is-ok" : "is-pending"}`,
       text: ok ? "✓" : "•"
     });
     button.createSpan({ text: label });
   }
 }
 
-class CodexChatView extends ItemView {
+class CortexChatView extends ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -2206,7 +2235,7 @@ class CodexChatView extends ItemView {
     if (!this.contentEl) {
       return;
     }
-    this.contentEl.style.setProperty("--codex-chat-scale", String(this.plugin.getUiScale()));
+    this.contentEl.style.setProperty("--cortex-chat-scale", String(this.plugin.getUiScale()));
   }
 
   registerScaleShortcuts() {
@@ -2277,31 +2306,31 @@ class CodexChatView extends ItemView {
   render() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.addClass("codex-chat-view");
+    contentEl.addClass("cortex-chat-view");
     contentEl.setAttr("tabindex", "0");
     this.applyUiScale();
     this.registerScaleShortcuts();
 
-    this.headerEl = contentEl.createDiv({ cls: "codex-chat-header" });
-    this.quickActionsEl = contentEl.createDiv({ cls: "codex-chat-quick-actions" });
-    this.messagesEl = contentEl.createDiv({ cls: "codex-chat-messages" });
-    this.sendEl = contentEl.createDiv({ cls: "codex-chat-send" });
-    this.contextEl = this.sendEl.createDiv({ cls: "codex-chat-context" });
-    this.modeCardsEl = this.sendEl.createDiv({ cls: "codex-chat-mode-cards" });
+    this.headerEl = contentEl.createDiv({ cls: "cortex-chat-header" });
+    this.quickActionsEl = contentEl.createDiv({ cls: "cortex-chat-quick-actions" });
+    this.messagesEl = contentEl.createDiv({ cls: "cortex-chat-messages" });
+    this.sendEl = contentEl.createDiv({ cls: "cortex-chat-send" });
+    this.contextEl = this.sendEl.createDiv({ cls: "cortex-chat-context" });
+    this.modeCardsEl = this.sendEl.createDiv({ cls: "cortex-chat-mode-cards" });
     this.renderModeCards();
 
     this.suggestionsEl = this.sendEl.createDiv({
-      cls: "codex-chat-suggestions suggestion-container"
+      cls: "cortex-chat-suggestions suggestion-container"
     });
     this.suggestionsEl.hide();
 
-    this.composerRowEl = this.sendEl.createDiv({ cls: "codex-chat-composer-row" });
+    this.composerRowEl = this.sendEl.createDiv({ cls: "cortex-chat-composer-row" });
     this.inputEl = this.composerRowEl.createEl("textarea", {
       attr: {
         placeholder: this.plugin.t("askPlaceholder")
       }
     });
-    this.inputEl.addClass("codex-chat-input");
+    this.inputEl.addClass("cortex-chat-input");
 
     this.inputEl.addEventListener("input", () => {
       this.autoResizeInput();
@@ -2328,7 +2357,7 @@ class CodexChatView extends ItemView {
     });
 
     this.sendButtonEl = this.composerRowEl.createEl("button", {
-      cls: "codex-chat-send-button",
+      cls: "cortex-chat-send-button",
       attr: { "aria-label": this.plugin.t("sendMessage") }
     });
     setIcon(this.sendButtonEl, "send-horizontal");
@@ -2336,7 +2365,7 @@ class CodexChatView extends ItemView {
       await this.sendMessage();
     });
     this.sendHintEl = this.sendEl.createDiv({
-      cls: "codex-chat-input-hint",
+      cls: "cortex-chat-input-hint",
       text: this.plugin.t("inputHint")
     });
 
@@ -2366,25 +2395,25 @@ class CodexChatView extends ItemView {
   addSegmentedSetting(config) {
     const current = this.plugin.settings[config.settingKey] || DEFAULT_SETTINGS[config.settingKey];
     const active = config.values[current] || config.values[Object.keys(config.values)[0]];
-    const groupEl = this.modeCardsEl.createDiv({ cls: "codex-chat-mode-group" });
-    const headerEl = groupEl.createDiv({ cls: "codex-chat-mode-group-header" });
-    headerEl.createSpan({ cls: "codex-chat-mode-group-title", text: config.title });
+    const groupEl = this.modeCardsEl.createDiv({ cls: "cortex-chat-mode-group" });
+    const headerEl = groupEl.createDiv({ cls: "cortex-chat-mode-group-header" });
+    headerEl.createSpan({ cls: "cortex-chat-mode-group-title", text: config.title });
     if (active?.detail) {
-      headerEl.createSpan({ cls: "codex-chat-mode-group-hint", text: active.detail });
+      headerEl.createSpan({ cls: "cortex-chat-mode-group-hint", text: active.detail });
     }
-    const segmentedEl = groupEl.createDiv({ cls: "codex-chat-mode-segmented" });
+    const segmentedEl = groupEl.createDiv({ cls: "cortex-chat-mode-segmented" });
     for (const [value, option] of Object.entries(config.values)) {
       const buttonEl = segmentedEl.createEl("button", {
-        cls: `codex-chat-mode-segment${value === current ? " is-active" : ""}`,
+        cls: `cortex-chat-mode-segment${value === current ? " is-active" : ""}`,
         attr: {
           "aria-label": `${config.title}: ${option.label}`,
           "aria-pressed": String(value === current),
           title: option.detail ? `${option.label} · ${option.detail}` : option.label
         }
       });
-      buttonEl.createSpan({ cls: "codex-chat-mode-segment-label", text: option.label });
+      buttonEl.createSpan({ cls: "cortex-chat-mode-segment-label", text: option.label });
       if (option.detail) {
-        buttonEl.createSpan({ cls: "codex-chat-mode-segment-detail", text: option.detail });
+        buttonEl.createSpan({ cls: "cortex-chat-mode-segment-detail", text: option.detail });
       }
       buttonEl.addEventListener("click", async () => {
         if (this.plugin.settings[config.settingKey] === value) {
@@ -2403,20 +2432,20 @@ class CodexChatView extends ItemView {
       return;
     }
     this.headerEl.empty();
-    const leftEl = this.headerEl.createDiv({ cls: "codex-chat-header-left" });
-    leftEl.createDiv({ cls: "codex-chat-title", text: this.plugin.t("appTitle") });
+    const leftEl = this.headerEl.createDiv({ cls: "cortex-chat-header-left" });
+    leftEl.createDiv({ cls: "cortex-chat-title", text: this.plugin.t("appTitle") });
     const state = this.getCodexState();
-    const stateEl = leftEl.createDiv({ cls: `codex-chat-state is-${state.kind}` });
-    stateEl.createSpan({ cls: "codex-chat-state-dot" });
+    const stateEl = leftEl.createDiv({ cls: `cortex-chat-state is-${state.kind}` });
+    stateEl.createSpan({ cls: "cortex-chat-state-dot" });
     stateEl.createSpan({ text: state.label });
     if ((this.plugin.settings.defaultInteractionMode || DEFAULT_SETTINGS.defaultInteractionMode) === "execute") {
-      leftEl.createDiv({ cls: "codex-chat-header-mode-chip is-unrestricted", text: this.plugin.t("unrestricted") });
+      leftEl.createDiv({ cls: "cortex-chat-header-mode-chip is-unrestricted", text: this.plugin.t("unrestricted") });
     }
-    const actionsButton = this.createIconButton(this.headerEl, "settings", this.plugin.t("consistencyDiagnostics"), "codex-chat-icon-button");
+    const actionsButton = this.createIconButton(this.headerEl, "settings", this.plugin.t("consistencyDiagnostics"), "cortex-chat-icon-button");
     actionsButton.addEventListener("click", (event) => this.openActionsMenu(event));
     if (this.plugin.settings.showDiagnostics) {
       this.headerEl.createDiv({
-        cls: "codex-chat-diagnostics",
+        cls: "cortex-chat-diagnostics",
         text: `${this.plugin.settings.backendUrl} | ${this.plugin.settings.deviceId}`
       });
     }
@@ -2455,7 +2484,7 @@ class CodexChatView extends ItemView {
 
   createQuickAction(icon, ariaLabel, handler) {
     const button = this.quickActionsEl.createEl("button", {
-      cls: "codex-chat-quick-action",
+      cls: "cortex-chat-quick-action",
       attr: { "aria-label": ariaLabel, title: ariaLabel }
     });
     setIcon(button, icon);
@@ -2538,9 +2567,9 @@ class CodexChatView extends ItemView {
   }
 
   createContextItem(parentEl, label, value, state = "") {
-    const itemEl = parentEl.createDiv({ cls: `codex-chat-context-item ${state}`.trim() });
-    itemEl.createDiv({ cls: "codex-chat-context-label", text: label });
-    itemEl.createDiv({ cls: "codex-chat-context-value", text: value });
+    const itemEl = parentEl.createDiv({ cls: `cortex-chat-context-item ${state}`.trim() });
+    itemEl.createDiv({ cls: "cortex-chat-context-label", text: label });
+    itemEl.createDiv({ cls: "cortex-chat-context-value", text: value });
   }
 
   getContextSummary() {
@@ -2552,7 +2581,7 @@ class CodexChatView extends ItemView {
 
   renderContext() {
     this.contextEl.empty();
-    const summaryEl = this.contextEl.createDiv({ cls: "codex-chat-context-summary" });
+    const summaryEl = this.contextEl.createDiv({ cls: "cortex-chat-context-summary" });
     summaryEl.setAttribute("role", "button");
     summaryEl.setAttribute("tabindex", "0");
     summaryEl.setAttribute("aria-expanded", String(this.contextExpanded));
@@ -2567,7 +2596,7 @@ class CodexChatView extends ItemView {
         toggleContext();
       }
     });
-    const summaryTextEl = summaryEl.createDiv({ cls: "codex-chat-context-line" });
+    const summaryTextEl = summaryEl.createDiv({ cls: "cortex-chat-context-line" });
     const noteReady = Boolean(this.context?.path || this.plugin.lastMarkdownFile);
     const referenceReady = Boolean(this.context?.references?.length);
     const indicators = [
@@ -2576,7 +2605,7 @@ class CodexChatView extends ItemView {
     ];
     for (const [icon, ready, label, handler] of indicators) {
       const indicatorEl = summaryTextEl.createEl("button", {
-        cls: ready ? "codex-chat-context-icon is-ready" : "codex-chat-context-icon",
+        cls: ready ? "cortex-chat-context-icon is-ready" : "cortex-chat-context-icon",
         attr: { "aria-label": label, title: label }
       });
       setIcon(indicatorEl, icon);
@@ -2586,17 +2615,17 @@ class CodexChatView extends ItemView {
         await handler();
       });
     }
-    summaryTextEl.createSpan({ cls: "codex-chat-context-kicker", text: this.context?.path ? this.plugin.t("activeContext") : this.plugin.t("context") });
-    summaryTextEl.createSpan({ cls: "codex-chat-context-text", text: this.getContextSummary() });
+    summaryTextEl.createSpan({ cls: "cortex-chat-context-kicker", text: this.context?.path ? this.plugin.t("activeContext") : this.plugin.t("context") });
+    summaryTextEl.createSpan({ cls: "cortex-chat-context-text", text: this.getContextSummary() });
     const toggleButton = this.createIconButton(
       summaryEl,
       this.contextExpanded ? "chevron-down" : "chevron-right",
       this.contextExpanded ? this.plugin.t("hideContextDetails") : this.plugin.t("viewContextDetails"),
-      "codex-chat-context-toggle"
+      "cortex-chat-context-toggle"
     );
     toggleButton.setAttribute("aria-expanded", String(this.contextExpanded));
     toggleButton.createSpan({
-      cls: "codex-chat-context-toggle-label",
+      cls: "cortex-chat-context-toggle-label",
       text: this.contextExpanded ? this.plugin.t("hide") : this.plugin.t("details")
     });
     toggleButton.addEventListener("click", (event) => {
@@ -2610,9 +2639,9 @@ class CodexChatView extends ItemView {
 
     if (!this.context) {
       const lastNote = this.plugin.lastMarkdownFile?.path || this.plugin.t("noNote");
-      this.contextEl.createDiv({ cls: "codex-chat-context-title", text: this.plugin.t("contextPending") });
+      this.contextEl.createDiv({ cls: "cortex-chat-context-title", text: this.plugin.t("contextPending") });
       this.contextEl.createDiv({
-        cls: "codex-chat-context-help",
+        cls: "cortex-chat-context-help",
         text: this.plugin.t("lastNoteHelp", { note: lastNote })
       });
       return;
@@ -2631,15 +2660,15 @@ class CodexChatView extends ItemView {
         }`
       : this.plugin.t("noRefs");
 
-    this.contextEl.createDiv({ cls: "codex-chat-context-title", text: this.plugin.t("contextToSend") });
-    const gridEl = this.contextEl.createDiv({ cls: "codex-chat-context-grid" });
+    this.contextEl.createDiv({ cls: "cortex-chat-context-title", text: this.plugin.t("contextToSend") });
+    const gridEl = this.contextEl.createDiv({ cls: "cortex-chat-context-grid" });
     this.createContextItem(gridEl, this.plugin.t("activeNote"), this.context.path || this.plugin.t("noNote"), this.context.path ? "is-ready" : "");
     this.createContextItem(gridEl, this.plugin.t("links"), outgoingSummary, this.context.outgoingLinks?.length ? "is-ready" : "");
     this.createContextItem(gridEl, this.plugin.t("references"), referenceSummary, references.length ? "is-ready" : "");
 
     if (references.length) {
       this.contextEl.createDiv({
-        cls: "codex-chat-context-help",
+        cls: "cortex-chat-context-help",
         text: references
           .slice(0, 5)
           .map((reference) => reference.path)
@@ -2656,7 +2685,7 @@ class CodexChatView extends ItemView {
     this.messagesEl.empty();
     if (!this.messages.length) {
       this.messagesEl.createEl("div", {
-        cls: "codex-chat-empty-state",
+        cls: "cortex-chat-empty-state",
         text: this.plugin.t("chatEmpty")
       });
       return;
@@ -2665,45 +2694,45 @@ class CodexChatView extends ItemView {
     for (const message of this.messages) {
       const isAssistant = message.role === "assistant";
       const messageEl = this.messagesEl.createDiv({
-        cls: `codex-chat-message ${isAssistant ? "is-assistant" : "is-user"}`
+        cls: `cortex-chat-message ${isAssistant ? "is-assistant" : "is-user"}`
       });
-      const headerEl = messageEl.createDiv({ cls: "codex-chat-message-header" });
-      const metaEl = headerEl.createDiv({ cls: "codex-chat-message-meta" });
+      const headerEl = messageEl.createDiv({ cls: "cortex-chat-message-header" });
+      const metaEl = headerEl.createDiv({ cls: "cortex-chat-message-meta" });
       metaEl.createDiv({
-        cls: "codex-chat-role",
+        cls: "cortex-chat-role",
         text: isAssistant ? "Codex" : this.plugin.t("you")
       });
       if (message.meta?.label) {
-        metaEl.createDiv({ cls: "codex-chat-message-chip", text: message.meta.label });
+        metaEl.createDiv({ cls: "cortex-chat-message-chip", text: message.meta.label });
       }
       if (isAssistant && !message.meta?.loading && message.content) {
-        const actionsEl = headerEl.createDiv({ cls: "codex-chat-message-actions" });
-        const copyButton = this.createIconButton(actionsEl, "copy", this.plugin.t("copyResponse"), "codex-chat-message-action");
+        const actionsEl = headerEl.createDiv({ cls: "cortex-chat-message-actions" });
+        const copyButton = this.createIconButton(actionsEl, "copy", this.plugin.t("copyResponse"), "cortex-chat-message-action");
         copyButton.addEventListener("click", async () => {
           await navigator.clipboard.writeText(message.content);
           new Notice(this.plugin.t("responseCopied"));
         });
-        const insertButton = this.createIconButton(actionsEl, "corner-down-left", this.plugin.t("insertResponse"), "codex-chat-message-action");
+        const insertButton = this.createIconButton(actionsEl, "corner-down-left", this.plugin.t("insertResponse"), "cortex-chat-message-action");
         insertButton.addEventListener("click", async () => {
           await this.insertTextIntoActiveNote(message.content);
         });
-        const useButton = this.createIconButton(actionsEl, "message-square-plus", this.plugin.t("useAsContext"), "codex-chat-message-action");
+        const useButton = this.createIconButton(actionsEl, "message-square-plus", this.plugin.t("useAsContext"), "cortex-chat-message-action");
         useButton.addEventListener("click", () => {
           this.appendToComposer(`Contexto de respuesta anterior:\n${message.content}`);
         });
       }
-      const bodyEl = messageEl.createDiv({ cls: "codex-chat-message-body" });
+      const bodyEl = messageEl.createDiv({ cls: "cortex-chat-message-body" });
       if (message.meta?.loading) {
-        bodyEl.createDiv({ cls: "codex-chat-loading", text: message.meta.status || this.plugin.t("preparingResponse") });
-        bodyEl.createDiv({ cls: "codex-chat-loading-bar" });
+        bodyEl.createDiv({ cls: "cortex-chat-loading", text: message.meta.status || this.plugin.t("preparingResponse") });
+        bodyEl.createDiv({ cls: "cortex-chat-loading-bar" });
       } else if (isAssistant) {
         void this.renderAssistantMessage(bodyEl, message.content);
       } else {
         bodyEl.setText(message.content);
       }
       if (message.meta?.detail) {
-        const footerEl = messageEl.createDiv({ cls: "codex-chat-message-detail" });
-        footerEl.createSpan({ cls: "codex-chat-message-detail-text", text: message.meta.detail });
+        const footerEl = messageEl.createDiv({ cls: "cortex-chat-message-detail" });
+        footerEl.createSpan({ cls: "cortex-chat-message-detail-text", text: message.meta.detail });
       }
     }
 
@@ -2853,7 +2882,7 @@ class CodexChatView extends ItemView {
 
     this.mentionState.items.forEach((file, index) => {
       const itemEl = this.suggestionsEl.createDiv({
-        cls: `suggestion-item codex-chat-suggestion-item${index === this.mentionState.selectedIndex ? " is-selected" : ""}`
+        cls: `suggestion-item cortex-chat-suggestion-item${index === this.mentionState.selectedIndex ? " is-selected" : ""}`
       });
 
       itemEl.createDiv({
@@ -2861,7 +2890,7 @@ class CodexChatView extends ItemView {
         text: file.basename
       });
       itemEl.createDiv({
-        cls: "suggestion-note codex-chat-suggestion-note",
+        cls: "suggestion-note cortex-chat-suggestion-note",
         text: file.path
       });
 
@@ -3034,7 +3063,7 @@ class ConsistencyDiagnosticsModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.addClass("codex-chat-setup-modal");
+    contentEl.addClass("cortex-chat-setup-modal");
     contentEl.createEl("h3", { text: this.t("consistencyDiagnostics") });
     contentEl.createEl("p", {
       text: this.report.summary
@@ -3051,7 +3080,7 @@ class ConsistencyDiagnosticsModal extends Modal {
   }
 }
 
-class CodexChatSettingTab extends PluginSettingTab {
+class CortexChatSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -3203,7 +3232,7 @@ class CodexChatSettingTab extends PluginSettingTab {
         .addTextArea((text) => {
           text.setValue(this.plugin.settings.systemPromptSections?.[key] || "");
           text.inputEl.rows = 4;
-          text.inputEl.addClass("codex-chat-settings-textarea");
+          text.inputEl.addClass("cortex-chat-settings-textarea");
           text.onChange(async (value) => {
             this.plugin.settings.systemPromptSections = {
               ...normalizeSystemPromptSections(this.plugin.settings.systemPromptSections, this.plugin.settings.languageMode),
@@ -3337,7 +3366,7 @@ class CodexChatSettingTab extends PluginSettingTab {
   }
 }
 
-module.exports = class CodexChatPlugin extends Plugin {
+module.exports = class CortexChatPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
     this.t = createTranslator(() => this.getLanguage());
@@ -3350,15 +3379,15 @@ module.exports = class CodexChatPlugin extends Plugin {
       await this.saveSettings();
     }
 
-    this.registerView(VIEW_TYPE, (leaf) => new CodexChatView(leaf, this));
-    this.addSettingTab(new CodexChatSettingTab(this.app, this));
+    this.registerView(VIEW_TYPE, (leaf) => new CortexChatView(leaf, this));
+    this.addSettingTab(new CortexChatSettingTab(this.app, this));
 
     this.addRibbonIcon("bot", this.t("openChat"), async () => {
       await this.activateView();
     });
 
     this.addCommand({
-      id: "open-codex-chat",
+      id: "open-cortex-chat",
       name: this.t("openChat"),
       callback: async () => {
         await this.activateView();
@@ -3544,7 +3573,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     if (directory) {
       return path.join(directory, "tmp");
     }
-    return os?.tmpdir ? path.join(os.tmpdir(), "codex-chat") : "";
+    return os?.tmpdir ? path.join(os.tmpdir(), "cortex-chat") : "";
   }
 
   async loadLocalRuntimeState(sharedSettings = {}) {
@@ -3712,7 +3741,7 @@ module.exports = class CodexChatPlugin extends Plugin {
         items.push({
           severity: "warn",
           message: this.t("dataJsonHasLocalKey", {
-            path: ".obsidian/plugins/codex-chat/data.json",
+            path: ".obsidian/plugins/cortex-chat/data.json",
             key
           })
         });
@@ -3760,7 +3789,7 @@ module.exports = class CodexChatPlugin extends Plugin {
   }
 
   async countDuplicateSessions(vaultRoot) {
-    const sessionsRoot = path.join(vaultRoot, "_agent", "sessions");
+    const sessionsRoot = agentPaths(vaultRoot).sessionsRoot;
     const files = await this.walkMarkdownFiles(sessionsRoot);
     const seen = new Set();
     let duplicates = 0;
@@ -3786,8 +3815,9 @@ module.exports = class CodexChatPlugin extends Plugin {
 
   async collectMemoryIssues(vaultRoot) {
     const issues = [];
+    const memoryRoot = agentPaths(vaultRoot).memoryRoot;
     for (const category of MEMORY_CATEGORIES) {
-      const filePath = path.join(vaultRoot, "_agent", "memory", `${category}.md`);
+      const filePath = path.join(memoryRoot, `${category}.md`);
       let markdown = "";
       try {
         markdown = await fs.readFile(filePath, "utf8");
@@ -3815,7 +3845,7 @@ module.exports = class CodexChatPlugin extends Plugin {
 
   async collectIndexIssues(vaultRoot) {
     const issues = [];
-    const indexRoot = path.join(vaultRoot, "_agent", "index");
+    const indexRoot = agentPaths(vaultRoot).indexRoot;
     try {
       const entries = await fs.readdir(indexRoot, { withFileTypes: true });
       if (!entries.length) {
@@ -3835,7 +3865,7 @@ module.exports = class CodexChatPlugin extends Plugin {
 
   async collectOutboxIssues(vaultRoot) {
     const issues = [];
-    const outboxRoot = path.join(vaultRoot, "_agent", "outbox");
+    const outboxRoot = agentPaths(vaultRoot).outboxRoot;
     let staleCount = 0;
     const cutoff = Date.now() - 24 * 60 * 60 * 1000;
     const files = await this.walkFiles(outboxRoot);
@@ -3948,7 +3978,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     return this.app.workspace
       .getLeavesOfType(VIEW_TYPE)
       .map((leaf) => leaf.view)
-      .filter((view) => view instanceof CodexChatView);
+      .filter((view) => view instanceof CortexChatView);
   }
 
   refreshAgentViewScale() {
@@ -4002,7 +4032,7 @@ module.exports = class CodexChatPlugin extends Plugin {
       throw new Error("Codex CLI local solo está disponible en escritorio.");
     }
     const vaultRoot = this.getVaultRoot();
-    const scriptRoot = this.getLocalTempDirectory() || (vaultRoot ? path.join(vaultRoot, "_agent", "outbox") : os.tmpdir());
+    const scriptRoot = this.getLocalTempDirectory() || (vaultRoot ? agentPaths(vaultRoot).outboxRoot : os.tmpdir());
     await fs.mkdir(scriptRoot, { recursive: true });
     const scriptPath = path.join(scriptRoot, `${makeId("codex_script")}.ps1`);
     await fs.writeFile(scriptPath, `\uFEFF${script}`, "utf8");
@@ -4235,7 +4265,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     try {
       await this.ensureCodexVaultTrust();
       const vaultRoot = this.getVaultRoot();
-      const tempRoot = this.getLocalTempDirectory() || path.join(vaultRoot, "_agent", "outbox");
+      const tempRoot = this.getLocalTempDirectory() || agentPaths(vaultRoot).outboxRoot;
       const promptPath = path.join(tempRoot, `${makeId("codex_test")}.txt`);
       const outputPath = path.join(tempRoot, `${makeId("codex_test_result")}.txt`);
       await fs.mkdir(tempRoot, { recursive: true });
@@ -4441,7 +4471,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     const references = [];
     for (const link of outgoingLinks || []) {
       const file = this.app.metadataCache.getFirstLinkpathDest(link, sourcePath || "");
-      if (!file || file.path === sourcePath || file.path.startsWith("_agent/")) {
+      if (!file || file.path === sourcePath || isIgnoredVaultPath(file.path)) {
         continue;
       }
 
@@ -4955,7 +4985,50 @@ module.exports = class CodexChatPlugin extends Plugin {
     return files.filter((filePath) => filePath.endsWith(".md"));
   }
 
+  async copyDirectoryIfMissing(sourceRoot, targetRoot) {
+    if (!sourceRoot || !targetRoot || sourceRoot === targetRoot) {
+      return false;
+    }
+    try {
+      await fs.access(targetRoot);
+      return false;
+    } catch {
+      // Target does not exist; continue with copy.
+    }
+    try {
+      await fs.access(sourceRoot);
+    } catch {
+      return false;
+    }
+
+    const copyRecursive = async (source, target) => {
+      const stat = await fs.stat(source);
+      if (stat.isDirectory()) {
+        await fs.mkdir(target, { recursive: true });
+        const entries = await fs.readdir(source, { withFileTypes: true });
+        for (const entry of entries) {
+          await copyRecursive(path.join(source, entry.name), path.join(target, entry.name));
+        }
+        return;
+      }
+      if (stat.isFile()) {
+        await fs.mkdir(path.dirname(target), { recursive: true });
+        await fs.copyFile(source, target);
+      }
+    };
+
+    await copyRecursive(sourceRoot, targetRoot);
+    return true;
+  }
+
+  async migrateLegacyAgentData(vaultRoot) {
+    const legacy = legacyAgentPaths(vaultRoot);
+    const current = agentPaths(vaultRoot);
+    return this.copyDirectoryIfMissing(legacy.agentRoot, current.agentRoot);
+  }
+
   async ensureAgentStructure(vaultRoot) {
+    await this.migrateLegacyAgentData(vaultRoot);
     const { memoryRoot, sessionsRoot, outboxRoot, indexRoot } = agentPaths(vaultRoot);
 
     await Promise.all([
@@ -4976,7 +5049,7 @@ module.exports = class CodexChatPlugin extends Plugin {
   }
 
   async readMemoryDocuments(vaultRoot) {
-    const memoryRoot = path.join(vaultRoot, "_agent", "memory");
+    const memoryRoot = agentPaths(vaultRoot).memoryRoot;
     const documents = [];
 
     for (const category of MEMORY_CATEGORIES) {
@@ -5003,8 +5076,12 @@ module.exports = class CodexChatPlugin extends Plugin {
   }
 
   async readRecentSessions(vaultRoot, threadId, limit) {
-    const sessionsRoot = path.join(vaultRoot, "_agent", "sessions");
-    const files = await this.walkMarkdownFiles(sessionsRoot);
+    const currentSessionsRoot = agentPaths(vaultRoot).sessionsRoot;
+    const legacySessionsRoot = legacyAgentPaths(vaultRoot).sessionsRoot;
+    let files = await this.walkMarkdownFiles(currentSessionsRoot);
+    if (!files.length) {
+      files = await this.walkMarkdownFiles(legacySessionsRoot);
+    }
     const deduped = new Map();
 
     for (const filePath of files) {
@@ -5126,7 +5203,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     ].join("\n");
 
     const vaultRoot = this.getVaultRoot();
-    const tempRoot = this.getLocalTempDirectory() || path.join(vaultRoot, "_agent", "outbox");
+    const tempRoot = this.getLocalTempDirectory() || agentPaths(vaultRoot).outboxRoot;
     const promptPath = path.join(tempRoot, `${makeId("codex_prompt")}.txt`);
     const outputPath = path.join(tempRoot, `${makeId("codex_output")}.txt`);
     try {
@@ -5178,7 +5255,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
     const filename = `${session.createdAt.replace(/[:.]/g, "-")}-${session.threadId}-${session.sessionId}.md`;
-    const relativePath = path.join("_agent", "sessions", year, month, day, filename).replaceAll("\\", "/");
+    const relativePath = path.join(CORTEX_DATA_ROOT, "sessions", year, month, day, filename).replaceAll("\\", "/");
     const absolutePath = path.join(vaultRoot, relativePath);
 
     await fs.mkdir(path.dirname(absolutePath), { recursive: true });
@@ -5201,7 +5278,7 @@ module.exports = class CodexChatPlugin extends Plugin {
     const year = String(date.getUTCFullYear());
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
-    const candidatesRoot = path.join(vaultRoot, "_agent", "index", "memory-candidates", year, month, day);
+    const candidatesRoot = path.join(vaultRoot, CORTEX_DATA_ROOT, "index", "memory-candidates", year, month, day);
     const fileName = `${(payload.createdAt || new Date().toISOString()).replace(/[:.]/g, "-")}-${payload.threadId}-${payload.sessionId}.md`;
     await fs.mkdir(candidatesRoot, { recursive: true });
     await fs.writeFile(

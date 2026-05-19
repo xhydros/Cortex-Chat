@@ -1,9 +1,9 @@
 {
-    "id":  "codex-chat",
-    "name":  "Codex Chat",
+    "id":  "cortex-chat",
+    "name":  "Cortex Chat",
     "version":  "1.0.0",
     "minAppVersion":  "1.8.0",
-    "description":  "Codex chat sidebar with vault context, references, PDF text, local CLI fallback, sessions, and backups.",
+    "description":  "AI chat sidebar with vault context, references, PDF text, local CLI fallback, sessions, and backups.",
     "author":  "xhydros",
     "isDesktopOnly":  true
 }

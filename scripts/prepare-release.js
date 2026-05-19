@@ -18,4 +18,4 @@ for (const fileName of requiredFiles) {
   fs.copyFileSync(path.join(root, fileName), path.join(releaseDir, fileName));
 }
 
-console.log(`Prepared Codex Chat ${manifest.version} release assets in ${releaseDir}`);
+console.log(`Prepared Cortex Chat ${manifest.version} release assets in ${releaseDir}`);

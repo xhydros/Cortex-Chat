@@ -12,11 +12,11 @@ const libNames = [
   "settings"
 ];
 
-const startMarker = "// BEGIN CODEX CHAT BUNDLED LIBS";
-const endMarker = "// END CODEX CHAT BUNDLED LIBS";
+const startMarker = "// BEGIN CORTEX CHAT BUNDLED LIBS";
+const endMarker = "// END CORTEX CHAT BUNDLED LIBS";
 
 function normalizeLibRequires(source) {
-  return source.replace(/require\("\.\/([^"]+)"\)/g, "__codexChatRequire('./lib/$1')");
+  return source.replace(/require\("\.\/([^"]+)"\)/g, "__cortexChatRequire('./lib/$1')");
 }
 
 function stripExistingBundle(source) {
@@ -32,30 +32,30 @@ function stripExistingBundle(source) {
 function stripRequireLocalPatch(source) {
   return source
     .replace(/\r?\nconst nodePathForLocalRequire = require\("path"\);\r?\n\r?\nfunction requireLocal\(modulePath\) \{[\s\S]*?\r?\n\}\r?\n/, "\n")
-    .replace(/requireLocal\("\.\/lib\/([^"]+)"\)/g, '__codexChatRequire("./lib/$1")')
-    .replace(/require\("\.\/lib\/([^"]+)"\)/g, '__codexChatRequire("./lib/$1")');
+    .replace(/requireLocal\("\.\/lib\/([^"]+)"\)/g, '__cortexChatRequire("./lib/$1")')
+    .replace(/require\("\.\/lib\/([^"]+)"\)/g, '__cortexChatRequire("./lib/$1")');
 }
 
 function buildBundle() {
   const parts = [
     startMarker,
-    "const __codexChatModules = Object.create(null);",
-    "const __codexChatModuleCache = Object.create(null);",
+    "const __cortexChatModules = Object.create(null);",
+    "const __cortexChatModuleCache = Object.create(null);",
     "",
-    "function __codexChatDefine(id, factory) {",
-    "  __codexChatModules[id] = factory;",
+    "function __cortexChatDefine(id, factory) {",
+    "  __cortexChatModules[id] = factory;",
     "}",
     "",
-    "function __codexChatRequire(id) {",
-    "  if (!__codexChatModules[id]) {",
+    "function __cortexChatRequire(id) {",
+    "  if (!__cortexChatModules[id]) {",
     "    return require(id);",
     "  }",
-    "  if (!__codexChatModuleCache[id]) {",
+    "  if (!__cortexChatModuleCache[id]) {",
     "    const module = { exports: {} };",
-    "    __codexChatModuleCache[id] = module;",
-    "    __codexChatModules[id](module, module.exports, __codexChatRequire);",
+    "    __cortexChatModuleCache[id] = module;",
+    "    __cortexChatModules[id](module, module.exports, __cortexChatRequire);",
     "  }",
-    "  return __codexChatModuleCache[id].exports;",
+    "  return __cortexChatModuleCache[id].exports;",
     "}",
     ""
   ];
@@ -64,7 +64,7 @@ function buildBundle() {
     const id = `./lib/${name}`;
     const libPath = path.join(root, "lib", `${name}.js`);
     const code = normalizeLibRequires(fs.readFileSync(libPath, "utf8")).trimEnd();
-    parts.push(`__codexChatDefine('${id}', function(module, exports, require) {`);
+    parts.push(`__cortexChatDefine('${id}', function(module, exports, require) {`);
     parts.push(code);
     parts.push("});");
     parts.push("");
