@@ -129,6 +129,57 @@ const I18N = {
     pluginScale: "Plugin scale",
     visualScale: "Visual scale",
     visualScaleDesc: "Panel-specific scale. You can also use Ctrl/Cmd +, Ctrl/Cmd - and Ctrl/Cmd 0 inside the chat.",
+    uiDensity: "UI density",
+    uiDensityDesc: "Controls how compact the Cortex shell feels without changing the overall scale.",
+    densityCompact: "Compact",
+    densityComfortable: "Comfortable",
+    tabBarPosition: "Tab bar position",
+    tabBarPositionDesc: "Places tabs in the header by default or above the workbench as a fallback.",
+    tabBarHeader: "Header",
+    tabBarComposer: "Workbench",
+    contextRetrieval: "Context and retrieval",
+    contextManifest: "Context manifest",
+    contextManifestDesc: "Shows and persists the exact sources used by each assistant response.",
+    includeActiveNote: "Active note",
+    includeActiveNoteDesc: "Allow the active note preview to be sent as context.",
+    includeLinks: "Outgoing links",
+    includeLinksDesc: "Allow notes linked from the active note to be included as context.",
+    includeMentions: "@ references",
+    includeMentionsDesc: "Allow explicit @note and @pdf references from the message.",
+    includeFolders: "Folder context",
+    includeFoldersDesc: "Allow configured folders to be loaded when the request asks for folder-level review.",
+    includePinned: "Pinned snippets",
+    includePinnedDesc: "Allow previous assistant answers pinned from message actions to travel as explicit context.",
+    includeMemory: "Shared memory",
+    includeMemoryDesc: "Allow local Cortex memory files to be injected into Codex prompts.",
+    includeRecentSessions: "Recent sessions",
+    includeRecentSessionsDesc: "Allow recent exchanges in this thread to be injected into Codex prompts.",
+    includeRag: "Local related notes",
+    includeRagDesc: "Suggest and include a small local related-note set before sending. Disabled by default.",
+    ragIndexEnabled: "Local RAG index",
+    ragIndexEnabledDesc: "Store a lightweight keyword index in `_cortex/index` for faster related-note retrieval.",
+    ragIndexMaxNotes: "Indexed note limit",
+    ragIndexMaxNotesDesc: "Maximum Markdown notes maintained in the local RAG index.",
+    rebuildRagIndex: "Rebuild local index",
+    ragIndexStatus: "RAG index: {status}",
+    ragIndexReady: "{count} notes indexed · {time}",
+    ragIndexNotBuilt: "not built yet",
+    ragIndexBuilding: "Building local RAG index...",
+    ragIndexBuilt: "Local RAG index rebuilt.",
+    ragIndexFailed: "Could not rebuild RAG index: {error}",
+    ragCandidateLimit: "Related-note limit",
+    ragCandidateLimitDesc: "Maximum local notes added by the lightweight vault search pass.",
+    contextExclusions: "Context exclusions",
+    contextExclusionsDesc: "Comma-separated path fragments or glob-ish patterns that must never enter context.",
+    safetySettings: "Safety",
+    approvedEditsOnly: "Approve edits before applying",
+    approvedEditsOnlyDesc: "Preview assistant insertions and create a backup before writing into a note.",
+    promptProfile: "Prompt profile",
+    promptProfileDesc: "Adds a compact operating preset on top of your editable system prompt.",
+    profileResearcher: "Researcher",
+    profileEditor: "Editor",
+    profilePlanner: "Planner",
+    profileSafeExecutor: "Safe executor",
     reset100: "Reset 100%",
     advancedLocal: "Advanced local",
     localBootstrapToken: "Local bootstrap token",
@@ -188,6 +239,45 @@ const I18N = {
     codexThinking: "Cortex is thinking",
     codexPreparingResponse: "Cortex is preparing the response",
     unrestrictedActive: "Unrestricted mode active: changes will not ask for additional confirmation.",
+    history: "History",
+    recentChats: "Recent chats",
+    noRecentChats: "No recent chats yet.",
+    openConversation: "Open conversation",
+    activeTabLabel: "Active",
+    contextWorkbench: "Context workbench",
+    manifestUsed: "Context used",
+    manifestDetails: "View context manifest",
+    manifestNone: "No context manifest is available for this response.",
+    manifestSummary: "{count} source(s): {sources}",
+    manifestActiveNote: "Active note",
+    manifestLinks: "Links",
+    manifestMentions: "Mentions",
+    manifestFolders: "Folders",
+    manifestMemory: "Memory",
+    manifestSessions: "Sessions",
+    manifestRag: "Related",
+    manifestPinned: "Pinned",
+    sourceDisabled: "off",
+    sourceEnabled: "on",
+    ragCandidates: "Related candidates",
+    pinnedContext: "Pinned context",
+    pinnedContextAdded: "Response pinned as context.",
+    pinnedContextRemoved: "Context source removed.",
+    removeContextSource: "Remove context source",
+    noPinnedContext: "No pinned snippets yet.",
+    reviewInsertTitle: "Review note insertion",
+    reviewInsertDesc: "Cortex will create a backup and log the approved change before applying this insertion.",
+    targetNote: "Target note",
+    preview: "Preview",
+    diffPreview: "Diff preview",
+    linesAdded: "{count} line(s) added",
+    linesRemoved: "{count} line(s) removed",
+    apply: "Apply",
+    cancel: "Cancel",
+    editRejected: "Insertion cancelled.",
+    backupCreated: "Backup created: {path}",
+    changeLogged: "Approved change logged: {path}",
+    commandExpanded: "Command expanded: {command}",
     unresolvedReferences: "Could not resolve these @ references: {refs}",
     requestFailed: "Could not complete the request: {error}",
     memoryUsed: "Memory used",
@@ -343,6 +433,57 @@ const I18N = {
     pluginScale: "Escala del plugin",
     visualScale: "Escala visual",
     visualScaleDesc: "Escala propia del panel. También puedes usar Ctrl/Cmd +, Ctrl/Cmd - y Ctrl/Cmd 0 dentro del chat.",
+    uiDensity: "Densidad de interfaz",
+    uiDensityDesc: "Controla lo compacta que se siente la shell de Cortex sin cambiar la escala general.",
+    densityCompact: "Compacta",
+    densityComfortable: "Cómoda",
+    tabBarPosition: "Posición de pestañas",
+    tabBarPositionDesc: "Coloca las pestañas en la cabecera por defecto o sobre el área de trabajo como alternativa.",
+    tabBarHeader: "Cabecera",
+    tabBarComposer: "Área de trabajo",
+    contextRetrieval: "Contexto y recuperación",
+    contextManifest: "Manifiesto de contexto",
+    contextManifestDesc: "Muestra y persiste las fuentes exactas usadas por cada respuesta del asistente.",
+    includeActiveNote: "Nota activa",
+    includeActiveNoteDesc: "Permite enviar la vista previa de la nota activa como contexto.",
+    includeLinks: "Enlaces salientes",
+    includeLinksDesc: "Permite incluir como contexto las notas enlazadas desde la nota activa.",
+    includeMentions: "Referencias @",
+    includeMentionsDesc: "Permite referencias explícitas @nota y @pdf desde el mensaje.",
+    includeFolders: "Contexto de carpeta",
+    includeFoldersDesc: "Permite cargar carpetas configuradas cuando la petición pide revisar una carpeta.",
+    includePinned: "Fragmentos fijados",
+    includePinnedDesc: "Permite enviar como contexto explícito respuestas anteriores fijadas desde acciones de mensaje.",
+    includeMemory: "Memoria compartida",
+    includeMemoryDesc: "Permite inyectar archivos de memoria local de Cortex en prompts de Codex.",
+    includeRecentSessions: "Sesiones recientes",
+    includeRecentSessionsDesc: "Permite inyectar intercambios recientes de este hilo en prompts de Codex.",
+    includeRag: "Notas relacionadas locales",
+    includeRagDesc: "Sugiere e incluye un conjunto pequeño de notas relacionadas antes de enviar. Desactivado por defecto.",
+    ragIndexEnabled: "Índice RAG local",
+    ragIndexEnabledDesc: "Guarda un índice ligero de palabras clave en `_cortex/index` para recuperar notas relacionadas más rápido.",
+    ragIndexMaxNotes: "Límite de notas indexadas",
+    ragIndexMaxNotesDesc: "Máximo de notas Markdown mantenidas en el índice RAG local.",
+    rebuildRagIndex: "Reconstruir índice local",
+    ragIndexStatus: "Índice RAG: {status}",
+    ragIndexReady: "{count} notas indexadas · {time}",
+    ragIndexNotBuilt: "sin construir aún",
+    ragIndexBuilding: "Construyendo índice RAG local...",
+    ragIndexBuilt: "Índice RAG local reconstruido.",
+    ragIndexFailed: "No se pudo reconstruir el índice RAG: {error}",
+    ragCandidateLimit: "Límite de notas relacionadas",
+    ragCandidateLimitDesc: "Máximo de notas locales añadidas por la búsqueda ligera en la vault.",
+    contextExclusions: "Exclusiones de contexto",
+    contextExclusionsDesc: "Fragmentos de ruta o patrones simples, separados por comas, que nunca deben entrar al contexto.",
+    safetySettings: "Seguridad",
+    approvedEditsOnly: "Aprobar cambios antes de aplicar",
+    approvedEditsOnlyDesc: "Previsualiza inserciones del asistente y crea backup antes de escribir en una nota.",
+    promptProfile: "Perfil de prompt",
+    promptProfileDesc: "Añade un preset operativo compacto sobre tu system prompt editable.",
+    profileResearcher: "Investigador",
+    profileEditor: "Editor",
+    profilePlanner: "Planner",
+    profileSafeExecutor: "Executor seguro",
     reset100: "Reset 100%",
     advancedLocal: "Avanzado local",
     localBootstrapToken: "Local bootstrap token",
@@ -402,6 +543,45 @@ const I18N = {
     codexThinking: "Cortex está pensando",
     codexPreparingResponse: "Cortex está preparando la respuesta",
     unrestrictedActive: "Sin restricciones activo: si hay cambios, se ejecutarán sin pedir confirmación adicional.",
+    history: "Historial",
+    recentChats: "Chats recientes",
+    noRecentChats: "Todavía no hay chats recientes.",
+    openConversation: "Abrir conversación",
+    activeTabLabel: "Activa",
+    contextWorkbench: "Mesa de contexto",
+    manifestUsed: "Contexto usado",
+    manifestDetails: "Ver manifiesto de contexto",
+    manifestNone: "No hay manifiesto de contexto para esta respuesta.",
+    manifestSummary: "{count} fuente(s): {sources}",
+    manifestActiveNote: "Nota activa",
+    manifestLinks: "Enlaces",
+    manifestMentions: "Menciones",
+    manifestFolders: "Carpetas",
+    manifestMemory: "Memoria",
+    manifestSessions: "Sesiones",
+    manifestRag: "Relacionadas",
+    manifestPinned: "Fijados",
+    sourceDisabled: "off",
+    sourceEnabled: "on",
+    ragCandidates: "Candidatas relacionadas",
+    pinnedContext: "Contexto fijado",
+    pinnedContextAdded: "Respuesta fijada como contexto.",
+    pinnedContextRemoved: "Fuente de contexto eliminada.",
+    removeContextSource: "Quitar fuente de contexto",
+    noPinnedContext: "Todavía no hay fragmentos fijados.",
+    reviewInsertTitle: "Revisar inserción en nota",
+    reviewInsertDesc: "Cortex creará una copia de seguridad y registrará el cambio aprobado antes de aplicar esta inserción.",
+    targetNote: "Nota destino",
+    preview: "Vista previa",
+    diffPreview: "Vista diff",
+    linesAdded: "{count} línea(s) añadida(s)",
+    linesRemoved: "{count} línea(s) eliminada(s)",
+    apply: "Aplicar",
+    cancel: "Cancelar",
+    editRejected: "Inserción cancelada.",
+    backupCreated: "Backup creado: {path}",
+    changeLogged: "Cambio aprobado registrado: {path}",
+    commandExpanded: "Comando expandido: {command}",
     unresolvedReferences: "No he podido resolver estas referencias @: {refs}",
     requestFailed: "No se pudo completar la petición: {error}",
     memoryUsed: "Memoria usada",
@@ -823,6 +1003,23 @@ const SHARED_SETTING_KEYS = [
   "folderReferenceRoots",
   "systemPromptSections",
   "uiScale",
+  "uiDensity",
+  "tabBarPosition",
+  "contextManifestEnabled",
+  "contextIncludeActiveNote",
+  "contextIncludeLinks",
+  "contextIncludeMentions",
+  "contextIncludeFolders",
+  "contextIncludePinned",
+  "contextIncludeMemory",
+  "contextIncludeRecentSessions",
+  "contextIncludeRag",
+  "ragIndexEnabled",
+  "ragIndexMaxNotes",
+  "ragCandidateLimit",
+  "contextExclusionPatterns",
+  "approvedEditsOnly",
+  "activePromptProfile",
   "languageMode",
   "chatTabs",
   "activeChatTabId"
@@ -877,6 +1074,23 @@ function buildDefaultSettings(pluginId) {
     deviceRegisteredOk: false,
     systemPromptSections: getDefaultSystemPromptSections("auto"),
     uiScale: 1,
+    uiDensity: "compact",
+    tabBarPosition: "header",
+    contextManifestEnabled: true,
+    contextIncludeActiveNote: true,
+    contextIncludeLinks: true,
+    contextIncludeMentions: true,
+    contextIncludeFolders: true,
+    contextIncludePinned: true,
+    contextIncludeMemory: true,
+    contextIncludeRecentSessions: true,
+    contextIncludeRag: false,
+    ragIndexEnabled: true,
+    ragIndexMaxNotes: 600,
+    ragCandidateLimit: 5,
+    contextExclusionPatterns: [],
+    approvedEditsOnly: true,
+    activePromptProfile: "planner",
     languageMode: "auto",
     chatTabs: [],
     activeChatTabId: ""
@@ -897,9 +1111,59 @@ function normalizeLanguageMode(value) {
   return value === "es" || value === "en" || value === "auto" ? value : "auto";
 }
 
+function normalizeUiDensity(value) {
+  return value === "comfortable" ? "comfortable" : "compact";
+}
+
+function normalizeTabBarPosition(value) {
+  return value === "composer" ? "composer" : "header";
+}
+
+function normalizePromptProfile(value) {
+  return ["researcher", "editor", "planner", "safe-executor"].includes(value) ? value : "planner";
+}
+
+function normalizeRagCandidateLimit(value, fallback = 5) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric >= 0 && numeric <= 20 ? Math.round(numeric) : fallback;
+}
+
+function normalizeRagIndexMaxNotes(value, fallback = 600) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric >= 50 && numeric <= 5000 ? Math.round(numeric) : fallback;
+}
+
+function normalizeExclusionPatterns(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 80);
+  }
+  return String(value || "")
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 80);
+}
+
 function normalizeSettings(settings, defaults) {
   const next = { ...defaults, ...(settings || {}) };
   next.languageMode = normalizeLanguageMode(next.languageMode);
+  next.uiDensity = normalizeUiDensity(next.uiDensity);
+  next.tabBarPosition = normalizeTabBarPosition(next.tabBarPosition);
+  next.contextManifestEnabled = next.contextManifestEnabled !== false;
+  next.contextIncludeActiveNote = next.contextIncludeActiveNote !== false;
+  next.contextIncludeLinks = next.contextIncludeLinks !== false;
+  next.contextIncludeMentions = next.contextIncludeMentions !== false;
+  next.contextIncludeFolders = next.contextIncludeFolders !== false;
+  next.contextIncludePinned = next.contextIncludePinned !== false;
+  next.contextIncludeMemory = next.contextIncludeMemory !== false;
+  next.contextIncludeRecentSessions = next.contextIncludeRecentSessions !== false;
+  next.contextIncludeRag = next.contextIncludeRag === true;
+  next.ragIndexEnabled = next.ragIndexEnabled !== false;
+  next.ragIndexMaxNotes = normalizeRagIndexMaxNotes(next.ragIndexMaxNotes, defaults.ragIndexMaxNotes);
+  next.ragCandidateLimit = normalizeRagCandidateLimit(next.ragCandidateLimit, defaults.ragCandidateLimit);
+  next.contextExclusionPatterns = normalizeExclusionPatterns(next.contextExclusionPatterns);
+  next.approvedEditsOnly = next.approvedEditsOnly !== false;
+  next.activePromptProfile = normalizePromptProfile(next.activePromptProfile);
   next.systemPromptSections = normalizeSystemPromptSections(next.systemPromptSections, next.languageMode);
   next.folderReferenceRoots = normalizeFolderRoots(next.folderReferenceRoots);
   next.chatTabs = Array.isArray(next.chatTabs) ? next.chatTabs : [];
@@ -919,7 +1183,13 @@ module.exports = {
   SHARED_SETTING_KEYS,
   buildDefaultSettings,
   getSettingsLanguage,
+  normalizeExclusionPatterns,
   normalizeLanguageMode,
+  normalizePromptProfile,
+  normalizeRagCandidateLimit,
+  normalizeRagIndexMaxNotes,
+  normalizeTabBarPosition,
+  normalizeUiDensity,
   normalizeSettings,
   normalizeSystemPromptSections
 };
@@ -962,7 +1232,11 @@ const {
   MEMORY_CATEGORIES,
   SHARED_SETTING_KEYS,
   buildDefaultSettings,
+  normalizeExclusionPatterns,
   normalizeLanguageMode,
+  normalizePromptProfile,
+  normalizeRagCandidateLimit,
+  normalizeRagIndexMaxNotes,
   normalizeSettings,
   normalizeSystemPromptSections
 } = __cortexChatRequire('./lib/settings');
@@ -1055,6 +1329,7 @@ function createDefaultChatTab(t = createTranslator("en")) {
     messages: [],
     context: null,
     contextSummary: "",
+    pinnedContext: [],
     isActive: true,
     isStreaming: false,
     needsAttention: false
@@ -1091,6 +1366,7 @@ function normalizeChatTab(tab, t = createTranslator("en")) {
     messages,
     context: tab.context && typeof tab.context === "object" ? tab.context : null,
     contextSummary: typeof tab.contextSummary === "string" ? tab.contextSummary : "",
+    pinnedContext: Array.isArray(tab.pinnedContext) ? tab.pinnedContext.slice(-12) : [],
     isActive: Boolean(tab.isActive),
     isStreaming: Boolean(tab.isStreaming),
     needsAttention: Boolean(tab.needsAttention)
@@ -1143,6 +1419,111 @@ function composeSystemPrompt(sections) {
     lines.push("");
   }
   return lines.join("\n").trim();
+}
+
+function getPromptProfileInstruction(profile) {
+  const normalized = normalizePromptProfile ? normalizePromptProfile(profile) : "planner";
+  const profiles = {
+    researcher:
+      "Prompt profile: Researcher. Prioritize source grounding, context gaps, evidence trails, and careful synthesis. Separate facts, inferences, and recommended next checks.",
+    editor:
+      "Prompt profile: Editor. Prioritize concise rewrites, structure, voice preservation, actionable improvements, and safe note edits that can be reviewed before applying.",
+    planner:
+      "Prompt profile: Planner. Prioritize diagnosis, sequencing, tradeoffs, acceptance criteria, and clear next actions before execution.",
+    "safe-executor":
+      "Prompt profile: Safe executor. Prefer concrete implementation steps, but propose changes with reviewable diffs or insertion previews before modifying vault content."
+  };
+  return profiles[normalized] || profiles.planner;
+}
+
+function expandSlashCommand(message) {
+  const text = String(message || "").trim();
+  const match = text.match(/^\/([a-z-]+)(?:\s+([\s\S]*))?$/i);
+  if (!match) {
+    return { command: "", message: text };
+  }
+  const command = match[1].toLowerCase();
+  const rest = String(match[2] || "").trim();
+  const commands = {
+    summarize: "Summarize the provided or active context into a clear, compact note with key points and open questions.",
+    rewrite: "Rewrite the provided text or active note section for clarity, flow, and usefulness while preserving meaning.",
+    "extract-actions": "Extract concrete action items, owners if present, deadlines if present, and unresolved decisions from the context.",
+    "build-context": "Build a context plan: list the active note, references, missing sources, and recommended next context to attach before answering."
+  };
+  if (!commands[command]) {
+    return { command: "", message: text };
+  }
+  return {
+    command,
+    message: `${commands[command]}\n\nUser request:\n${rest || "(use the active context)"}`
+  };
+}
+
+function referenceSourceBucket(reference) {
+  const source = String(reference?.source || "");
+  if (source.includes("mention")) {
+    return "mentions";
+  }
+  if (source.includes("outgoing-link")) {
+    return "links";
+  }
+  if (source === "folder") {
+    return "folders";
+  }
+  if (source === "rag") {
+    return "rag";
+  }
+  if (source === "pinned-response") {
+    return "pinned";
+  }
+  return "references";
+}
+
+function tokenizeForRag(text, limit = 64) {
+  const stopWords = new Set([
+    "para",
+    "como",
+    "pero",
+    "todo",
+    "esta",
+    "este",
+    "that",
+    "this",
+    "with",
+    "from",
+    "have",
+    "what",
+    "when",
+    "where",
+    "sobre",
+    "contexto",
+    "nota"
+  ]);
+  const tokens = String(text || "")
+    .toLowerCase()
+    .match(/[a-záéíóúüñ0-9]{4,}/gi) || [];
+  return [...new Set(tokens.filter((token) => !stopWords.has(token)))].slice(0, limit);
+}
+
+function buildInsertionDiffPreview(before, insertion, cursorOffset) {
+  const safeBefore = String(before || "");
+  const offset = Math.max(0, Math.min(Number(cursorOffset) || 0, safeBefore.length));
+  const prefix = safeBefore.slice(Math.max(0, offset - 700), offset);
+  const suffix = safeBefore.slice(offset, offset + 700);
+  const addedLines = String(insertion || "").split("\n");
+  const lines = [];
+  if (prefix.trim()) {
+    lines.push(...prefix.split("\n").slice(-8).map((line) => ` ${line}`));
+  }
+  lines.push(...addedLines.map((line) => `+${line}`));
+  if (suffix.trim()) {
+    lines.push(...suffix.split("\n").slice(0, 8).map((line) => ` ${line}`));
+  }
+  return {
+    text: lines.join("\n"),
+    added: addedLines.filter((line) => line.trim()).length,
+    removed: 0
+  };
 }
 
 function workModeLabel(interactionMode, t = createTranslator("en")) {
@@ -1381,6 +1762,47 @@ ${session.assistantMessage}
 - Effort: ${session.effort || "thinking"}
 - Backup policy: ${session.backupPolicy || "(none)"}
 - Backup root: ${session.backupRoot || "(none)"}
+
+## Context Manifest
+
+\`\`\`json
+${JSON.stringify(session.contextManifest || {}, null, 2)}
+\`\`\`
+`;
+}
+
+function buildApprovedChangeMarkdown(change) {
+  return `${toFrontmatter({
+    kind: "cortex-approved-change",
+    schema_version: CORTEX_SCHEMA_VERSION,
+    plugin_version: change.pluginVersion || "",
+    change_id: change.changeId,
+    created_at: change.createdAt,
+    target_path: change.targetPath || "",
+    backup_path: change.backupPath || "",
+    thread_id: change.threadId || "",
+    session_id: change.sessionId || "",
+    summary: change.summary || ""
+  })}
+
+# Approved Change
+
+## Target
+
+- Note path: ${change.targetPath || "(none)"}
+- Backup: ${change.backupPath || "(none)"}
+
+## Diff Preview
+
+\`\`\`diff
+${change.diffPreview || ""}
+\`\`\`
+
+## Inserted Content
+
+\`\`\`markdown
+${change.insertion || ""}
+\`\`\`
 `;
 }
 
@@ -2105,6 +2527,102 @@ class MemoryContextModal extends Modal {
   }
 }
 
+class ContextManifestModal extends Modal {
+  constructor(app, manifest, t = createTranslator("en")) {
+    super(app);
+    this.manifest = manifest || null;
+    this.t = t;
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.addClass("cortex-chat-manifest-modal");
+    contentEl.createEl("h2", { text: this.t("manifestUsed") });
+
+    if (!this.manifest) {
+      contentEl.createEl("p", { text: this.t("manifestNone") });
+      return;
+    }
+
+    const summary = contentEl.createDiv({ cls: "cortex-chat-manifest-modal-summary" });
+    summary.createEl("div", { text: this.manifest.summary || "" });
+    summary.createEl("small", { text: this.manifest.createdAt || "" });
+
+    const sources = this.manifest.sources || {};
+    for (const [key, group] of Object.entries(sources)) {
+      const items = group?.items || [];
+      const sectionEl = contentEl.createDiv({ cls: "cortex-chat-manifest-section" });
+      sectionEl.createEl("h3", { text: `${group.label || key} (${items.length})` });
+      if (!items.length) {
+        sectionEl.createEl("p", { text: group.enabled === false ? this.t("sourceDisabled") : this.t("noRefs") });
+        continue;
+      }
+      const list = sectionEl.createEl("ul");
+      for (const item of items.slice(0, 20)) {
+        list.createEl("li", { text: [item.path, item.reason || item.source].filter(Boolean).join(" · ") });
+      }
+    }
+
+    const rawEl = contentEl.createEl("details");
+    rawEl.createEl("summary", { text: "JSON" });
+    rawEl.createEl("pre", { text: JSON.stringify(this.manifest, null, 2) });
+  }
+}
+
+class ApprovedInsertionModal extends Modal {
+  constructor(app, plugin, payload) {
+    super(app);
+    this.plugin = plugin;
+    this.payload = payload || {};
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.addClass("cortex-chat-approval-modal");
+    contentEl.createEl("h2", { text: this.plugin.t("reviewInsertTitle") });
+    contentEl.createEl("p", { text: this.plugin.t("reviewInsertDesc") });
+
+    const targetEl = contentEl.createDiv({ cls: "cortex-chat-approval-target" });
+    targetEl.createDiv({ cls: "cortex-chat-context-label", text: this.plugin.t("targetNote") });
+    targetEl.createDiv({ cls: "cortex-chat-context-value", text: this.payload.filePath || this.plugin.t("noNote") });
+
+    contentEl.createEl("h3", { text: this.plugin.t("preview") });
+    contentEl.createEl("pre", {
+      cls: "cortex-chat-approval-preview",
+      text: this.payload.insertion || ""
+    });
+    if (this.payload.diffPreview) {
+      const diffHeader = contentEl.createDiv({ cls: "cortex-chat-approval-diff-header" });
+      diffHeader.createEl("h3", { text: this.plugin.t("diffPreview") });
+      diffHeader.createEl("span", {
+        text: [
+          this.plugin.t("linesAdded", { count: this.payload.diffPreview.added || 0 }),
+          this.plugin.t("linesRemoved", { count: this.payload.diffPreview.removed || 0 })
+        ].join(" · ")
+      });
+      contentEl.createEl("pre", {
+        cls: "cortex-chat-approval-preview cortex-chat-approval-diff",
+        text: this.payload.diffPreview.text || ""
+      });
+    }
+
+    const actionsEl = contentEl.createDiv({ cls: "cortex-chat-approval-actions" });
+    const cancelButton = actionsEl.createEl("button", { cls: "mod-muted", text: this.plugin.t("cancel") });
+    cancelButton.addEventListener("click", () => {
+      new Notice(this.plugin.t("editRejected"));
+      this.close();
+    });
+    const applyButton = actionsEl.createEl("button", { cls: "mod-cta", text: this.plugin.t("apply") });
+    applyButton.addEventListener("click", async () => {
+      applyButton.disabled = true;
+      await this.payload.onApply?.();
+      this.close();
+    });
+  }
+}
+
 class CodexSetupModal extends Modal {
   constructor(app, plugin) {
     super(app);
@@ -2231,6 +2749,8 @@ class CortexChatView extends ItemView {
     };
     this.lastPendingStatus = "";
     this.keydownHandler = null;
+    this.historyMenuOpen = false;
+    this.historyDocumentHandler = null;
   }
 
   getViewType() {
@@ -2254,6 +2774,10 @@ class CortexChatView extends ItemView {
     if (this.keydownHandler) {
       this.contentEl?.removeEventListener("keydown", this.keydownHandler);
       this.keydownHandler = null;
+    }
+    if (this.historyDocumentHandler) {
+      this.contentEl?.ownerDocument?.removeEventListener("click", this.historyDocumentHandler);
+      this.historyDocumentHandler = null;
     }
   }
 
@@ -2388,6 +2912,7 @@ class CortexChatView extends ItemView {
       messages: (tab.messages || []).slice(-40),
       context: tab.context || null,
       contextSummary: tab.contextSummary || "",
+      pinnedContext: (tab.pinnedContext || []).slice(-12),
       isActive: tab.id === this.activeTabId,
       isStreaming: Boolean(tab.isStreaming),
       needsAttention: Boolean(tab.needsAttention)
@@ -2413,6 +2938,18 @@ class CortexChatView extends ItemView {
       return;
     }
     this.contentEl.style.setProperty("--cortex-chat-scale", String(this.plugin.getUiScale()));
+    this.contentEl.toggleClass("is-density-comfortable", this.getUiDensity() === "comfortable");
+    this.contentEl.toggleClass("is-density-compact", this.getUiDensity() !== "comfortable");
+    this.contentEl.toggleClass("is-tabbar-header", this.getTabBarPosition() === "header");
+    this.contentEl.toggleClass("is-tabbar-composer", this.getTabBarPosition() === "composer");
+  }
+
+  getUiDensity() {
+    return this.plugin.settings.uiDensity || DEFAULT_SETTINGS.uiDensity;
+  }
+
+  getTabBarPosition() {
+    return this.plugin.settings.tabBarPosition || DEFAULT_SETTINGS.tabBarPosition;
   }
 
   registerScaleShortcuts() {
@@ -2489,9 +3026,15 @@ class CortexChatView extends ItemView {
     this.registerScaleShortcuts();
 
     this.headerEl = contentEl.createDiv({ cls: "cortex-chat-header" });
-    this.tabBarEl = contentEl.createDiv({ cls: "cortex-chat-tabbar" });
+    this.headerMainEl = this.headerEl.createDiv({ cls: "cortex-chat-header-main" });
+    this.headerTabSlotEl = this.headerEl.createDiv({ cls: "cortex-chat-header-tabslot" });
     this.messagesEl = contentEl.createDiv({ cls: "cortex-chat-messages" });
     this.sendEl = contentEl.createDiv({ cls: "cortex-chat-send" });
+    if (this.getTabBarPosition() === "header") {
+      this.tabBarEl = this.headerTabSlotEl.createDiv({ cls: "cortex-chat-tabbar cortex-chat-tabbar--header" });
+    } else {
+      this.tabBarEl = this.sendEl.createDiv({ cls: "cortex-chat-tabbar cortex-chat-tabbar--composer" });
+    }
     this.contextEl = this.sendEl.createDiv({ cls: "cortex-chat-context" });
     this.modeCardsEl = this.sendEl.createDiv({ cls: "cortex-chat-mode-cards" });
     this.renderModeCards();
@@ -2607,34 +3150,149 @@ class CortexChatView extends ItemView {
     }
   }
 
-  renderHeader() {
-    if (!this.headerEl) {
+  getActiveProviderBadge() {
+    const activeTab = this.getActiveTab();
+    const lastAssistantMessage = [...(activeTab.messages || [])].reverse().find((entry) => entry.role === "assistant");
+    return lastAssistantMessage?.meta?.label || this.plugin.t("codexOauthProvider");
+  }
+
+  ensureHistoryDismissHandler() {
+    if (this.historyDocumentHandler) {
       return;
     }
-    this.headerEl.empty();
-    const leftEl = this.headerEl.createDiv({ cls: "cortex-chat-header-left" });
-    leftEl.createDiv({ cls: "cortex-chat-title", text: this.plugin.t("appTitle") });
+    this.historyDocumentHandler = (event) => {
+      if (!this.historyMenuOpen || !this.historyWrapEl) {
+        return;
+      }
+      if (this.historyWrapEl.contains(event.target)) {
+        return;
+      }
+      this.closeHistoryMenu();
+    };
+    this.contentEl?.ownerDocument?.addEventListener("click", this.historyDocumentHandler);
+  }
+
+  toggleHistoryMenu() {
+    this.historyMenuOpen = !this.historyMenuOpen;
+    this.renderHistoryMenu();
+  }
+
+  closeHistoryMenu() {
+    if (!this.historyMenuOpen) {
+      return;
+    }
+    this.historyMenuOpen = false;
+    this.renderHistoryMenu();
+  }
+
+  getRecentTabEntries() {
+    return [...this.tabs].sort((left, right) => {
+      const rightTime = new Date(right.updatedAt || right.createdAt || 0).getTime();
+      const leftTime = new Date(left.updatedAt || left.createdAt || 0).getTime();
+      return rightTime - leftTime;
+    });
+  }
+
+  formatTabTimestamp(tab) {
+    const raw = tab.updatedAt || tab.createdAt;
+    if (!raw) {
+      return "";
+    }
+    try {
+      return new Date(raw).toLocaleString();
+    } catch {
+      return "";
+    }
+  }
+
+  renderHistoryMenu() {
+    if (!this.historyMenuEl) {
+      return;
+    }
+    this.historyMenuEl.empty();
+    this.historyMenuEl.toggleClass("is-open", this.historyMenuOpen);
+    if (!this.historyMenuOpen) {
+      return;
+    }
+    this.historyMenuEl.createDiv({ cls: "cortex-chat-history-title", text: this.plugin.t("recentChats") });
+    const entries = this.getRecentTabEntries();
+    if (!entries.length) {
+      this.historyMenuEl.createDiv({ cls: "cortex-chat-history-empty", text: this.plugin.t("noRecentChats") });
+      return;
+    }
+    for (const tab of entries) {
+      const itemEl = this.historyMenuEl.createEl("button", {
+        cls: `cortex-chat-history-item${tab.id === this.activeTabId ? " is-active" : ""}`,
+        attr: {
+          title: `${tab.title || this.plugin.t("untitledTab")}${this.formatTabTimestamp(tab) ? ` · ${this.formatTabTimestamp(tab)}` : ""}`,
+          "aria-label": this.plugin.t("openConversation")
+        }
+      });
+      const titleRowEl = itemEl.createDiv({ cls: "cortex-chat-history-row" });
+      titleRowEl.createSpan({ cls: "cortex-chat-history-item-title", text: tab.title || this.plugin.t("untitledTab") });
+      if (tab.id === this.activeTabId) {
+        titleRowEl.createSpan({ cls: "cortex-chat-history-item-badge", text: this.plugin.t("activeTabLabel") });
+      }
+      itemEl.createDiv({
+        cls: "cortex-chat-history-item-meta",
+        text: tab.contextSummary || this.formatTabTimestamp(tab) || this.plugin.t("openConversation")
+      });
+      itemEl.addEventListener("click", async () => {
+        this.closeHistoryMenu();
+        await this.activateTab(tab.id);
+      });
+    }
+  }
+
+  renderHeader() {
+    if (!this.headerMainEl) {
+      return;
+    }
+    this.ensureHistoryDismissHandler();
+    this.headerMainEl.empty();
+    if (this.headerDiagnosticsEl) {
+      this.headerDiagnosticsEl.remove();
+      this.headerDiagnosticsEl = null;
+    }
+    const leftEl = this.headerMainEl.createDiv({ cls: "cortex-chat-header-left" });
+    const titleClusterEl = leftEl.createDiv({ cls: "cortex-chat-title-cluster" });
+    titleClusterEl.createDiv({ cls: "cortex-chat-title", text: this.plugin.t("appTitle") });
     const state = this.getCodexState();
-    const stateEl = leftEl.createDiv({ cls: `cortex-chat-state is-${state.kind}` });
+    const stateEl = titleClusterEl.createDiv({ cls: `cortex-chat-state is-${state.kind}` });
     stateEl.createSpan({ cls: "cortex-chat-state-dot" });
     stateEl.createSpan({ text: state.label });
-    if ((this.plugin.settings.defaultInteractionMode || DEFAULT_SETTINGS.defaultInteractionMode) === "execute") {
-      leftEl.createDiv({ cls: "cortex-chat-header-mode-chip is-unrestricted", text: this.plugin.t("unrestricted") });
-    }
-    const actionsButton = this.createIconButton(this.headerEl, "settings", this.plugin.t("consistencyDiagnostics"), "cortex-chat-icon-button");
-    actionsButton.addEventListener("click", (event) => this.openActionsMenu(event));
-    const newTabButton = this.createIconButton(this.headerEl, "square-plus", this.plugin.t("newTab"), "cortex-chat-icon-button");
-    newTabButton.addEventListener("click", () => this.createNewTab());
-    const newChatButton = this.createIconButton(this.headerEl, "square-pen", this.plugin.t("newChatReady"), "cortex-chat-icon-button");
-    newChatButton.addEventListener("click", () => this.startNewChat());
-    const noteButton = this.createIconButton(this.headerEl, "file-text", this.plugin.t("activeNote"), "cortex-chat-icon-button");
+    const badgesEl = leftEl.createDiv({ cls: "cortex-chat-header-badges" });
+    badgesEl.createDiv({ cls: "cortex-chat-header-mode-chip", text: this.getActiveProviderBadge() });
+    const isExecute = (this.plugin.settings.defaultInteractionMode || DEFAULT_SETTINGS.defaultInteractionMode) === "execute";
+    badgesEl.createDiv({
+      cls: `cortex-chat-header-mode-chip${isExecute ? " is-unrestricted" : ""}`,
+      text: isExecute ? this.plugin.t("unrestricted") : this.plugin.t("planner")
+    });
+
+    const rightEl = this.headerMainEl.createDiv({ cls: "cortex-chat-header-right" });
+    this.historyWrapEl = rightEl.createDiv({ cls: "cortex-chat-history-wrap" });
+    const historyButton = this.createIconButton(this.historyWrapEl, "history", this.plugin.t("history"), "cortex-chat-icon-button");
+    historyButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.toggleHistoryMenu();
+    });
+    this.historyMenuEl = this.historyWrapEl.createDiv({ cls: "cortex-chat-history-menu" });
+    const noteButton = this.createIconButton(rightEl, "file-text", this.plugin.t("activeNote"), "cortex-chat-icon-button");
     noteButton.addEventListener("click", async () => this.loadCurrentNoteContext());
+    const newChatButton = this.createIconButton(rightEl, "square-pen", this.plugin.t("newChatReady"), "cortex-chat-icon-button");
+    newChatButton.addEventListener("click", () => this.startNewChat());
+    const newTabButton = this.createIconButton(rightEl, "square-plus", this.plugin.t("newTab"), "cortex-chat-icon-button");
+    newTabButton.addEventListener("click", () => this.createNewTab());
+    const actionsButton = this.createIconButton(rightEl, "settings", this.plugin.t("consistencyDiagnostics"), "cortex-chat-icon-button");
+    actionsButton.addEventListener("click", (event) => this.openActionsMenu(event));
     if (this.plugin.settings.showDiagnostics) {
-      this.headerEl.createDiv({
+      this.headerDiagnosticsEl = this.headerEl.createDiv({
         cls: "cortex-chat-diagnostics",
         text: `${this.plugin.settings.backendUrl} | ${this.plugin.settings.deviceId}`
       });
     }
+    this.renderHistoryMenu();
   }
 
   getCodexState() {
@@ -2671,6 +3329,7 @@ class CortexChatView extends ItemView {
           title: tab.title || this.plugin.t("untitledTab")
         }
       });
+      button.createSpan({ cls: "cortex-chat-tab-indicator" });
       button.createSpan({ cls: "cortex-chat-tab-title", text: tab.title || this.plugin.t("untitledTab") });
       if (this.tabs.length > 1) {
         const close = button.createSpan({ cls: "cortex-chat-tab-close", text: "×" });
@@ -2684,6 +3343,17 @@ class CortexChatView extends ItemView {
         await this.activateTab(tab.id);
       });
     }
+    const addButton = this.tabBarEl.createEl("button", {
+      cls: "cortex-chat-tab cortex-chat-tab-add",
+      attr: {
+        "aria-label": this.plugin.t("newTab"),
+        title: this.plugin.t("newTab")
+      }
+    });
+    setIcon(addButton, "plus");
+    addButton.addEventListener("click", async () => {
+      await this.createNewTab();
+    });
   }
 
   async activateTab(tabId) {
@@ -2851,6 +3521,36 @@ class CortexChatView extends ItemView {
     return `${note} · ${referenceLabel}`;
   }
 
+  renderContextSourceChips(parentEl) {
+    const chips = [
+      ["contextIncludeActiveNote", this.plugin.t("includeActiveNote"), this.context?.path ? 1 : 0],
+      ["contextIncludeLinks", this.plugin.t("links"), this.context?.outgoingLinks?.length || 0],
+      ["contextIncludeMentions", "@", (this.context?.references || []).filter((reference) => referenceSourceBucket(reference) === "mentions").length],
+      ["contextIncludeFolders", this.plugin.t("manifestFolders"), (this.context?.references || []).filter((reference) => referenceSourceBucket(reference) === "folders").length],
+      ["contextIncludePinned", this.plugin.t("manifestPinned"), (this.context?.references || []).filter((reference) => referenceSourceBucket(reference) === "pinned").length],
+      ["contextIncludeMemory", this.plugin.t("manifestMemory"), MEMORY_CATEGORIES.length],
+      ["contextIncludeRecentSessions", this.plugin.t("manifestSessions"), 0],
+      ["contextIncludeRag", this.plugin.t("manifestRag"), (this.context?.references || []).filter((reference) => referenceSourceBucket(reference) === "rag").length]
+    ];
+    const chipsEl = parentEl.createDiv({ cls: "cortex-chat-context-chips" });
+    for (const [key, label, count] of chips) {
+      const enabled = this.plugin.settings[key] !== false && (key !== "contextIncludeRag" || this.plugin.settings[key] === true);
+      const chipEl = chipsEl.createEl("button", {
+        cls: enabled ? "cortex-chat-context-chip is-enabled" : "cortex-chat-context-chip",
+        text: `${label}${Number.isFinite(count) ? ` ${count}` : ""}`,
+        attr: {
+          "aria-pressed": String(enabled),
+          title: enabled ? this.plugin.t("sourceEnabled") : this.plugin.t("sourceDisabled")
+        }
+      });
+      chipEl.addEventListener("click", async () => {
+        this.plugin.settings[key] = !enabled;
+        await this.plugin.saveSettings();
+        this.renderContext();
+      });
+    }
+  }
+
   renderContext() {
     this.contextEl.empty();
     const summaryEl = this.contextEl.createDiv({ cls: "cortex-chat-context-summary" });
@@ -2933,19 +3633,23 @@ class CortexChatView extends ItemView {
       : this.plugin.t("noRefs");
 
     this.contextEl.createDiv({ cls: "cortex-chat-context-title", text: this.plugin.t("contextToSend") });
+    this.renderContextSourceChips(this.contextEl);
     const gridEl = this.contextEl.createDiv({ cls: "cortex-chat-context-grid" });
     this.createContextItem(gridEl, this.plugin.t("activeNote"), this.context.path || this.plugin.t("noNote"), this.context.path ? "is-ready" : "");
     this.createContextItem(gridEl, this.plugin.t("links"), outgoingSummary, this.context.outgoingLinks?.length ? "is-ready" : "");
     this.createContextItem(gridEl, this.plugin.t("references"), referenceSummary, references.length ? "is-ready" : "");
 
     if (references.length) {
-      this.contextEl.createDiv({
-        cls: "cortex-chat-context-help",
-        text: references
-          .slice(0, 5)
-          .map((reference) => reference.path)
-          .join(" · ")
-      });
+      const sourcesEl = this.contextEl.createDiv({ cls: "cortex-chat-context-source-list" });
+      for (const reference of references.slice(0, 8)) {
+        const sourceEl = sourcesEl.createDiv({ cls: "cortex-chat-context-source-row" });
+        sourceEl.createSpan({ cls: "cortex-chat-context-source-path", text: reference.path });
+        sourceEl.createSpan({ cls: "cortex-chat-context-source-kind", text: reference.source || "" });
+        const removeEl = this.createIconButton(sourceEl, "x", this.plugin.t("removeContextSource"), "cortex-chat-context-source-remove");
+        removeEl.addEventListener("click", async () => {
+          await this.removeContextReference(reference.path);
+        });
+      }
     }
   }
 
@@ -2989,9 +3693,15 @@ class CortexChatView extends ItemView {
           await this.insertTextIntoActiveNote(message.content);
         });
         const useButton = this.createIconButton(actionsEl, "message-square-plus", this.plugin.t("useAsContext"), "cortex-chat-message-action");
-        useButton.addEventListener("click", () => {
-          this.appendToComposer(`Contexto de respuesta anterior:\n${message.content}`);
+        useButton.addEventListener("click", async () => {
+          await this.pinResponseAsContext(message);
         });
+        if (message.meta?.contextManifest) {
+          const manifestButton = this.createIconButton(actionsEl, "list-checks", this.plugin.t("manifestDetails"), "cortex-chat-message-action");
+          manifestButton.addEventListener("click", () => {
+            new ContextManifestModal(this.app, message.meta.contextManifest, this.plugin.t).open();
+          });
+        }
       }
       const bodyEl = messageEl.createDiv({ cls: "cortex-chat-message-body" });
       if (message.meta?.loading) {
@@ -3005,6 +3715,16 @@ class CortexChatView extends ItemView {
       if (message.meta?.detail) {
         const footerEl = messageEl.createDiv({ cls: "cortex-chat-message-detail" });
         footerEl.createSpan({ cls: "cortex-chat-message-detail-text", text: message.meta.detail });
+        if (message.meta?.contextManifest?.summary) {
+          const manifestEl = footerEl.createEl("button", {
+            cls: "cortex-chat-manifest-pill",
+            text: message.meta.contextManifest.summary,
+            attr: { title: this.plugin.t("manifestDetails") }
+          });
+          manifestEl.addEventListener("click", () => {
+            new ContextManifestModal(this.app, message.meta.contextManifest, this.plugin.t).open();
+          });
+        }
       }
     }
 
@@ -3021,13 +3741,60 @@ class CortexChatView extends ItemView {
   }
 
   async insertTextIntoActiveNote(content) {
-    const view = this.plugin.refreshLastMarkdownView();
-    if (!view || !view.editor) {
-      new Notice(this.plugin.t("openEditableNote"));
-      return;
+    await this.plugin.approveInsertionIntoNote(content, {
+      threadId: this.getActiveTab()?.threadId || "manual"
+    });
+  }
+
+  async pinResponseAsContext(message) {
+    const tab = this.getActiveTab();
+    const source = {
+      id: message.id || makeId("pin"),
+      path: `pinned://${message.id || makeId("msg")}`,
+      title: summarize(message.content || this.plugin.t("pinnedContext")),
+      preview: String(message.content || "").slice(0, 4000),
+      source: "pinned-response",
+      kind: "snippet",
+      reason: this.plugin.t("useAsContext")
+    };
+    tab.pinnedContext = mergeReferences(tab.pinnedContext || [], [source]).slice(-12);
+    tab.context = {
+      ...(tab.context || {}),
+      references: mergeReferences(tab.context?.references || [], [source])
+    };
+    tab.contextSummary = this.describeContext(tab.context);
+    this.syncActiveFields();
+    await this.persistTabs();
+    this.renderContext();
+    new Notice(this.plugin.t("pinnedContextAdded"));
+  }
+
+  async removeContextReference(referencePath) {
+    const tab = this.getActiveTab();
+    const removePath = String(referencePath || "");
+    tab.pinnedContext = (tab.pinnedContext || []).filter((reference) => reference.path !== removePath);
+    if (tab.context?.references) {
+      tab.context = {
+        ...tab.context,
+        references: tab.context.references.filter((reference) => reference.path !== removePath)
+      };
     }
-    view.editor.replaceRange(`\n\n${content}\n`, view.editor.getCursor());
-    new Notice(this.plugin.t("responseInserted"));
+    tab.contextSummary = this.describeContext(tab.context);
+    this.syncActiveFields();
+    await this.persistTabs();
+    this.renderContext();
+    new Notice(this.plugin.t("pinnedContextRemoved"));
+  }
+
+  contextWithPinnedSources(context, tab = this.getActiveTab()) {
+    const pinned = tab?.pinnedContext || [];
+    if (!pinned.length) {
+      return context || {};
+    }
+    return {
+      ...(context || {}),
+      references: mergeReferences(context?.references || [], pinned)
+    };
   }
 
   appendToComposer(content) {
@@ -3269,6 +4036,11 @@ class CortexChatView extends ItemView {
     this.setSending(true);
 
     const startedAt = Date.now();
+    const expanded = expandSlashCommand(message);
+    const agentMessage = expanded.message;
+    if (expanded.command) {
+      new Notice(this.plugin.t("commandExpanded", { command: `/${expanded.command}` }));
+    }
     const activeWorkMode = this.plugin.settings.defaultInteractionMode || DEFAULT_SETTINGS.defaultInteractionMode;
     const pendingId = this.appendMessage("assistant", "", {
       loading: true,
@@ -3290,14 +4062,14 @@ class CortexChatView extends ItemView {
     }
     try {
       const requestTab = this.getTab(requestTabId);
-      const requestContext = requestTab?.context || this.context || {};
-      const runOptions = this.plugin.getRunOptions(requestContext, message);
-      const folderStatus = this.getFolderReviewStatus(message, requestContext);
+      const requestContext = this.contextWithPinnedSources(requestTab?.context || this.context || {}, requestTab);
+      const runOptions = this.plugin.getRunOptions(requestContext, agentMessage);
+      const folderStatus = this.getFolderReviewStatus(agentMessage, requestContext);
       if (folderStatus) {
         this.setPendingStatus(pendingId, folderStatus, {}, requestTabId);
       }
       this.setPendingStatus(pendingId, this.plugin.t("codexThinking"), {}, requestTabId);
-      const response = await this.plugin.sendMessageToAgent(requestTab?.threadId || null, message, requestContext, runOptions);
+      const response = await this.plugin.sendMessageToAgent(requestTab?.threadId || null, agentMessage, requestContext, runOptions);
       const isFallback = response.localFallback || response.raw?.provider === "heuristic-fallback";
       this.setPendingStatus(pendingId, this.plugin.t("codexPreparingResponse"), {
         detail:
@@ -3322,7 +4094,8 @@ class CortexChatView extends ItemView {
       }
       this.updateMessageInTab(requestTabId, pendingId, response.answer, {
         loading: false,
-        ...this.responseMetaFor(response, Date.now() - startedAt, runOptions)
+        ...this.responseMetaFor(response, Date.now() - startedAt, runOptions),
+        contextManifest: response.contextManifest || null
       });
       this.plugin.setLastResponse(response);
 
@@ -3491,6 +4264,82 @@ class CortexChatSettingTab extends PluginSettingTab {
           })
       );
 
+    containerEl.createEl("h3", { text: t("contextRetrieval") });
+
+    const contextToggles = [
+      ["contextManifestEnabled", t("contextManifest"), t("contextManifestDesc")],
+      ["contextIncludeActiveNote", t("includeActiveNote"), t("includeActiveNoteDesc")],
+      ["contextIncludeLinks", t("includeLinks"), t("includeLinksDesc")],
+      ["contextIncludeMentions", t("includeMentions"), t("includeMentionsDesc")],
+      ["contextIncludeFolders", t("includeFolders"), t("includeFoldersDesc")],
+      ["contextIncludePinned", t("includePinned"), t("includePinnedDesc")],
+      ["contextIncludeMemory", t("includeMemory"), t("includeMemoryDesc")],
+      ["contextIncludeRecentSessions", t("includeRecentSessions"), t("includeRecentSessionsDesc")],
+      ["contextIncludeRag", t("includeRag"), t("includeRagDesc")]
+    ];
+
+    for (const [key, name, description] of contextToggles) {
+      new Setting(containerEl)
+        .setName(name)
+        .setDesc(description)
+        .addToggle((toggle) =>
+          toggle.setValue(Boolean(this.plugin.settings[key])).onChange(async (value) => {
+            this.plugin.settings[key] = Boolean(value);
+            await this.plugin.saveSettings();
+            this.plugin.refreshAgentViews();
+          })
+        );
+    }
+
+    new Setting(containerEl)
+      .setName(t("ragIndexEnabled"))
+      .setDesc(t("ragIndexEnabledDesc"))
+      .addToggle((toggle) =>
+        toggle.setValue(Boolean(this.plugin.settings.ragIndexEnabled)).onChange(async (value) => {
+          this.plugin.settings.ragIndexEnabled = Boolean(value);
+          await this.plugin.saveSettings();
+        })
+      )
+      .addButton((button) =>
+        button.setButtonText(t("rebuildRagIndex")).onClick(async () => {
+          await this.plugin.rebuildRagIndex({ notify: true });
+          this.display();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName(t("ragIndexStatus", { status: this.plugin.getRagIndexStatusLabel() }))
+      .setDesc(t("ragIndexMaxNotesDesc"))
+      .addText((text) =>
+        text.setValue(String(this.plugin.settings.ragIndexMaxNotes ?? DEFAULT_SETTINGS.ragIndexMaxNotes)).onChange(async (value) => {
+          this.plugin.settings.ragIndexMaxNotes = normalizeRagIndexMaxNotes(value, DEFAULT_SETTINGS.ragIndexMaxNotes);
+          await this.plugin.saveSettings();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName(t("ragCandidateLimit"))
+      .setDesc(t("ragCandidateLimitDesc"))
+      .addText((text) =>
+        text.setValue(String(this.plugin.settings.ragCandidateLimit ?? DEFAULT_SETTINGS.ragCandidateLimit)).onChange(async (value) => {
+          this.plugin.settings.ragCandidateLimit = normalizeRagCandidateLimit(value, DEFAULT_SETTINGS.ragCandidateLimit);
+          await this.plugin.saveSettings();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName(t("contextExclusions"))
+      .setDesc(t("contextExclusionsDesc"))
+      .addTextArea((text) => {
+        text.setValue((this.plugin.settings.contextExclusionPatterns || []).join(", "));
+        text.inputEl.rows = 3;
+        text.inputEl.addClass("cortex-chat-settings-textarea");
+        text.onChange(async (value) => {
+          this.plugin.settings.contextExclusionPatterns = normalizeExclusionPatterns(value);
+          await this.plugin.saveSettings();
+        });
+      });
+
     new Setting(containerEl)
       .setName(t("folderRoots"))
       .setDesc(t("folderRootsDesc"))
@@ -3513,10 +4362,39 @@ class CortexChatSettingTab extends PluginSettingTab {
         })
       );
 
+    containerEl.createEl("h3", { text: t("safetySettings") });
+
+    new Setting(containerEl)
+      .setName(t("approvedEditsOnly"))
+      .setDesc(t("approvedEditsOnlyDesc"))
+      .addToggle((toggle) =>
+        toggle.setValue(Boolean(this.plugin.settings.approvedEditsOnly)).onChange(async (value) => {
+          this.plugin.settings.approvedEditsOnly = Boolean(value);
+          await this.plugin.saveSettings();
+        })
+      );
+
     containerEl.createEl("h3", { text: t("systemPrompt") });
     containerEl.createEl("p", {
       text: t("systemPromptDesc")
     });
+
+    new Setting(containerEl)
+      .setName(t("promptProfile"))
+      .setDesc(t("promptProfileDesc"))
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("researcher", t("profileResearcher"))
+          .addOption("editor", t("profileEditor"))
+          .addOption("planner", t("profilePlanner"))
+          .addOption("safe-executor", t("profileSafeExecutor"))
+          .setValue(this.plugin.settings.activePromptProfile || DEFAULT_SETTINGS.activePromptProfile)
+          .onChange(async (value) => {
+            this.plugin.settings.activePromptProfile = normalizePromptProfile(value);
+            await this.plugin.saveSettings();
+          })
+      );
+
 
     const promptFieldMeta = [
       ["role", t("promptRole"), t("promptRoleDesc")],
@@ -3563,6 +4441,36 @@ class CortexChatSettingTab extends PluginSettingTab {
           await this.plugin.resetUiScale();
           this.display();
         })
+      );
+
+    new Setting(containerEl)
+      .setName(t("uiDensity"))
+      .setDesc(t("uiDensityDesc"))
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("compact", t("densityCompact"))
+          .addOption("comfortable", t("densityComfortable"))
+          .setValue(this.plugin.settings.uiDensity || DEFAULT_SETTINGS.uiDensity)
+          .onChange(async (value) => {
+            this.plugin.settings.uiDensity = value;
+            await this.plugin.saveSettings();
+            this.plugin.refreshAgentViewScale();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName(t("tabBarPosition"))
+      .setDesc(t("tabBarPositionDesc"))
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("header", t("tabBarHeader"))
+          .addOption("composer", t("tabBarComposer"))
+          .setValue(this.plugin.settings.tabBarPosition || DEFAULT_SETTINGS.tabBarPosition)
+          .onChange(async (value) => {
+            this.plugin.settings.tabBarPosition = value;
+            await this.plugin.saveSettings();
+            this.plugin.refreshAgentViews();
+          })
       );
 
     containerEl.createEl("h3", { text: t("advancedLocal") });
@@ -3675,6 +4583,7 @@ module.exports = class CortexChatPlugin extends Plugin {
     this.lastResponse = null;
     this.lastMarkdownView = null;
     this.lastMarkdownFile = null;
+    this.ragIndexStatus = null;
     this.normalizePortableSettings();
     await this.ensureLocalIdentity();
 
@@ -3791,6 +4700,23 @@ module.exports = class CortexChatPlugin extends Plugin {
       this.settings.languageMode
     );
     this.settings.uiScale = clampUiScale(this.settings.uiScale);
+    this.settings.uiDensity = this.settings.uiDensity === "comfortable" ? "comfortable" : DEFAULT_SETTINGS.uiDensity;
+    this.settings.tabBarPosition = this.settings.tabBarPosition === "composer" ? "composer" : DEFAULT_SETTINGS.tabBarPosition;
+    this.settings.contextManifestEnabled = this.settings.contextManifestEnabled !== false;
+    this.settings.contextIncludeActiveNote = this.settings.contextIncludeActiveNote !== false;
+    this.settings.contextIncludeLinks = this.settings.contextIncludeLinks !== false;
+    this.settings.contextIncludeMentions = this.settings.contextIncludeMentions !== false;
+    this.settings.contextIncludeFolders = this.settings.contextIncludeFolders !== false;
+    this.settings.contextIncludePinned = this.settings.contextIncludePinned !== false;
+    this.settings.contextIncludeMemory = this.settings.contextIncludeMemory !== false;
+    this.settings.contextIncludeRecentSessions = this.settings.contextIncludeRecentSessions !== false;
+    this.settings.contextIncludeRag = this.settings.contextIncludeRag === true;
+    this.settings.ragIndexEnabled = this.settings.ragIndexEnabled !== false;
+    this.settings.ragIndexMaxNotes = normalizeRagIndexMaxNotes(this.settings.ragIndexMaxNotes, DEFAULT_SETTINGS.ragIndexMaxNotes);
+    this.settings.ragCandidateLimit = normalizeRagCandidateLimit(this.settings.ragCandidateLimit, DEFAULT_SETTINGS.ragCandidateLimit);
+    this.settings.contextExclusionPatterns = normalizeExclusionPatterns(this.settings.contextExclusionPatterns);
+    this.settings.approvedEditsOnly = this.settings.approvedEditsOnly !== false;
+    this.settings.activePromptProfile = normalizePromptProfile(this.settings.activePromptProfile);
     this.settings.folderReferenceRoots = normalizeFolderRoots(this.settings.folderReferenceRoots);
     this.normalizePortableSettings();
   }
@@ -3802,6 +4728,23 @@ module.exports = class CortexChatPlugin extends Plugin {
       this.settings.languageMode
     );
     this.settings.uiScale = clampUiScale(this.settings.uiScale);
+    this.settings.uiDensity = this.settings.uiDensity === "comfortable" ? "comfortable" : DEFAULT_SETTINGS.uiDensity;
+    this.settings.tabBarPosition = this.settings.tabBarPosition === "composer" ? "composer" : DEFAULT_SETTINGS.tabBarPosition;
+    this.settings.contextManifestEnabled = this.settings.contextManifestEnabled !== false;
+    this.settings.contextIncludeActiveNote = this.settings.contextIncludeActiveNote !== false;
+    this.settings.contextIncludeLinks = this.settings.contextIncludeLinks !== false;
+    this.settings.contextIncludeMentions = this.settings.contextIncludeMentions !== false;
+    this.settings.contextIncludeFolders = this.settings.contextIncludeFolders !== false;
+    this.settings.contextIncludePinned = this.settings.contextIncludePinned !== false;
+    this.settings.contextIncludeMemory = this.settings.contextIncludeMemory !== false;
+    this.settings.contextIncludeRecentSessions = this.settings.contextIncludeRecentSessions !== false;
+    this.settings.contextIncludeRag = this.settings.contextIncludeRag === true;
+    this.settings.ragIndexEnabled = this.settings.ragIndexEnabled !== false;
+    this.settings.ragIndexMaxNotes = normalizeRagIndexMaxNotes(this.settings.ragIndexMaxNotes, DEFAULT_SETTINGS.ragIndexMaxNotes);
+    this.settings.ragCandidateLimit = normalizeRagCandidateLimit(this.settings.ragCandidateLimit, DEFAULT_SETTINGS.ragCandidateLimit);
+    this.settings.contextExclusionPatterns = normalizeExclusionPatterns(this.settings.contextExclusionPatterns);
+    this.settings.approvedEditsOnly = this.settings.approvedEditsOnly !== false;
+    this.settings.activePromptProfile = normalizePromptProfile(this.settings.activePromptProfile);
     this.settings.folderReferenceRoots = normalizeFolderRoots(this.settings.folderReferenceRoots);
     this.normalizePortableSettings();
     await this.saveData(this.pickSettings(SHARED_SETTING_KEYS));
@@ -4209,6 +5152,7 @@ module.exports = class CortexChatPlugin extends Plugin {
 
   getConfiguredSystemPrompt(runOptions = {}, backupRoot = "") {
     const basePrompt = composeSystemPrompt(this.settings.systemPromptSections);
+    const profileLines = ["[prompt-profile]", getPromptProfileInstruction(this.settings.activePromptProfile)];
     const backupInstruction = backupRoot
       ? this.t("workModeExecuteBackupPath", { backupRoot })
       : this.t("workModeExecuteBackupGeneric");
@@ -4216,7 +5160,7 @@ module.exports = class CortexChatPlugin extends Plugin {
       runOptions.interactionMode === "execute"
         ? ["[work-mode]", this.t("workModeExecutePrompt", { backupInstruction })]
         : ["[work-mode]", this.t("workModePlannerPrompt")];
-    return [basePrompt, modeLines.join("\n")].filter(Boolean).join("\n\n").trim();
+    return [basePrompt, profileLines.join("\n"), modeLines.join("\n")].filter(Boolean).join("\n\n").trim();
   }
 
   getUiScale() {
@@ -4233,6 +5177,12 @@ module.exports = class CortexChatPlugin extends Plugin {
   refreshAgentViewScale() {
     for (const view of this.getOpenAgentViews()) {
       view.applyUiScale?.();
+    }
+  }
+
+  refreshAgentViews() {
+    for (const view of this.getOpenAgentViews()) {
+      view.render?.();
     }
   }
 
@@ -4988,17 +5938,315 @@ module.exports = class CortexChatPlugin extends Plugin {
     return isLocalBackendUrlValue(value);
   }
 
+  isContextPathExcluded(filePath) {
+    const normalizedPath = String(filePath || "").replaceAll("\\", "/").toLowerCase();
+    if (!normalizedPath) {
+      return false;
+    }
+    for (const pattern of this.settings.contextExclusionPatterns || []) {
+      const normalizedPattern = String(pattern || "").replaceAll("\\", "/").toLowerCase().trim();
+      if (!normalizedPattern) {
+        continue;
+      }
+      const loosePattern = normalizedPattern.replace(/\*/g, "");
+      if (normalizedPath.includes(loosePattern) || normalizedPath.includes(normalizedPattern)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  applyContextSourcePolicy(context = {}) {
+    const filtered = { ...context };
+    const references = Array.isArray(context.references) ? context.references : [];
+    const removed = [];
+
+    if (!this.settings.contextIncludeActiveNote || this.isContextPathExcluded(filtered.path)) {
+      if (filtered.path) {
+        removed.push({ path: filtered.path, source: "active-note" });
+      }
+      filtered.path = "";
+      filtered.title = "";
+      filtered.content = "";
+      filtered.outgoingLinks = [];
+    }
+
+    filtered.references = references.filter((reference) => {
+      const bucket = referenceSourceBucket(reference);
+      const pathExcluded = this.isContextPathExcluded(reference.path);
+      const disabled =
+        (bucket === "links" && !this.settings.contextIncludeLinks) ||
+        (bucket === "mentions" && !this.settings.contextIncludeMentions) ||
+        (bucket === "folders" && !this.settings.contextIncludeFolders) ||
+        (bucket === "pinned" && !this.settings.contextIncludePinned) ||
+        (bucket === "rag" && !this.settings.contextIncludeRag);
+      if (pathExcluded || disabled) {
+        removed.push({ path: reference.path, source: reference.source, reason: pathExcluded ? "excluded" : "disabled" });
+        return false;
+      }
+      return true;
+    });
+
+    if (!this.settings.contextIncludeLinks) {
+      filtered.outgoingLinks = [];
+    }
+
+    filtered.policy = {
+      removed,
+      exclusions: this.settings.contextExclusionPatterns || []
+    };
+    return filtered;
+  }
+
+  contextManifestSourceLabels() {
+    return {
+      activeNote: this.t("manifestActiveNote"),
+      links: this.t("manifestLinks"),
+      mentions: this.t("manifestMentions"),
+      folders: this.t("manifestFolders"),
+      pinned: this.t("manifestPinned"),
+      memory: this.t("manifestMemory"),
+      sessions: this.t("manifestSessions"),
+      rag: this.t("manifestRag")
+    };
+  }
+
+  buildContextManifest(context = {}, details = {}) {
+    if (this.settings.contextManifestEnabled === false) {
+      return null;
+    }
+
+    const labels = this.contextManifestSourceLabels();
+    const references = Array.isArray(context.references) ? context.references : [];
+    const sourceGroup = (label, enabled, items) => ({
+      label,
+      enabled,
+      items: (items || []).map((item) => ({
+        path: item.path || "",
+        title: item.title || "",
+        source: item.source || "",
+        reason: item.reason || item.token || ""
+      }))
+    });
+
+    const sources = {
+      activeNote: sourceGroup(labels.activeNote, this.settings.contextIncludeActiveNote !== false, context.path ? [{ path: context.path, title: context.title, source: "active-note" }] : []),
+      links: sourceGroup(labels.links, this.settings.contextIncludeLinks !== false, references.filter((reference) => referenceSourceBucket(reference) === "links")),
+      mentions: sourceGroup(labels.mentions, this.settings.contextIncludeMentions !== false, references.filter((reference) => referenceSourceBucket(reference) === "mentions")),
+      folders: sourceGroup(labels.folders, this.settings.contextIncludeFolders !== false, references.filter((reference) => referenceSourceBucket(reference) === "folders")),
+      pinned: sourceGroup(labels.pinned, this.settings.contextIncludePinned !== false, references.filter((reference) => referenceSourceBucket(reference) === "pinned")),
+      memory: sourceGroup(labels.memory, this.settings.contextIncludeMemory !== false, details.memoryDocuments || []),
+      sessions: sourceGroup(labels.sessions, this.settings.contextIncludeRecentSessions !== false, details.recentSessions || []),
+      rag: sourceGroup(labels.rag, this.settings.contextIncludeRag === true, references.filter((reference) => referenceSourceBucket(reference) === "rag"))
+    };
+
+    const used = Object.values(sources).filter((group) => group.items.length);
+    const summarySources = used.map((group) => `${group.label} ${group.items.length}`);
+    return {
+      schemaVersion: 1,
+      createdAt: new Date().toISOString(),
+      summary: this.t("manifestSummary", {
+        count: used.reduce((total, group) => total + group.items.length, 0),
+        sources: summarySources.join(", ") || this.t("noRefs")
+      }),
+      runOptions: details.runOptions || {},
+      unresolvedReferences: details.unresolvedReferences || [],
+      removed: context.policy?.removed || [],
+      exclusions: this.settings.contextExclusionPatterns || [],
+      sources
+    };
+  }
+
+  getRagIndexPath(vaultRoot = this.getVaultRoot()) {
+    if (!vaultRoot || !path) {
+      return "";
+    }
+    return path.join(agentPaths(vaultRoot).indexRoot, "vault-keywords.json");
+  }
+
+  getRagIndexStatusLabel() {
+    if (this.ragIndexStatus?.count) {
+      return this.t("ragIndexReady", {
+        count: this.ragIndexStatus.count,
+        time: this.ragIndexStatus.updatedAt ? new Date(this.ragIndexStatus.updatedAt).toLocaleString() : ""
+      });
+    }
+    return this.t("ragIndexNotBuilt");
+  }
+
+  async readRagIndex(vaultRoot = this.getVaultRoot()) {
+    if (!fs || !vaultRoot) {
+      return { schemaVersion: 1, updatedAt: "", entries: {} };
+    }
+    try {
+      const raw = await fs.readFile(this.getRagIndexPath(vaultRoot), "utf8");
+      const parsed = JSON.parse(raw);
+      const entries = parsed?.entries && typeof parsed.entries === "object" ? parsed.entries : {};
+      this.ragIndexStatus = { count: Object.keys(entries).length, updatedAt: parsed.updatedAt || "" };
+      return { schemaVersion: 1, updatedAt: parsed.updatedAt || "", entries };
+    } catch {
+      this.ragIndexStatus = null;
+      return { schemaVersion: 1, updatedAt: "", entries: {} };
+    }
+  }
+
+  async writeRagIndex(vaultRoot, index) {
+    if (!fs || !vaultRoot) {
+      return;
+    }
+    const indexPath = this.getRagIndexPath(vaultRoot);
+    await fs.mkdir(path.dirname(indexPath), { recursive: true });
+    await fs.writeFile(indexPath, JSON.stringify(index, null, 2), "utf8");
+    this.ragIndexStatus = {
+      count: Object.keys(index.entries || {}).length,
+      updatedAt: index.updatedAt || ""
+    };
+  }
+
+  async rebuildRagIndex(options = {}) {
+    if (options.notify) {
+      new Notice(this.t("ragIndexBuilding"));
+    }
+    try {
+      const index = await this.buildOrUpdateRagIndex({ force: true });
+      if (options.notify) {
+        new Notice(this.t("ragIndexBuilt"));
+      }
+      return index;
+    } catch (error) {
+      if (options.notify) {
+        new Notice(this.t("ragIndexFailed", { error: error.message }));
+      }
+      throw error;
+    }
+  }
+
+  async buildOrUpdateRagIndex(options = {}) {
+    if (!this.settings.ragIndexEnabled || !fs) {
+      return { schemaVersion: 1, updatedAt: "", entries: {} };
+    }
+    const vaultRoot = this.getVaultRoot();
+    if (!vaultRoot) {
+      return { schemaVersion: 1, updatedAt: "", entries: {} };
+    }
+    await this.ensureAgentStructure(vaultRoot);
+    const currentIndex = options.force ? { entries: {} } : await this.readRagIndex(vaultRoot);
+    const entries = {};
+    const maxNotes = normalizeRagIndexMaxNotes(this.settings.ragIndexMaxNotes, DEFAULT_SETTINGS.ragIndexMaxNotes);
+    const files = this.app.vault
+      .getMarkdownFiles()
+      .filter((file) => !isIgnoredVaultPath(file.path) && !this.isContextPathExcluded(file.path))
+      .sort((left, right) => (right.stat?.mtime || 0) - (left.stat?.mtime || 0))
+      .slice(0, maxNotes);
+
+    for (const file of files) {
+      const previous = currentIndex.entries?.[file.path];
+      if (!options.force && previous?.mtime === file.stat?.mtime && previous?.size === file.stat?.size) {
+        entries[file.path] = previous;
+        continue;
+      }
+      let content = "";
+      try {
+        content = await this.app.vault.cachedRead(file);
+      } catch {
+        content = "";
+      }
+      const preview = content.slice(0, 2500);
+      const tokens = tokenizeForRag(`${file.basename} ${file.path} ${preview}`, 80);
+      entries[file.path] = {
+        path: file.path,
+        title: file.basename,
+        mtime: file.stat?.mtime || 0,
+        size: file.stat?.size || 0,
+        tokens,
+        preview: preview.slice(0, 900)
+      };
+    }
+
+    const index = {
+      schemaVersion: 1,
+      updatedAt: new Date().toISOString(),
+      maxNotes,
+      entries
+    };
+    await this.writeRagIndex(vaultRoot, index);
+    return index;
+  }
+
+  scoreRagEntry(entry, tokens) {
+    const entryTokens = new Set(entry.tokens || []);
+    const pathText = `${entry.title || ""} ${entry.path || ""}`.toLowerCase();
+    let score = 0;
+    for (const token of tokens) {
+      if (entryTokens.has(token)) {
+        score += 2;
+      }
+      if (pathText.includes(token)) {
+        score += 4;
+      }
+    }
+    return score;
+  }
+
+  async suggestRagReferences(message, context = {}, existingReferences = []) {
+    if (this.settings.contextIncludeRag !== true || !this.settings.ragCandidateLimit) {
+      return [];
+    }
+    const limit = normalizeRagCandidateLimit(this.settings.ragCandidateLimit, DEFAULT_SETTINGS.ragCandidateLimit);
+    if (limit <= 0) {
+      return [];
+    }
+    const query = `${message || ""} ${context.title || ""} ${context.content || ""}`.toLowerCase();
+    const tokens = tokenizeForRag(query, 30);
+    if (!tokens.length) {
+      return [];
+    }
+
+    const existingPaths = new Set([
+      context.path,
+      ...(existingReferences || []).map((reference) => reference.path)
+    ].filter(Boolean));
+    const index = await this.buildOrUpdateRagIndex({ force: false });
+    const indexedCandidates = Object.values(index.entries || [])
+      .filter((entry) => !existingPaths.has(entry.path))
+      .map((entry) => ({ entry, score: this.scoreRagEntry(entry, tokens) }))
+      .filter((candidate) => candidate.score > 0)
+      .sort((left, right) => right.score - left.score || String(left.entry.path).localeCompare(String(right.entry.path)))
+      .slice(0, limit);
+    const references = [];
+    for (const candidate of indexedCandidates) {
+      const file = this.app.vault.getAbstractFileByPath(candidate.entry.path);
+      if (!file) {
+        continue;
+      }
+      const reference = await this.buildReferenceFromFile(file, "rag", this.t("ragCandidates"));
+      reference.reason = `score ${candidate.score}`;
+      if (candidate.entry.preview && !reference.preview) {
+        reference.preview = candidate.entry.preview.slice(0, 2500);
+      }
+      references.push(reference);
+    }
+    return references;
+  }
+
   async sendMessageToAgent(threadId, message, baseContext, preparedRunOptions = null) {
     const referenceResolution = await this.resolveAtReferences(message);
     const baseReferences = baseContext.references || [];
     const referencesBeforeFolder = mergeReferences(baseReferences, referenceResolution.references);
     const folderReferences = await this.resolveFolderReferences(message, referencesBeforeFolder);
-    const context = {
+    const referencesBeforeRag = mergeReferences(baseReferences, referenceResolution.references, folderReferences);
+    const ragReferences = await this.suggestRagReferences(message, baseContext, referencesBeforeRag);
+    const rawContext = {
       ...baseContext,
-      references: mergeReferences(baseReferences, referenceResolution.references, folderReferences)
+      references: mergeReferences(baseReferences, referenceResolution.references, folderReferences, ragReferences)
     };
+    const context = this.applyContextSourcePolicy(rawContext);
     const runOptions = preparedRunOptions || this.getRunOptions(context, message);
     const systemPrompt = this.getConfiguredSystemPrompt(runOptions);
+    const requestManifest = this.buildContextManifest(context, {
+      runOptions,
+      unresolvedReferences: referenceResolution.unresolved
+    });
 
     try {
       let activeThreadId = threadId;
@@ -5022,6 +6270,7 @@ module.exports = class CortexChatPlugin extends Plugin {
         ...response,
         threadId: response.threadId || activeThreadId,
         context,
+        contextManifest: response.contextManifest || requestManifest,
         unresolvedReferences: referenceResolution.unresolved
       };
     } catch (error) {
@@ -5034,6 +6283,7 @@ module.exports = class CortexChatPlugin extends Plugin {
         ...localResponse,
         localFallback: true,
         context,
+        contextManifest: localResponse.contextManifest || requestManifest,
         unresolvedReferences: referenceResolution.unresolved
       };
     }
@@ -5120,8 +6370,9 @@ module.exports = class CortexChatPlugin extends Plugin {
     }
 
     await this.ensureAgentStructure(vaultRoot);
-    const memoryDocuments = await this.readMemoryDocuments(vaultRoot);
-    const recentSessions = await this.readRecentSessions(vaultRoot, threadId, 6);
+    const memoryDocuments = this.settings.contextIncludeMemory === false ? [] : await this.readMemoryDocuments(vaultRoot);
+    const recentSessions =
+      this.settings.contextIncludeRecentSessions === false ? [] : await this.readRecentSessions(vaultRoot, threadId, 6);
     const sessionId = makeId("session");
     const createdAt = new Date().toISOString();
     const backupRoot = this.getSessionBackupRoot(createdAt, threadId, sessionId);
@@ -5130,6 +6381,11 @@ module.exports = class CortexChatPlugin extends Plugin {
     }
     const answer = await this.runLocalCodex(message, context, memoryDocuments, recentSessions, runOptions, backupRoot);
     const summary = summarize(`${message} ${answer}`);
+    const contextManifest = this.buildContextManifest(context, {
+      runOptions,
+      memoryDocuments,
+      recentSessions
+    });
     const sessionPath = await this.writeLocalSession(vaultRoot, {
       sessionId,
       threadId,
@@ -5144,6 +6400,7 @@ module.exports = class CortexChatPlugin extends Plugin {
       effort: runOptions.effort,
       backupPolicy: runOptions.backupPolicy || "none",
       backupRoot,
+      contextManifest,
       summary
     });
 
@@ -5170,6 +6427,7 @@ module.exports = class CortexChatPlugin extends Plugin {
         redacted: false,
         detectedTypes: []
       },
+      contextManifest,
       memoryContext: {
         documents: memoryDocuments.map((document) => ({
           path: document.path,
@@ -5477,34 +6735,107 @@ module.exports = class CortexChatPlugin extends Plugin {
     );
   }
 
-  async insertLastResponseIntoNote() {
-    if (!this.lastResponse?.answer) {
-      new Notice(this.t("noLastResponseInsert"));
-      return;
+  async writeApprovedChangeLog(payload) {
+    const vaultRoot = this.getVaultRoot();
+    if (!vaultRoot || !fs || !path) {
+      return "";
     }
+    await this.ensureAgentStructure(vaultRoot);
+    const createdAt = payload.createdAt || new Date().toISOString();
+    const date = new Date(createdAt);
+    const year = String(date.getUTCFullYear());
+    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(date.getUTCDate()).padStart(2, "0");
+    const changeId = payload.changeId || makeId("change");
+    const relativePath = path
+      .join(CORTEX_DATA_ROOT, "outbox", "approved-changes", year, month, day, `${createdAt.replace(/[:.]/g, "-")}-${changeId}.md`)
+      .replaceAll("\\", "/");
+    const absolutePath = path.join(vaultRoot, relativePath);
+    await fs.mkdir(path.dirname(absolutePath), { recursive: true });
+    await fs.writeFile(
+      absolutePath,
+      buildApprovedChangeMarkdown({
+        ...payload,
+        changeId,
+        createdAt,
+        pluginVersion: this.manifest?.version || ""
+      }),
+      "utf8"
+    );
+    return relativePath;
+  }
 
+  async approveInsertionIntoNote(content, options = {}) {
     const view = this.refreshLastMarkdownView();
     if (!view || !view.editor) {
       new Notice(this.t("openEditableNote"));
       return;
     }
 
-    if ((this.settings.defaultInteractionMode || DEFAULT_SETTINGS.defaultInteractionMode) === "execute" && view.file?.path) {
-      try {
-        await this.backupVaultFile(view.file.path, {
-          createdAt: new Date().toISOString(),
-          threadId: this.lastResponse.threadId || "manual",
-          sessionId: this.lastResponse.sessionId || makeId("manual")
-        });
-      } catch (error) {
-        new Notice(this.t("backupFailed", { error: error.message }));
-        return;
+    const insertion = `\n\n${content}\n`;
+    const cursor = view.editor.getCursor();
+    const cursorOffset = view.editor.posToOffset ? view.editor.posToOffset(cursor) : 0;
+    const currentContent = view.editor.getValue ? view.editor.getValue() : "";
+    const diffPreview = buildInsertionDiffPreview(currentContent, insertion, cursorOffset);
+    const applyInsertion = async () => {
+      let backupPath = "";
+      if (view.file?.path) {
+        try {
+          backupPath = await this.backupVaultFile(view.file.path, {
+            createdAt: new Date().toISOString(),
+            threadId: options.threadId || this.lastResponse?.threadId || "manual",
+            sessionId: options.sessionId || this.lastResponse?.sessionId || makeId("manual")
+          });
+          new Notice(this.t("backupCreated", { path: backupPath }));
+        } catch (error) {
+          new Notice(this.t("backupFailed", { error: error.message }));
+          return;
+        }
       }
+      let changeLogPath = "";
+      try {
+        changeLogPath = await this.writeApprovedChangeLog({
+          createdAt: new Date().toISOString(),
+          targetPath: view.file?.path || "",
+          backupPath,
+          threadId: options.threadId || this.lastResponse?.threadId || "manual",
+          sessionId: options.sessionId || this.lastResponse?.sessionId || makeId("manual"),
+          summary: summarize(content),
+          insertion,
+          diffPreview: diffPreview.text
+        });
+      } catch {
+        changeLogPath = "";
+      }
+      view.editor.replaceRange(insertion, cursor);
+      new Notice(this.t("responseInserted"));
+      if (changeLogPath) {
+        new Notice(this.t("changeLogged", { path: changeLogPath }));
+      }
+    };
+
+    if (this.settings.approvedEditsOnly === false) {
+      await applyInsertion();
+      return;
     }
 
-    const insertion = `\n\n${this.lastResponse.answer}\n`;
-    view.editor.replaceRange(insertion, view.editor.getCursor());
-    new Notice(this.t("responseInserted"));
+    new ApprovedInsertionModal(this.app, this, {
+      filePath: view.file?.path || "",
+      insertion,
+      diffPreview,
+      onApply: applyInsertion
+    }).open();
+  }
+
+  async insertLastResponseIntoNote() {
+    if (!this.lastResponse?.answer) {
+      new Notice(this.t("noLastResponseInsert"));
+      return;
+    }
+    await this.approveInsertionIntoNote(this.lastResponse.answer, {
+      threadId: this.lastResponse.threadId || "manual",
+      sessionId: this.lastResponse.sessionId || makeId("manual")
+    });
   }
 
   async showMemoryUsed() {
