@@ -74,6 +74,13 @@ const I18N = {
     languageSpanish: "Spanish",
     languageAuto: "Automatic",
     appTitle: "Cortex",
+    emptyGreeting: "Hey there",
+    contextDetails: "Context details",
+    selectPreset: "Select preset",
+    selectVaultFolder: "Select vault folder",
+    folderContextAdded: "Folder context added: {folder}",
+    folderContextCleared: "Folder context removed.",
+    noVaultFolders: "No vault folders available.",
     openChat: "Open Cortex Chat",
     newTab: "New tab",
     closeTab: "Close tab",
@@ -378,6 +385,13 @@ const I18N = {
     languageSpanish: "Español",
     languageAuto: "Automático",
     appTitle: "Cortex",
+    emptyGreeting: "Hola",
+    contextDetails: "Detalles de contexto",
+    selectPreset: "Seleccionar preset",
+    selectVaultFolder: "Seleccionar carpeta de la vault",
+    folderContextAdded: "Contexto de carpeta añadido: {folder}",
+    folderContextCleared: "Contexto de carpeta eliminado.",
+    noVaultFolders: "No hay carpetas disponibles en la vault.",
     openChat: "Abrir Cortex Chat",
     newTab: "Nueva pestaña",
     closeTab: "Cerrar pestaña",
@@ -3030,11 +3044,7 @@ class CortexChatView extends ItemView {
     this.headerTabSlotEl = this.headerEl.createDiv({ cls: "cortex-chat-header-tabslot" });
     this.messagesEl = contentEl.createDiv({ cls: "cortex-chat-messages" });
     this.sendEl = contentEl.createDiv({ cls: "cortex-chat-send" });
-    if (this.getTabBarPosition() === "header") {
-      this.tabBarEl = this.headerTabSlotEl.createDiv({ cls: "cortex-chat-tabbar cortex-chat-tabbar--header" });
-    } else {
-      this.tabBarEl = this.sendEl.createDiv({ cls: "cortex-chat-tabbar cortex-chat-tabbar--composer" });
-    }
+    this.tabBarEl = this.sendEl.createDiv({ cls: "cortex-chat-tabbar cortex-chat-tabbar--composer" });
     this.contextEl = this.sendEl.createDiv({ cls: "cortex-chat-context" });
     this.modeCardsEl = this.sendEl.createDiv({ cls: "cortex-chat-mode-cards" });
     this.renderModeCards();
@@ -3084,14 +3094,12 @@ class CortexChatView extends ItemView {
     this.sendButtonEl.addEventListener("click", async () => {
       await this.sendMessage();
     });
-    this.sendHintEl = this.sendEl.createDiv({
-      cls: "cortex-chat-input-hint",
-      text: this.plugin.t("inputHint")
-    });
+    this.composerToolbarEl = this.sendEl.createDiv({ cls: "cortex-chat-composer-toolbar" });
 
     this.renderHeader();
     this.renderTabBar();
     this.renderContext();
+    this.renderComposerToolbar();
     this.renderMessages();
     this.autoResizeInput();
     if (this.isSending) {
@@ -3276,12 +3284,8 @@ class CortexChatView extends ItemView {
       this.toggleHistoryMenu();
     });
     this.historyMenuEl = this.historyWrapEl.createDiv({ cls: "cortex-chat-history-menu" });
-    const noteButton = this.createIconButton(rightEl, "file-text", this.plugin.t("activeNote"), "cortex-chat-icon-button");
-    noteButton.addEventListener("click", async () => this.loadCurrentNoteContext());
     const newChatButton = this.createIconButton(rightEl, "square-pen", this.plugin.t("newChatReady"), "cortex-chat-icon-button");
     newChatButton.addEventListener("click", () => this.startNewChat());
-    const newTabButton = this.createIconButton(rightEl, "square-plus", this.plugin.t("newTab"), "cortex-chat-icon-button");
-    newTabButton.addEventListener("click", () => this.createNewTab());
     const actionsButton = this.createIconButton(rightEl, "settings", this.plugin.t("consistencyDiagnostics"), "cortex-chat-icon-button");
     actionsButton.addEventListener("click", (event) => this.openActionsMenu(event));
     if (this.plugin.settings.showDiagnostics) {
@@ -3319,7 +3323,7 @@ class CortexChatView extends ItemView {
       return;
     }
     this.tabBarEl.removeClass("is-hidden");
-    for (const tab of this.tabs) {
+    this.tabs.forEach((tab, index) => {
       const button = this.tabBarEl.createEl("button", {
         cls: `cortex-chat-tab${tab.id === this.activeTabId ? " is-active" : ""}${tab.isStreaming ? " is-streaming" : ""}${tab.needsAttention ? " needs-attention" : ""}`,
         attr: {
@@ -3327,8 +3331,7 @@ class CortexChatView extends ItemView {
           title: tab.title || this.plugin.t("untitledTab")
         }
       });
-      button.createSpan({ cls: "cortex-chat-tab-indicator" });
-      button.createSpan({ cls: "cortex-chat-tab-title", text: tab.title || this.plugin.t("untitledTab") });
+      button.createSpan({ cls: "cortex-chat-tab-title", text: String(index + 1) });
       if (this.tabs.length > 1) {
         const close = button.createSpan({ cls: "cortex-chat-tab-close", text: "×" });
         close.setAttribute("aria-label", this.plugin.t("closeTab"));
@@ -3340,7 +3343,7 @@ class CortexChatView extends ItemView {
       button.addEventListener("click", async () => {
         await this.activateTab(tab.id);
       });
-    }
+    });
     const addButton = this.tabBarEl.createEl("button", {
       cls: "cortex-chat-tab cortex-chat-tab-add",
       attr: {
@@ -3352,6 +3355,153 @@ class CortexChatView extends ItemView {
     addButton.addEventListener("click", async () => {
       await this.createNewTab();
     });
+  }
+
+  getPromptProfileOptions() {
+    return [
+      ["planner", this.plugin.t("profilePlanner")],
+      ["researcher", this.plugin.t("profileResearcher")],
+      ["editor", this.plugin.t("profileEditor")],
+      ["safe-executor", this.plugin.t("profileSafeExecutor")]
+    ];
+  }
+
+  getActivePromptProfileLabel() {
+    const current = normalizePromptProfile(this.plugin.settings.activePromptProfile);
+    return this.getPromptProfileOptions().find(([value]) => value === current)?.[1] || this.plugin.t("profilePlanner");
+  }
+
+  renderComposerToolbar() {
+    if (!this.composerToolbarEl) {
+      return;
+    }
+    this.composerToolbarEl.empty();
+    const leftEl = this.composerToolbarEl.createDiv({ cls: "cortex-chat-composer-toolbar-left" });
+    const rightEl = this.composerToolbarEl.createDiv({ cls: "cortex-chat-composer-toolbar-right" });
+    const presetButton = leftEl.createEl("button", {
+      cls: "cortex-chat-toolbar-pill",
+      text: this.getActivePromptProfileLabel(),
+      attr: { title: this.plugin.t("selectPreset") }
+    });
+    presetButton.addEventListener("click", (event) => this.openPresetMenu(event));
+    const isExecute = (this.plugin.settings.defaultInteractionMode || DEFAULT_SETTINGS.defaultInteractionMode) === "execute";
+    const modeButton = leftEl.createEl("button", {
+      cls: `cortex-chat-toolbar-pill${isExecute ? " is-danger" : ""}`,
+      text: isExecute ? this.plugin.t("execute") : this.plugin.t("planner")
+    });
+    modeButton.addEventListener("click", async () => {
+      this.plugin.settings.defaultInteractionMode = isExecute ? "plan" : "execute";
+      await this.plugin.saveSettings();
+      this.renderComposerToolbar();
+      this.renderHeader();
+    });
+    const folderButton = this.createIconButton(rightEl, "folder", this.plugin.t("selectVaultFolder"), "cortex-chat-toolbar-icon");
+    folderButton.addEventListener("click", (event) => this.openFolderContextMenu(event));
+    const noteButton = this.createIconButton(rightEl, "file-text", this.plugin.t("activeNote"), "cortex-chat-toolbar-icon");
+    noteButton.addEventListener("click", async () => this.loadCurrentNoteContext());
+    const mentionButton = this.createIconButton(rightEl, "at-sign", "@", "cortex-chat-toolbar-icon");
+    mentionButton.addEventListener("click", () => this.insertMentionTrigger());
+    const detailsButton = rightEl.createEl("button", {
+      cls: "cortex-chat-toolbar-pill",
+      text: this.plugin.t("details"),
+      attr: { title: this.plugin.t("contextDetails") }
+    });
+    detailsButton.addEventListener("click", () => {
+      this.contextExpanded = !this.contextExpanded;
+      this.renderContext();
+    });
+  }
+
+  openPresetMenu(event) {
+    const menu = new Menu();
+    const current = normalizePromptProfile(this.plugin.settings.activePromptProfile);
+    for (const [value, label] of this.getPromptProfileOptions()) {
+      menu.addItem((item) =>
+        item
+          .setTitle(label)
+          .setChecked(current === value)
+          .onClick(async () => {
+            this.plugin.settings.activePromptProfile = value;
+            await this.plugin.saveSettings();
+            this.renderComposerToolbar();
+          })
+      );
+    }
+    menu.showAtMouseEvent(event);
+  }
+
+  getVaultFolders() {
+    return this.app.vault
+      .getAllLoadedFiles()
+      .filter((entry) => entry?.children && entry.path && !isIgnoredVaultPath(entry.path))
+      .map((entry) => entry.path)
+      .sort((left, right) => left.localeCompare(right, this.plugin.getLanguage(), { sensitivity: "base" }))
+      .slice(0, 80);
+  }
+
+  openFolderContextMenu(event) {
+    const folders = this.getVaultFolders();
+    const selected = normalizeFolderRoots(this.plugin.settings.folderReferenceRoots);
+    const menu = new Menu();
+    if (!folders.length) {
+      menu.addItem((item) => item.setTitle(this.plugin.t("noVaultFolders")).setDisabled(true));
+    }
+    for (const folder of folders) {
+      menu.addItem((item) =>
+        item
+          .setTitle(folder)
+          .setChecked(selected.includes(folder))
+          .onClick(async () => {
+            await this.selectFolderContext(folder);
+          })
+      );
+    }
+    if (selected.length) {
+      menu.addSeparator();
+      menu.addItem((item) =>
+        item.setTitle(this.plugin.t("folderContextCleared")).setIcon("x").onClick(async () => {
+          await this.clearFolderContext();
+        })
+      );
+    }
+    menu.showAtMouseEvent(event);
+  }
+
+  async selectFolderContext(folder) {
+    const roots = normalizeFolderRoots([folder]);
+    this.plugin.settings.folderReferenceRoots = roots;
+    this.plugin.settings.contextIncludeFolders = true;
+    await this.plugin.saveSettings();
+    const baseContext = this.context || (await this.plugin.captureCurrentContext(false));
+    const folderReferences = await this.plugin.resolveFolderReferences(`folder ${folder}`, baseContext.references || []);
+    const nextContext = {
+      ...baseContext,
+      references: mergeReferences(baseContext.references || [], folderReferences)
+    };
+    this.setActiveTabState({
+      context: nextContext,
+      contextSummary: this.describeContext(nextContext)
+    });
+    this.renderContext();
+    this.renderComposerToolbar();
+    new Notice(this.plugin.t("folderContextAdded", { folder }));
+  }
+
+  async clearFolderContext() {
+    this.plugin.settings.folderReferenceRoots = [];
+    await this.plugin.saveSettings();
+    const tab = this.getActiveTab();
+    const nextContext = {
+      ...(tab.context || {}),
+      references: (tab.context?.references || []).filter((reference) => referenceSourceBucket(reference) !== "folders")
+    };
+    this.setActiveTabState({
+      context: nextContext,
+      contextSummary: this.describeContext(nextContext)
+    });
+    this.renderContext();
+    this.renderComposerToolbar();
+    new Notice(this.plugin.t("folderContextCleared"));
   }
 
   async activateTab(tabId) {
@@ -3660,10 +3810,8 @@ class CortexChatView extends ItemView {
 
     this.messagesEl.empty();
     if (!this.messages.length) {
-      this.messagesEl.createEl("div", {
-        cls: "cortex-chat-empty-state",
-        text: this.plugin.t("chatEmpty")
-      });
+      const emptyEl = this.messagesEl.createEl("div", { cls: "cortex-chat-empty-state" });
+      emptyEl.createEl("div", { cls: "cortex-chat-empty-greeting", text: this.plugin.t("emptyGreeting") });
       return;
     }
 
