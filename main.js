@@ -81,6 +81,9 @@ const I18N = {
     folderContextAdded: "Folder context added: {folder}",
     folderContextCleared: "Folder context removed.",
     noVaultFolders: "No vault folders available.",
+    droppedContextAdded: "Context added: {path}",
+    dropContextHint: "Drop vault notes, PDFs, files, or folders here to add them as context.",
+    unsupportedDrop: "Could not resolve the dropped item inside this vault.",
     close: "Close",
     folderSearchLimited: "Showing {visible} of {total} folders. Type to narrow the list.",
     resetSystemPrompt: "Restore prompt for current language",
@@ -114,8 +117,30 @@ const I18N = {
       "Planner acts as a copilot and does not modify content on its own. Execute works without additional prompts and requires backups before touching files.",
     planner: "Planner",
     execute: "Execute",
+    readMode: "Read Mode",
+    writeMode: "Write Mode",
+    toggleWorkMode: "Toggle work mode",
     copilot: "Copilot",
     unrestricted: "Unrestricted",
+    skills: "Skills",
+    skillsTitle: "Codex Skills",
+    skillsDesc: "Vault skills are Markdown instructions stored under _cortex/skills. Cortex injects enabled skills as context; it does not execute scripts.",
+    skillsEnabled: "Enable vault skills",
+    skillsRoot: "Skills folder",
+    skillsRootDesc: "Vault folder that contains skill folders with SKILL.md files.",
+    enabledSkills: "Enabled skills",
+    enabledSkillsDesc: "Comma-separated skill IDs to inject into the prompt.",
+    maxSkillContextChars: "Maximum skill context characters",
+    maxSkillContextCharsDesc: "Total character budget for enabled SKILL.md files.",
+    noSkillsFound: "No skills found in {root}.",
+    skillContextSummary: "{enabled} active of {total} skills",
+    missingEnabledSkills: "Enabled skills not found: {ids}",
+    mcpTitle: "MCP experiment",
+    mcpDesc: "Experimental MCP planning settings. Tool execution is disabled until a permission model is implemented.",
+    mcpEnabled: "Enable MCP experiment",
+    mcpServers: "MCP servers",
+    mcpServersDesc: "Experimental JSON array for future MCP servers. Cortex stores it but does not execute MCP tools yet.",
+    mcpReadOnlyToolsOnly: "Read-only MCP tools only",
     showDiagnostics: "Show diagnostics in panel",
     showDiagnosticsDesc: "Shows backend, device, and current context in the chat header.",
     folderRoots: "Folder reference roots",
@@ -269,6 +294,7 @@ const I18N = {
     manifestFolders: "Folders",
     manifestMemory: "Memory",
     manifestSessions: "Sessions",
+    manifestSkills: "Skills",
     manifestRag: "Related",
     manifestPinned: "Pinned",
     sourceDisabled: "off",
@@ -278,6 +304,7 @@ const I18N = {
     pinnedContextAdded: "Response pinned as context.",
     pinnedContextRemoved: "Context source removed.",
     removeContextSource: "Remove context source",
+    remove: "Remove",
     noPinnedContext: "No pinned snippets yet.",
     reviewInsertTitle: "Review note insertion",
     reviewInsertDesc: "Cortex will create a backup and log the approved change before applying this insertion.",
@@ -399,6 +426,9 @@ const I18N = {
     folderContextAdded: "Contexto de carpeta añadido: {folder}",
     folderContextCleared: "Contexto de carpeta eliminado.",
     noVaultFolders: "No hay carpetas disponibles en la vault.",
+    droppedContextAdded: "Contexto añadido: {path}",
+    dropContextHint: "Suelta notas, PDFs, archivos o carpetas de la vault para añadirlos como contexto.",
+    unsupportedDrop: "No he podido resolver el elemento arrastrado dentro de esta vault.",
     close: "Cerrar",
     folderSearchLimited: "Mostrando {visible} de {total} carpetas. Escribe para afinar la lista.",
     resetSystemPrompt: "Restaurar prompt del idioma actual",
@@ -432,8 +462,30 @@ const I18N = {
       "Planificador actúa como copiloto sin modificar nada por su cuenta. Ejecutar trabaja sin pedir permisos adicionales y exige backups previos si toca archivos.",
     planner: "Planificador",
     execute: "Ejecutar",
+    readMode: "Modo Lectura",
+    writeMode: "Modo Escritura",
+    toggleWorkMode: "Cambiar modo de trabajo",
     copilot: "Copiloto",
     unrestricted: "Sin restricciones",
+    skills: "Skills",
+    skillsTitle: "Skills de Codex",
+    skillsDesc: "Las skills de la vault son instrucciones Markdown guardadas en _cortex/skills. Cortex inyecta las skills activas como contexto; no ejecuta scripts.",
+    skillsEnabled: "Activar skills de vault",
+    skillsRoot: "Carpeta de skills",
+    skillsRootDesc: "Carpeta de la vault que contiene carpetas de skill con archivos SKILL.md.",
+    enabledSkills: "Skills activas",
+    enabledSkillsDesc: "IDs de skills separados por comas que se inyectarán en el prompt.",
+    maxSkillContextChars: "Caracteres máximos de contexto de skills",
+    maxSkillContextCharsDesc: "Presupuesto total de caracteres para los archivos SKILL.md activos.",
+    noSkillsFound: "No se han encontrado skills en {root}.",
+    skillContextSummary: "{enabled} activas de {total} skills",
+    missingEnabledSkills: "Skills activas no encontradas: {ids}",
+    mcpTitle: "Experimento MCP",
+    mcpDesc: "Ajustes experimentales de planificación MCP. La ejecución de herramientas queda desactivada hasta implementar un modelo de permisos.",
+    mcpEnabled: "Activar experimento MCP",
+    mcpServers: "Servidores MCP",
+    mcpServersDesc: "Array JSON experimental para futuros servidores MCP. Cortex lo guarda, pero todavía no ejecuta herramientas MCP.",
+    mcpReadOnlyToolsOnly: "Solo herramientas MCP de lectura",
     showDiagnostics: "Mostrar diagnóstico en el panel",
     showDiagnosticsDesc: "Muestra backend, dispositivo y contexto actual en la cabecera del chat.",
     folderRoots: "Raíces de carpetas referenciables",
@@ -587,6 +639,7 @@ const I18N = {
     manifestFolders: "Carpetas",
     manifestMemory: "Memoria",
     manifestSessions: "Sesiones",
+    manifestSkills: "Skills",
     manifestRag: "Relacionadas",
     manifestPinned: "Fijados",
     sourceDisabled: "off",
@@ -596,6 +649,7 @@ const I18N = {
     pinnedContextAdded: "Respuesta fijada como contexto.",
     pinnedContextRemoved: "Fuente de contexto eliminada.",
     removeContextSource: "Quitar fuente de contexto",
+    remove: "Quitar",
     noPinnedContext: "Todavía no hay fragmentos fijados.",
     reviewInsertTitle: "Revisar inserción en nota",
     reviewInsertDesc: "Cortex creará una copia de seguridad y registrará el cambio aprobado antes de aplicar esta inserción.",
@@ -1048,6 +1102,13 @@ const SHARED_SETTING_KEYS = [
   "contextExclusionPatterns",
   "approvedEditsOnly",
   "activePromptProfile",
+  "skillsEnabled",
+  "skillsRoot",
+  "enabledSkillIds",
+  "maxSkillContextChars",
+  "mcpEnabled",
+  "mcpServers",
+  "mcpReadOnlyToolsOnly",
   "languageMode",
   "chatTabs",
   "activeChatTabId"
@@ -1119,6 +1180,13 @@ function buildDefaultSettings(pluginId) {
     contextExclusionPatterns: [],
     approvedEditsOnly: true,
     activePromptProfile: "planner",
+    skillsEnabled: false,
+    skillsRoot: "_cortex/skills",
+    enabledSkillIds: [],
+    maxSkillContextChars: 12000,
+    mcpEnabled: false,
+    mcpServers: [],
+    mcpReadOnlyToolsOnly: true,
     languageMode: "auto",
     chatTabs: [],
     activeChatTabId: ""
@@ -1186,6 +1254,50 @@ function normalizeRagIndexMaxNotes(value, fallback = 600) {
   return Number.isFinite(numeric) && numeric >= 50 && numeric <= 5000 ? Math.round(numeric) : fallback;
 }
 
+function normalizeSkillsRoot(value, fallback = "_cortex/skills") {
+  const normalized = String(value || fallback)
+    .replaceAll("\\", "/")
+    .replace(/^\/+|\/+$/g, "")
+    .trim();
+  return normalized || fallback;
+}
+
+function normalizeSkillIds(value) {
+  const source = Array.isArray(value) ? value : String(value || "").split(/[\n,]/);
+  return Array.from(
+    new Set(
+      source
+        .map((item) =>
+          String(item || "")
+            .replaceAll("\\", "/")
+            .replace(/^\/+|\/+$/g, "")
+            .trim()
+        )
+        .filter(Boolean)
+    )
+  ).slice(0, 80);
+}
+
+function normalizeMaxSkillContextChars(value, fallback = 12000) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric >= 1000 && numeric <= 60000 ? Math.round(numeric) : fallback;
+}
+
+function normalizeMcpServers(value) {
+  return Array.isArray(value)
+    ? value
+        .map((server) => ({
+          id: String(server?.id || "").trim(),
+          name: String(server?.name || "").trim(),
+          url: String(server?.url || "").trim(),
+          enabled: server?.enabled === true,
+          readOnly: server?.readOnly !== false
+        }))
+        .filter((server) => server.id && server.url)
+        .slice(0, 20)
+    : [];
+}
+
 function normalizeExclusionPatterns(value) {
   if (Array.isArray(value)) {
     return value.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 80);
@@ -1217,6 +1329,13 @@ function normalizeSettings(settings, defaults) {
   next.contextExclusionPatterns = normalizeExclusionPatterns(next.contextExclusionPatterns);
   next.approvedEditsOnly = next.approvedEditsOnly !== false;
   next.activePromptProfile = normalizePromptProfile(next.activePromptProfile);
+  next.skillsEnabled = next.skillsEnabled === true;
+  next.skillsRoot = normalizeSkillsRoot(next.skillsRoot, defaults.skillsRoot);
+  next.enabledSkillIds = normalizeSkillIds(next.enabledSkillIds);
+  next.maxSkillContextChars = normalizeMaxSkillContextChars(next.maxSkillContextChars, defaults.maxSkillContextChars);
+  next.mcpEnabled = next.mcpEnabled === true;
+  next.mcpServers = normalizeMcpServers(next.mcpServers);
+  next.mcpReadOnlyToolsOnly = next.mcpReadOnlyToolsOnly !== false;
   next.systemPromptSections = normalizeSystemPromptForLanguage(next.systemPromptSections, next.languageMode);
   next.folderReferenceRoots = normalizeFolderRoots(next.folderReferenceRoots);
   next.chatTabs = Array.isArray(next.chatTabs) ? next.chatTabs : [];
@@ -1241,6 +1360,10 @@ module.exports = {
   normalizePromptProfile,
   normalizeRagCandidateLimit,
   normalizeRagIndexMaxNotes,
+  normalizeSkillIds,
+  normalizeSkillsRoot,
+  normalizeMaxSkillContextChars,
+  normalizeMcpServers,
   normalizeTabBarPosition,
   normalizeUiDensity,
   normalizeSettings,
@@ -1292,6 +1415,10 @@ const {
   normalizePromptProfile,
   normalizeRagCandidateLimit,
   normalizeRagIndexMaxNotes,
+  normalizeSkillIds,
+  normalizeSkillsRoot,
+  normalizeMaxSkillContextChars,
+  normalizeMcpServers,
   normalizeSettings,
   normalizeSystemPromptForLanguage,
   normalizeSystemPromptSections
@@ -3090,6 +3217,8 @@ class CortexChatView extends ItemView {
     this.headerTabSlotEl = this.headerEl.createDiv({ cls: "cortex-chat-header-tabslot" });
     this.messagesEl = contentEl.createDiv({ cls: "cortex-chat-messages" });
     this.sendEl = contentEl.createDiv({ cls: "cortex-chat-send" });
+    this.sendEl.setAttr("data-drop-hint", this.plugin.t("dropContextHint"));
+    this.registerContextDropHandlers();
     this.tabBarEl = this.sendEl.createDiv({ cls: "cortex-chat-tabbar cortex-chat-tabbar--composer" });
     this.contextEl = this.sendEl.createDiv({ cls: "cortex-chat-context" });
     this.modeCardsEl = this.sendEl.createDiv({ cls: "cortex-chat-mode-cards" });
@@ -3185,7 +3314,7 @@ class CortexChatView extends ItemView {
         attr: {
           "aria-label": `${config.title}: ${option.label}`,
           "aria-pressed": String(value === current),
-          title: option.detail ? `${option.label} · ${option.detail}` : option.label
+          "data-tooltip": option.detail ? `${option.label} · ${option.detail}` : option.label
         }
       });
       buttonEl.createSpan({ cls: "cortex-chat-mode-segment-label", text: option.label });
@@ -3278,8 +3407,8 @@ class CortexChatView extends ItemView {
       const itemEl = this.historyMenuEl.createEl("button", {
         cls: `cortex-chat-history-item${tab.id === this.activeTabId ? " is-active" : ""}`,
         attr: {
-          title: `${tab.title || this.plugin.t("untitledTab")}${this.formatTabTimestamp(tab) ? ` · ${this.formatTabTimestamp(tab)}` : ""}`,
-          "aria-label": this.plugin.t("openConversation")
+          "aria-label": this.plugin.t("openConversation"),
+          "data-tooltip": `${tab.title || this.plugin.t("untitledTab")}${this.formatTabTimestamp(tab) ? ` · ${this.formatTabTimestamp(tab)}` : ""}`
         }
       });
       const titleRowEl = itemEl.createDiv({ cls: "cortex-chat-history-row" });
@@ -3352,7 +3481,7 @@ class CortexChatView extends ItemView {
         cls: `cortex-chat-tab${tab.id === this.activeTabId ? " is-active" : ""}${tab.isStreaming ? " is-streaming" : ""}${tab.needsAttention ? " needs-attention" : ""}`,
         attr: {
           "aria-pressed": String(tab.id === this.activeTabId),
-          title: tab.title || this.plugin.t("untitledTab")
+          "data-tooltip": tab.title || this.plugin.t("untitledTab")
         }
       });
       button.createSpan({ cls: "cortex-chat-tab-title", text: String(index + 1) });
@@ -3372,7 +3501,7 @@ class CortexChatView extends ItemView {
       cls: "cortex-chat-tab cortex-chat-tab-add",
       attr: {
         "aria-label": this.plugin.t("newTab"),
-        title: this.plugin.t("newTab")
+        "data-tooltip": this.plugin.t("newTab")
       }
     });
     setIcon(addButton, "plus");
@@ -3395,6 +3524,58 @@ class CortexChatView extends ItemView {
     return this.getPromptProfileOptions().find(([value]) => value === current)?.[1] || this.plugin.t("profilePlanner");
   }
 
+  registerContextDropHandlers() {
+    if (!this.sendEl) {
+      return;
+    }
+    this.sendEl.addEventListener("dragover", (event) => {
+      if (this.plugin.extractVaultPathFromDataTransfer(event.dataTransfer)) {
+        event.preventDefault();
+        this.sendEl.addClass("is-drag-over");
+      }
+    });
+    this.sendEl.addEventListener("dragleave", (event) => {
+      if (!this.sendEl.contains(event.relatedTarget)) {
+        this.sendEl.removeClass("is-drag-over");
+      }
+    });
+    this.sendEl.addEventListener("drop", async (event) => {
+      const vaultPath = this.plugin.extractVaultPathFromDataTransfer(event.dataTransfer);
+      this.sendEl.removeClass("is-drag-over");
+      if (!vaultPath) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      await this.addDroppedVaultContext(vaultPath);
+    });
+  }
+
+  async addDroppedVaultContext(vaultPath) {
+    const item = this.app.vault.getAbstractFileByPath(vaultPath);
+    if (!item) {
+      new Notice(this.plugin.t("unsupportedDrop"));
+      return;
+    }
+    if (item.children) {
+      await this.selectFolderContext(item.path);
+      return;
+    }
+    const baseContext = this.context || (await this.plugin.captureCurrentContext(false));
+    const reference = await this.plugin.buildReferenceFromFile(item, "drop", item.basename || item.name || item.path);
+    const nextContext = {
+      ...baseContext,
+      references: mergeReferences(baseContext.references || [], [reference])
+    };
+    this.setActiveTabState({
+      context: nextContext,
+      contextSummary: this.describeContext(nextContext)
+    });
+    this.renderContext();
+    this.renderComposerToolbar();
+    new Notice(this.plugin.t("droppedContextAdded", { path: item.path }));
+  }
+
   renderComposerToolbar() {
     if (!this.composerToolbarEl) {
       return;
@@ -3405,20 +3586,31 @@ class CortexChatView extends ItemView {
     const presetButton = leftEl.createEl("button", {
       cls: "cortex-chat-toolbar-pill",
       text: this.getActivePromptProfileLabel(),
-      attr: { title: this.plugin.t("selectPreset") }
+      attr: { "aria-label": this.plugin.t("selectPreset"), "data-tooltip": this.plugin.t("selectPreset") }
     });
     presetButton.addEventListener("click", (event) => this.openPresetMenu(event));
     const isExecute = (this.plugin.settings.defaultInteractionMode || DEFAULT_SETTINGS.defaultInteractionMode) === "execute";
     const modeButton = leftEl.createEl("button", {
-      cls: `cortex-chat-toolbar-pill${isExecute ? " is-danger" : ""}`,
-      text: isExecute ? this.plugin.t("execute") : this.plugin.t("planner")
+      cls: `cortex-chat-mode-selector${isExecute ? " is-write" : " is-read"}`,
+      attr: {
+        "aria-label": this.plugin.t("toggleWorkMode"),
+        "data-tooltip": this.plugin.t("toggleWorkMode")
+      }
     });
+    modeButton.createSpan({ cls: "cortex-chat-mode-selector-knob" });
+    modeButton.createSpan({ cls: "cortex-chat-mode-selector-label", text: isExecute ? this.plugin.t("writeMode") : this.plugin.t("readMode") });
     modeButton.addEventListener("click", async () => {
       this.plugin.settings.defaultInteractionMode = isExecute ? "plan" : "execute";
       await this.plugin.saveSettings();
       this.renderComposerToolbar();
       this.renderHeader();
     });
+    const skillsButton = leftEl.createEl("button", {
+      cls: "cortex-chat-toolbar-pill",
+      text: this.plugin.t("skills"),
+      attr: { "aria-label": this.plugin.t("skillsTitle"), "data-tooltip": this.plugin.t("skillsTitle") }
+    });
+    skillsButton.addEventListener("click", (event) => this.openSkillsMenu(event));
     const folderButton = this.createIconButton(rightEl, "folder", this.plugin.t("selectVaultFolder"), "cortex-chat-toolbar-icon");
     folderButton.addEventListener("click", (event) => this.openFolderContextMenu(event));
     const noteButton = this.createIconButton(rightEl, "file-text", this.plugin.t("activeNote"), "cortex-chat-toolbar-icon");
@@ -3440,7 +3632,7 @@ class CortexChatView extends ItemView {
     const detailsButton = rightEl.createEl("button", {
       cls: "cortex-chat-toolbar-pill",
       text: this.plugin.t("details"),
-      attr: { title: this.plugin.t("contextDetails") }
+      attr: { "aria-label": this.plugin.t("contextDetails"), "data-tooltip": this.plugin.t("contextDetails") }
     });
     detailsButton.addEventListener("click", () => {
       this.contextExpanded = !this.contextExpanded;
@@ -3460,6 +3652,46 @@ class CortexChatView extends ItemView {
           .setChecked(current === value)
           .onClick(async () => {
             this.plugin.settings.activePromptProfile = value;
+            await this.plugin.saveSettings();
+            this.renderComposerToolbar();
+          })
+      );
+    }
+    menu.showAtMouseEvent(event);
+  }
+
+  async openSkillsMenu(event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const menu = new Menu();
+    const skills = await this.plugin.listVaultSkills();
+    const enabledIds = new Set(normalizeSkillIds(this.plugin.settings.enabledSkillIds));
+    menu.addItem((item) =>
+      item
+        .setTitle(this.plugin.t("skillsEnabled"))
+        .setChecked(this.plugin.settings.skillsEnabled === true)
+        .onClick(async () => {
+          this.plugin.settings.skillsEnabled = this.plugin.settings.skillsEnabled !== true;
+          await this.plugin.saveSettings();
+          this.renderComposerToolbar();
+        })
+    );
+    if (!skills.length) {
+      menu.addItem((item) => item.setTitle(this.plugin.t("noSkillsFound", { root: this.plugin.settings.skillsRoot || DEFAULT_SETTINGS.skillsRoot })).setDisabled(true));
+    }
+    for (const skill of skills) {
+      menu.addItem((item) =>
+        item
+          .setTitle(skill.name || skill.id)
+          .setChecked(enabledIds.has(skill.id))
+          .onClick(async () => {
+            if (enabledIds.has(skill.id)) {
+              enabledIds.delete(skill.id);
+            } else {
+              enabledIds.add(skill.id);
+            }
+            this.plugin.settings.enabledSkillIds = normalizeSkillIds(Array.from(enabledIds));
+            this.plugin.settings.skillsEnabled = true;
             await this.plugin.saveSettings();
             this.renderComposerToolbar();
           })
@@ -3521,7 +3753,7 @@ class CortexChatView extends ItemView {
       for (const folder of visibleFolders) {
         const itemEl = listEl.createEl("button", {
           cls: `cortex-chat-folder-picker-item${selected.includes(folder) ? " is-selected" : ""}`,
-          attr: { type: "button", title: folder }
+          attr: { type: "button", "aria-label": folder, "data-tooltip": folder }
         });
         const depth = Math.max(0, folder.split("/").length - 1);
         itemEl.style.paddingLeft = `${8 + Math.min(depth, 5) * 11}px`;
@@ -3670,7 +3902,7 @@ class CortexChatView extends ItemView {
   createQuickAction(icon, ariaLabel, handler) {
     const button = this.quickActionsEl.createEl("button", {
       cls: "cortex-chat-quick-action",
-      attr: { "aria-label": ariaLabel, title: ariaLabel }
+      attr: { "aria-label": ariaLabel, "data-tooltip": ariaLabel }
     });
     setIcon(button, icon);
     button.addEventListener("click", handler);
@@ -3680,7 +3912,7 @@ class CortexChatView extends ItemView {
   createIconButton(parentEl, icon, ariaLabel, className) {
     const button = parentEl.createEl("button", {
       cls: className,
-      attr: { "aria-label": ariaLabel, title: ariaLabel }
+      attr: { "aria-label": ariaLabel, "data-tooltip": ariaLabel }
     });
     setIcon(button, icon);
     return button;
@@ -3790,7 +4022,7 @@ class CortexChatView extends ItemView {
         text: `${label}${Number.isFinite(count) ? ` ${count}` : ""}`,
         attr: {
           "aria-pressed": String(enabled),
-          title: enabled ? this.plugin.t("sourceEnabled") : this.plugin.t("sourceDisabled")
+          "data-tooltip": enabled ? this.plugin.t("sourceEnabled") : this.plugin.t("sourceDisabled")
         }
       });
       chipEl.addEventListener("click", async () => {
@@ -3828,7 +4060,7 @@ class CortexChatView extends ItemView {
     for (const [icon, ready, label, handler] of indicators) {
       const indicatorEl = summaryTextEl.createEl("button", {
         cls: ready ? "cortex-chat-context-icon is-ready" : "cortex-chat-context-icon",
-        attr: { "aria-label": label, title: label }
+        attr: { "aria-label": label, "data-tooltip": label }
       });
       setIcon(indicatorEl, icon);
       indicatorEl.addEventListener("click", async (event) => {
@@ -3895,9 +4127,19 @@ class CortexChatView extends ItemView {
       const sourcesEl = this.contextEl.createDiv({ cls: "cortex-chat-context-source-list" });
       for (const reference of references.slice(0, 8)) {
         const sourceEl = sourcesEl.createDiv({ cls: "cortex-chat-context-source-row" });
-        sourceEl.createSpan({ cls: "cortex-chat-context-source-path", text: reference.path });
-        sourceEl.createSpan({ cls: "cortex-chat-context-source-kind", text: reference.source || "" });
-        const removeEl = this.createIconButton(sourceEl, "x", this.plugin.t("removeContextSource"), "cortex-chat-context-source-remove");
+        const textEl = sourceEl.createDiv({ cls: "cortex-chat-context-source-main" });
+        textEl.createSpan({ cls: "cortex-chat-context-source-path", text: reference.path });
+        const kindEl = sourceEl.createSpan({ cls: "cortex-chat-context-source-kind", text: reference.source || "" });
+        const removeEl = sourceEl.createEl("button", {
+          cls: "cortex-chat-context-source-remove",
+          attr: {
+            type: "button",
+            "aria-label": this.plugin.t("removeContextSource"),
+            "data-tooltip": this.plugin.t("removeContextSource")
+          }
+        });
+        setIcon(removeEl, "x");
+        removeEl.createSpan({ cls: "cortex-chat-context-source-remove-label", text: this.plugin.t("remove") || this.plugin.t("hide") });
         removeEl.addEventListener("click", async () => {
           await this.removeContextReference(reference.path);
         });
@@ -3972,7 +4214,7 @@ class CortexChatView extends ItemView {
           const manifestEl = footerEl.createEl("button", {
             cls: "cortex-chat-manifest-pill",
             text: message.meta.contextManifest.summary,
-            attr: { title: this.plugin.t("manifestDetails") }
+            attr: { "aria-label": this.plugin.t("manifestDetails"), "data-tooltip": this.plugin.t("manifestDetails") }
           });
           manifestEl.addEventListener("click", () => {
             new ContextManifestModal(this.app, message.meta.contextManifest, this.plugin.t).open();
@@ -4642,6 +4884,93 @@ class CortexChatSettingTab extends PluginSettingTab {
         })
       );
 
+    containerEl.createEl("h3", { text: t("skillsTitle") });
+    containerEl.createEl("p", { text: t("skillsDesc") });
+
+    new Setting(containerEl)
+      .setName(t("skillsEnabled"))
+      .setDesc(t("enabledSkillsDesc"))
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.skillsEnabled === true).onChange(async (value) => {
+          this.plugin.settings.skillsEnabled = Boolean(value);
+          await this.plugin.saveSettings();
+          this.display();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName(t("skillsRoot"))
+      .setDesc(t("skillsRootDesc"))
+      .addText((text) =>
+        text.setValue(this.plugin.settings.skillsRoot || DEFAULT_SETTINGS.skillsRoot).onChange(async (value) => {
+          this.plugin.settings.skillsRoot = normalizeSkillsRoot(value, DEFAULT_SETTINGS.skillsRoot);
+          await this.plugin.saveSettings();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName(t("enabledSkills"))
+      .setDesc(t("enabledSkillsDesc"))
+      .addTextArea((text) => {
+        text.setValue(normalizeSkillIds(this.plugin.settings.enabledSkillIds).join(", "));
+        text.inputEl.rows = 2;
+        text.inputEl.addClass("cortex-chat-settings-textarea");
+        text.onChange(async (value) => {
+          this.plugin.settings.enabledSkillIds = normalizeSkillIds(value);
+          await this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName(t("maxSkillContextChars"))
+      .setDesc(t("maxSkillContextCharsDesc"))
+      .addText((text) =>
+        text.setValue(String(this.plugin.settings.maxSkillContextChars || DEFAULT_SETTINGS.maxSkillContextChars)).onChange(async (value) => {
+          this.plugin.settings.maxSkillContextChars = normalizeMaxSkillContextChars(value, DEFAULT_SETTINGS.maxSkillContextChars);
+          await this.plugin.saveSettings();
+        })
+      );
+
+    containerEl.createEl("h3", { text: t("mcpTitle") });
+    containerEl.createEl("p", { text: t("mcpDesc") });
+
+    new Setting(containerEl)
+      .setName(t("mcpEnabled"))
+      .setDesc(t("mcpDesc"))
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.mcpEnabled === true).onChange(async (value) => {
+          this.plugin.settings.mcpEnabled = Boolean(value);
+          await this.plugin.saveSettings();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName(t("mcpServers"))
+      .setDesc(t("mcpServersDesc"))
+      .addTextArea((text) => {
+        text.setValue(JSON.stringify(this.plugin.settings.mcpServers || [], null, 2));
+        text.inputEl.rows = 4;
+        text.inputEl.addClass("cortex-chat-settings-textarea");
+        text.onChange(async (value) => {
+          try {
+            this.plugin.settings.mcpServers = normalizeMcpServers(JSON.parse(value || "[]"));
+            await this.plugin.saveSettings();
+          } catch {
+            // Keep the user's draft in the text area; invalid JSON is ignored until corrected.
+          }
+        });
+      });
+
+    new Setting(containerEl)
+      .setName(t("mcpReadOnlyToolsOnly"))
+      .setDesc(t("mcpDesc"))
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.mcpReadOnlyToolsOnly !== false).onChange(async (value) => {
+          this.plugin.settings.mcpReadOnlyToolsOnly = Boolean(value);
+          await this.plugin.saveSettings();
+        })
+      );
+
     containerEl.createEl("h3", { text: t("safetySettings") });
 
     new Setting(containerEl)
@@ -5008,6 +5337,13 @@ module.exports = class CortexChatPlugin extends Plugin {
     this.settings.contextExclusionPatterns = normalizeExclusionPatterns(this.settings.contextExclusionPatterns);
     this.settings.approvedEditsOnly = this.settings.approvedEditsOnly !== false;
     this.settings.activePromptProfile = normalizePromptProfile(this.settings.activePromptProfile);
+    this.settings.skillsEnabled = this.settings.skillsEnabled === true;
+    this.settings.skillsRoot = normalizeSkillsRoot(this.settings.skillsRoot, DEFAULT_SETTINGS.skillsRoot);
+    this.settings.enabledSkillIds = normalizeSkillIds(this.settings.enabledSkillIds);
+    this.settings.maxSkillContextChars = normalizeMaxSkillContextChars(this.settings.maxSkillContextChars, DEFAULT_SETTINGS.maxSkillContextChars);
+    this.settings.mcpEnabled = this.settings.mcpEnabled === true;
+    this.settings.mcpServers = normalizeMcpServers(this.settings.mcpServers);
+    this.settings.mcpReadOnlyToolsOnly = this.settings.mcpReadOnlyToolsOnly !== false;
     this.settings.folderReferenceRoots = normalizeFolderRoots(this.settings.folderReferenceRoots);
     this.normalizePortableSettings();
   }
@@ -5036,6 +5372,13 @@ module.exports = class CortexChatPlugin extends Plugin {
     this.settings.contextExclusionPatterns = normalizeExclusionPatterns(this.settings.contextExclusionPatterns);
     this.settings.approvedEditsOnly = this.settings.approvedEditsOnly !== false;
     this.settings.activePromptProfile = normalizePromptProfile(this.settings.activePromptProfile);
+    this.settings.skillsEnabled = this.settings.skillsEnabled === true;
+    this.settings.skillsRoot = normalizeSkillsRoot(this.settings.skillsRoot, DEFAULT_SETTINGS.skillsRoot);
+    this.settings.enabledSkillIds = normalizeSkillIds(this.settings.enabledSkillIds);
+    this.settings.maxSkillContextChars = normalizeMaxSkillContextChars(this.settings.maxSkillContextChars, DEFAULT_SETTINGS.maxSkillContextChars);
+    this.settings.mcpEnabled = this.settings.mcpEnabled === true;
+    this.settings.mcpServers = normalizeMcpServers(this.settings.mcpServers);
+    this.settings.mcpReadOnlyToolsOnly = this.settings.mcpReadOnlyToolsOnly !== false;
     this.settings.folderReferenceRoots = normalizeFolderRoots(this.settings.folderReferenceRoots);
     this.normalizePortableSettings();
     await this.saveData(this.pickSettings(SHARED_SETTING_KEYS));
@@ -5256,6 +5599,16 @@ module.exports = class CortexChatPlugin extends Plugin {
     const outboxIssues = await this.collectOutboxIssues(vaultRoot);
     items.push(...outboxIssues);
 
+    const skills = await this.listVaultSkills();
+    const skillIds = new Set(skills.map((skill) => skill.id));
+    const missingSkills = normalizeSkillIds(this.settings.enabledSkillIds).filter((id) => !skillIds.has(id));
+    if (this.settings.skillsEnabled && missingSkills.length) {
+      items.push({
+        severity: "warn",
+        message: this.t("missingEnabledSkills", { ids: missingSkills.join(", ") })
+      });
+    }
+
     if (this.localStatePortabilityReset) {
       items.push({
         severity: "info",
@@ -5441,7 +5794,7 @@ module.exports = class CortexChatPlugin extends Plugin {
     };
   }
 
-  getConfiguredSystemPrompt(runOptions = {}, backupRoot = "") {
+  getConfiguredSystemPrompt(runOptions = {}, backupRoot = "", skillContext = null) {
     const basePrompt = composeSystemPrompt(this.settings.systemPromptSections, this.settings.languageMode);
     const profileLines = ["[prompt-profile]", getPromptProfileInstruction(this.settings.activePromptProfile)];
     const backupInstruction = backupRoot
@@ -5451,7 +5804,204 @@ module.exports = class CortexChatPlugin extends Plugin {
       runOptions.interactionMode === "execute"
         ? ["[work-mode]", this.t("workModeExecutePrompt", { backupInstruction })]
         : ["[work-mode]", this.t("workModePlannerPrompt")];
-    return [basePrompt, profileLines.join("\n"), modeLines.join("\n")].filter(Boolean).join("\n\n").trim();
+    const skillLines = this.formatSkillContextForPrompt(skillContext);
+    return [basePrompt, profileLines.join("\n"), modeLines.join("\n"), skillLines].filter(Boolean).join("\n\n").trim();
+  }
+
+  skillIdFromPath(filePath) {
+    const root = normalizeSkillsRoot(this.settings.skillsRoot || DEFAULT_SETTINGS.skillsRoot, DEFAULT_SETTINGS.skillsRoot);
+    const normalizedPath = String(filePath || "").replaceAll("\\", "/");
+    const prefix = `${root}/`;
+    if (!normalizedPath.startsWith(prefix) || !normalizedPath.endsWith("/SKILL.md")) {
+      return "";
+    }
+    return normalizedPath.slice(prefix.length, -"/SKILL.md".length).replace(/^\/+|\/+$/g, "");
+  }
+
+  async listVaultSkills() {
+    const files = this.app.vault.getMarkdownFiles();
+    const skills = [];
+    for (const file of files) {
+      const id = this.skillIdFromPath(file.path);
+      if (!id) {
+        continue;
+      }
+      const cache = this.app.metadataCache.getFileCache(file);
+      const frontmatter = cache?.frontmatter || {};
+      skills.push({
+        id,
+        path: file.path,
+        name: String(frontmatter.name || frontmatter.title || id).trim(),
+        description: String(frontmatter.description || "").trim()
+      });
+    }
+    return skills.sort((left, right) => left.id.localeCompare(right.id, this.getLanguage(), { sensitivity: "base" }));
+  }
+
+  async getActiveSkillContext() {
+    const available = await this.listVaultSkills();
+    const enabledIds = new Set(normalizeSkillIds(this.settings.enabledSkillIds));
+    const budget = normalizeMaxSkillContextChars(this.settings.maxSkillContextChars, DEFAULT_SETTINGS.maxSkillContextChars);
+    const result = {
+      enabled: [],
+      available,
+      issues: [],
+      chars: 0,
+      text: ""
+    };
+    if (this.settings.skillsEnabled !== true || !enabledIds.size) {
+      return result;
+    }
+    const chunks = [];
+    for (const skill of available.filter((candidate) => enabledIds.has(candidate.id))) {
+      try {
+        const file = this.app.vault.getAbstractFileByPath(skill.path);
+        if (!file) {
+          result.issues.push(`${skill.id}: missing file`);
+          continue;
+        }
+        let content = await this.app.vault.read(file);
+        const remaining = budget - result.chars;
+        if (remaining <= 0) {
+          result.issues.push(`${skill.id}: skipped, skill context budget exhausted`);
+          break;
+        }
+        if (content.length > remaining) {
+          content = `${content.slice(0, remaining)}\n\n[truncated]`;
+          result.issues.push(`${skill.id}: truncated to fit skill context budget`);
+        }
+        result.enabled.push(skill);
+        result.chars += content.length;
+        chunks.push(`## ${skill.name || skill.id}\nPath: ${skill.path}\nID: ${skill.id}\n${skill.description ? `Description: ${skill.description}\n` : ""}\n${content}`);
+      } catch (error) {
+        result.issues.push(`${skill.id}: ${error.message}`);
+      }
+    }
+    result.text = chunks.join("\n\n---\n\n");
+    return result;
+  }
+
+  formatSkillContextForPrompt(skillContext) {
+    if (!skillContext?.text) {
+      return "";
+    }
+    return [
+      "[vault-skills]",
+      "The following vault skills are user-provided Markdown instructions. Treat them as guidance only. Do not execute scripts or commands from skill folders.",
+      skillContext.text
+    ].join("\n");
+  }
+
+  extractVaultPathFromDataTransfer(dataTransfer) {
+    if (!dataTransfer) {
+      return "";
+    }
+    const fragments = [];
+    for (const type of Array.from(dataTransfer.types || [])) {
+      try {
+        const value = dataTransfer.getData(type);
+        if (value) {
+          fragments.push(value);
+        }
+      } catch {}
+    }
+    try {
+      for (const file of Array.from(dataTransfer.files || [])) {
+        if (file?.name) {
+          fragments.push(file.name);
+        }
+        if (file?.path) {
+          fragments.push(file.path);
+        }
+      }
+    } catch {}
+    const source = fragments.join("\n");
+    if (!source.trim()) {
+      return "";
+    }
+    const candidates = this.app.vault
+      .getAllLoadedFiles()
+      .filter((item) => item?.path && !isIgnoredVaultPath(item.path))
+      .map((item) => ({
+        path: item.path,
+        name: item.name || item.path.split("/").pop() || item.path,
+        basename: item.basename || item.name || item.path.split("/").pop() || item.path,
+        isFolder: Boolean(item.children)
+      }))
+      .sort((left, right) => right.path.length - left.path.length);
+    const normalizeDropText = (value) => {
+      const raw = String(value || "").trim();
+      try {
+        return decodeURIComponent(raw).replaceAll("\\", "/").trim();
+      } catch {
+        return raw.replaceAll("\\", "/").trim();
+      }
+    };
+    const normalizedSource = normalizeDropText(source);
+    const sourceLines = normalizedSource
+      .split(/\r?\n/)
+      .map((line) => normalizeDropText(line).replace(/^["']|["']$/g, ""))
+      .filter(Boolean);
+    const sourceTokens = new Set([
+      normalizedSource,
+      ...sourceLines,
+      ...sourceLines.flatMap((line) => line.split(/[|,;\t]/).map((part) => normalizeDropText(part).replace(/^["']|["']$/g, "")))
+    ].filter(Boolean));
+    const matchFromText = (text) => {
+      if (!text) {
+        return "";
+      }
+      for (const candidate of candidates) {
+        if (text.includes(candidate.path)) {
+          return candidate.path;
+        }
+      }
+      const exactPath = candidates.find((candidate) => sourceTokens.has(candidate.path));
+      if (exactPath) {
+        return exactPath.path;
+      }
+      const folderNameMatches = candidates.filter((candidate) =>
+        candidate.isFolder && (sourceTokens.has(candidate.name) || sourceTokens.has(candidate.basename))
+      );
+      if (folderNameMatches.length === 1) {
+        return folderNameMatches[0].path;
+      }
+      const fileNameMatches = candidates.filter((candidate) =>
+        !candidate.isFolder && (sourceTokens.has(candidate.name) || sourceTokens.has(candidate.basename))
+      );
+      if (fileNameMatches.length === 1) {
+        return fileNameMatches[0].path;
+      }
+      return "";
+    };
+    const directMatch = matchFromText(normalizedSource);
+    if (directMatch) {
+      return directMatch;
+    }
+    try {
+      const parsed = JSON.parse(source);
+      const flattened = [];
+      const visit = (value) => {
+        if (typeof value === "string") {
+          flattened.push(value);
+          return;
+        }
+        if (Array.isArray(value)) {
+          value.forEach(visit);
+          return;
+        }
+        if (value && typeof value === "object") {
+          Object.values(value).forEach(visit);
+        }
+      };
+      visit(parsed);
+      const parsedSource = flattened.join("\n").replaceAll("\\", "/");
+      const parsedMatch = matchFromText(normalizeDropText(parsedSource));
+      if (parsedMatch) {
+        return parsedMatch;
+      }
+    } catch {}
+    return "";
   }
 
   getUiScale() {
@@ -5871,7 +6421,14 @@ module.exports = class CortexChatPlugin extends Plugin {
   }
 
   getReferenceKind(file) {
-    return String(file?.extension || "").toLowerCase() === "pdf" ? "pdf" : "markdown";
+    const extension = String(file?.extension || "").toLowerCase();
+    if (extension === "pdf") {
+      return "pdf";
+    }
+    if (extension === "md") {
+      return "markdown";
+    }
+    return "file";
   }
 
   async buildReferenceFromFile(file, source, token = "") {
@@ -5879,9 +6436,11 @@ module.exports = class CortexChatPlugin extends Plugin {
     let preview = "";
     if (kind === "pdf") {
       preview = await this.extractPdfPreview(file);
-    } else {
+    } else if (kind === "markdown") {
       const content = await this.app.vault.cachedRead(file);
       preview = truncatePreviewText(content, 2500);
+    } else {
+      preview = `[File selected as context. Text extraction is not available for .${file.extension || "file"} files.]`;
     }
     return {
       token: token || file.basename,
@@ -6298,6 +6857,7 @@ module.exports = class CortexChatPlugin extends Plugin {
       pinned: this.t("manifestPinned"),
       memory: this.t("manifestMemory"),
       sessions: this.t("manifestSessions"),
+      skills: this.t("manifestSkills"),
       rag: this.t("manifestRag")
     };
   }
@@ -6328,6 +6888,16 @@ module.exports = class CortexChatPlugin extends Plugin {
       pinned: sourceGroup(labels.pinned, this.settings.contextIncludePinned !== false, references.filter((reference) => referenceSourceBucket(reference) === "pinned")),
       memory: sourceGroup(labels.memory, this.settings.contextIncludeMemory !== false, details.memoryDocuments || []),
       sessions: sourceGroup(labels.sessions, this.settings.contextIncludeRecentSessions !== false, details.recentSessions || []),
+      skills: sourceGroup(
+        labels.skills,
+        this.settings.skillsEnabled === true,
+        (details.skillContext?.enabled || []).map((skill) => ({
+          path: skill.path,
+          title: skill.name || skill.id,
+          source: "skill",
+          reason: skill.id
+        }))
+      ),
       rag: sourceGroup(labels.rag, this.settings.contextIncludeRag === true, references.filter((reference) => referenceSourceBucket(reference) === "rag"))
     };
 
@@ -6533,10 +7103,12 @@ module.exports = class CortexChatPlugin extends Plugin {
     };
     const context = this.applyContextSourcePolicy(rawContext);
     const runOptions = preparedRunOptions || this.getRunOptions(context, message);
-    const systemPrompt = this.getConfiguredSystemPrompt(runOptions);
+    const skillContext = await this.getActiveSkillContext();
+    const systemPrompt = this.getConfiguredSystemPrompt(runOptions, "", skillContext);
     const requestManifest = this.buildContextManifest(context, {
       runOptions,
-      unresolvedReferences: referenceResolution.unresolved
+      unresolvedReferences: referenceResolution.unresolved,
+      skillContext
     });
 
     try {
@@ -6569,7 +7141,7 @@ module.exports = class CortexChatPlugin extends Plugin {
         throw error;
       }
 
-      const localResponse = await this.sendLocalMessage(threadId || makeId("thread"), message, context, runOptions);
+      const localResponse = await this.sendLocalMessage(threadId || makeId("thread"), message, context, runOptions, skillContext);
       return {
         ...localResponse,
         localFallback: true,
@@ -6651,7 +7223,7 @@ module.exports = class CortexChatPlugin extends Plugin {
     return references;
   }
 
-  async sendLocalMessage(threadId, message, context, runOptions) {
+  async sendLocalMessage(threadId, message, context, runOptions, skillContext = null) {
     if (!this.canUseLocalCodex()) {
       throw new Error(this.t("localFallbackDesktopOnly"));
     }
@@ -6670,12 +7242,13 @@ module.exports = class CortexChatPlugin extends Plugin {
     if (runOptions.interactionMode === "execute") {
       await fs.mkdir(path.join(vaultRoot, backupRoot), { recursive: true });
     }
-    const answer = await this.runLocalCodex(message, context, memoryDocuments, recentSessions, runOptions, backupRoot);
+    const answer = await this.runLocalCodex(message, context, memoryDocuments, recentSessions, runOptions, backupRoot, skillContext);
     const summary = summarize(`${message} ${answer}`);
     const contextManifest = this.buildContextManifest(context, {
       runOptions,
       memoryDocuments,
-      recentSessions
+      recentSessions,
+      skillContext
     });
     const sessionPath = await this.writeLocalSession(vaultRoot, {
       sessionId,
@@ -6873,8 +7446,8 @@ module.exports = class CortexChatPlugin extends Plugin {
     return path.join(relativeBackupRoot, normalizedPath).replaceAll("\\", "/");
   }
 
-  async runLocalCodex(message, context, memoryDocuments, recentSessions, runOptions, backupRoot = "") {
-    const systemPrompt = this.getConfiguredSystemPrompt(runOptions, backupRoot);
+  async runLocalCodex(message, context, memoryDocuments, recentSessions, runOptions, backupRoot = "", skillContext = null) {
+    const systemPrompt = this.getConfiguredSystemPrompt(runOptions, backupRoot, skillContext);
     const prompt = [
       "System prompt:",
       systemPrompt || "(empty)",
@@ -6925,6 +7498,10 @@ module.exports = class CortexChatPlugin extends Plugin {
       "",
       "Shared memory:",
       JSON.stringify(memoryDocuments, null, 2),
+      "",
+      "Active vault skills:",
+      skillContext?.text || "(none)",
+      skillContext?.issues?.length ? `Skill issues:\n${skillContext.issues.join("\n")}` : "",
       "",
       "Recent sessions in this thread:",
       JSON.stringify(recentSessions, null, 2),
