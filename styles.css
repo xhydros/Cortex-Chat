@@ -2695,6 +2695,129 @@
   max-height: min(38vh, 320px);
 }
 
+/* v1.4.1 Soft violet accents and minimal header */
+.cortex-chat-view {
+  --cortex-chat-violet: #7c5cff;
+  --cortex-chat-violet-soft: color-mix(in srgb, var(--cortex-chat-violet) 10%, var(--background-primary));
+  --cortex-chat-violet-softer: color-mix(in srgb, var(--cortex-chat-violet) 6%, var(--background-primary));
+  --cortex-chat-violet-border: color-mix(in srgb, var(--cortex-chat-violet) 28%, var(--background-modifier-border));
+  --cortex-chat-violet-strong-border: color-mix(in srgb, var(--cortex-chat-violet) 52%, var(--background-modifier-border));
+}
+
+.cortex-chat-header {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--cortex-chat-violet) 5%, transparent),
+    transparent
+  );
+}
+
+.cortex-chat-header-main {
+  display: flex;
+  justify-content: center;
+}
+
+.cortex-chat-header-left {
+  align-items: center;
+  justify-content: center;
+}
+
+.cortex-chat-title {
+  letter-spacing: -0.03em;
+}
+
+.cortex-chat-header-right,
+.cortex-chat-diagnostics {
+  display: none !important;
+}
+
+.cortex-chat-state-dot {
+  background: color-mix(in srgb, var(--cortex-chat-violet) 70%, var(--color-green)) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cortex-chat-violet) 11%, transparent);
+}
+
+.cortex-chat-header-mode-chip.is-unrestricted {
+  border-color: color-mix(in srgb, var(--color-orange) 42%, var(--cortex-chat-violet-border));
+}
+
+.cortex-chat-message.is-user {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--cortex-chat-violet) 13%, var(--background-secondary)),
+    color-mix(in srgb, var(--cortex-chat-violet) 7%, var(--background-primary))
+  );
+  border: 1px solid var(--cortex-chat-violet-border);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--cortex-chat-violet) 8%, transparent);
+}
+
+.cortex-chat-message.is-assistant {
+  border-left: 2px solid color-mix(in srgb, var(--cortex-chat-violet) 34%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--cortex-chat-violet) 4%, transparent),
+    transparent 34%
+  );
+}
+
+.cortex-chat-message.is-assistant .cortex-chat-role {
+  color: color-mix(in srgb, var(--cortex-chat-violet) 58%, var(--text-muted));
+}
+
+.cortex-chat-send {
+  border-color: var(--cortex-chat-violet-border);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--cortex-chat-violet) 4%, var(--background-primary)),
+    var(--background-primary)
+  );
+}
+
+.cortex-chat-send:focus-within {
+  border-color: var(--cortex-chat-violet-strong-border);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cortex-chat-violet) 10%, transparent);
+}
+
+.cortex-chat-tab.is-active,
+.cortex-chat-toolbar-pill:hover,
+.cortex-chat-toolbar-icon:hover,
+.cortex-chat-toolbar-pill:focus-visible,
+.cortex-chat-toolbar-icon:focus-visible,
+.cortex-chat-suggestion-item.is-selected,
+.cortex-chat-suggestion-item:hover,
+.cortex-chat-folder-picker-item:hover,
+.cortex-chat-folder-picker-item:focus-visible,
+.cortex-chat-folder-picker-item.is-selected {
+  background: var(--cortex-chat-violet-soft);
+  border-color: var(--cortex-chat-violet-border);
+}
+
+.cortex-chat-toolbar-pill,
+.cortex-chat-toolbar-icon,
+.cortex-chat-tab,
+.cortex-chat-send-button {
+  border-color: color-mix(in srgb, var(--cortex-chat-violet) 22%, var(--background-modifier-border));
+}
+
+.cortex-chat-send-button {
+  color: color-mix(in srgb, var(--cortex-chat-violet) 72%, var(--text-normal));
+}
+
+.cortex-chat-folder-picker,
+.cortex-chat-suggestions {
+  border-color: var(--cortex-chat-violet-border);
+  background: color-mix(in srgb, var(--cortex-chat-violet) 4%, var(--background-primary));
+}
+
+.cortex-chat-folder-picker-search:focus {
+  border-color: var(--cortex-chat-violet-strong-border);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cortex-chat-violet) 10%, transparent);
+}
+
+.cortex-chat-folder-picker-limit {
+  color: var(--text-faint);
+  font-size: calc(0.76em * var(--cortex-chat-scale));
+}
+
 @media (max-width: 420px) {
   .cortex-chat-send {
     width: calc(100% - 8px);

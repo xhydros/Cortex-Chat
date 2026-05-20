@@ -82,6 +82,8 @@ const I18N = {
     folderContextCleared: "Folder context removed.",
     noVaultFolders: "No vault folders available.",
     close: "Close",
+    folderSearchLimited: "Showing {visible} of {total} folders. Type to narrow the list.",
+    resetSystemPrompt: "Restore prompt for current language",
     openChat: "Open Cortex Chat",
     newTab: "New tab",
     closeTab: "Close tab",
@@ -398,6 +400,8 @@ const I18N = {
     folderContextCleared: "Contexto de carpeta eliminado.",
     noVaultFolders: "No hay carpetas disponibles en la vault.",
     close: "Cerrar",
+    folderSearchLimited: "Mostrando {visible} de {total} carpetas. Escribe para afinar la lista.",
+    resetSystemPrompt: "Restaurar prompt del idioma actual",
     openChat: "Abrir Cortex Chat",
     newTab: "Nueva pestaña",
     closeTab: "Cerrar pestaña",
@@ -1009,7 +1013,7 @@ module.exports = {
 });
 
 __cortexChatDefine('./lib/settings', function(module, exports, require) {
-const { getDefaultSystemPromptSections, resolveLanguage } = __cortexChatRequire('./lib/i18n');
+const { getDefaultSystemPromptSections, resolveLanguage, SUPPORTED_LANGUAGES } = __cortexChatRequire('./lib/i18n');
 const { normalizeFolderRoots } = __cortexChatRequire('./lib/security');
 
 const MEMORY_CATEGORIES = ["preferences", "projects", "people", "decisions", "recent"];
@@ -1131,6 +1135,31 @@ function normalizeSystemPromptSections(value, languageMode = "auto") {
   return normalized;
 }
 
+function normalizePromptText(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function isSameSystemPromptSections(left, right) {
+  const defaults = getDefaultSystemPromptSections("en");
+  return Object.keys(defaults).every((key) => normalizePromptText(left?.[key]) === normalizePromptText(right?.[key]));
+}
+
+function isDefaultSystemPromptSections(value) {
+  if (!value || typeof value !== "object") {
+    return true;
+  }
+  return SUPPORTED_LANGUAGES.some((language) =>
+    isSameSystemPromptSections(normalizeSystemPromptSections(value, language), getDefaultSystemPromptSections(language))
+  );
+}
+
+function normalizeSystemPromptForLanguage(value, languageMode = "auto") {
+  if (!value || isDefaultSystemPromptSections(value)) {
+    return getDefaultSystemPromptSections(languageMode);
+  }
+  return normalizeSystemPromptSections(value, languageMode);
+}
+
 function normalizeLanguageMode(value) {
   return value === "es" || value === "en" || value === "auto" ? value : "auto";
 }
@@ -1188,7 +1217,7 @@ function normalizeSettings(settings, defaults) {
   next.contextExclusionPatterns = normalizeExclusionPatterns(next.contextExclusionPatterns);
   next.approvedEditsOnly = next.approvedEditsOnly !== false;
   next.activePromptProfile = normalizePromptProfile(next.activePromptProfile);
-  next.systemPromptSections = normalizeSystemPromptSections(next.systemPromptSections, next.languageMode);
+  next.systemPromptSections = normalizeSystemPromptForLanguage(next.systemPromptSections, next.languageMode);
   next.folderReferenceRoots = normalizeFolderRoots(next.folderReferenceRoots);
   next.chatTabs = Array.isArray(next.chatTabs) ? next.chatTabs : [];
   next.activeChatTabId = typeof next.activeChatTabId === "string" ? next.activeChatTabId : "";
@@ -1215,7 +1244,9 @@ module.exports = {
   normalizeTabBarPosition,
   normalizeUiDensity,
   normalizeSettings,
-  normalizeSystemPromptSections
+  normalizeSystemPromptForLanguage,
+  normalizeSystemPromptSections,
+  isDefaultSystemPromptSections
 };
 });
 
@@ -1262,6 +1293,7 @@ const {
   normalizeRagCandidateLimit,
   normalizeRagIndexMaxNotes,
   normalizeSettings,
+  normalizeSystemPromptForLanguage,
   normalizeSystemPromptSections
 } = __cortexChatRequire('./lib/settings');
 
@@ -1430,8 +1462,8 @@ function sessionFingerprint(session) {
   );
 }
 
-function composeSystemPrompt(sections) {
-  const normalized = normalizeSystemPromptSections(sections);
+function composeSystemPrompt(sections, languageMode = "auto") {
+  const normalized = normalizeSystemPromptSections(sections, languageMode);
   const lines = [];
   for (const [key, value] of Object.entries(normalized)) {
     const trimmed = String(value || "").trim();
@@ -3270,7 +3302,6 @@ class CortexChatView extends ItemView {
     if (!this.headerMainEl) {
       return;
     }
-    this.ensureHistoryDismissHandler();
     this.headerMainEl.empty();
     if (this.headerDiagnosticsEl) {
       this.headerDiagnosticsEl.remove();
@@ -3288,27 +3319,6 @@ class CortexChatView extends ItemView {
       const badgesEl = leftEl.createDiv({ cls: "cortex-chat-header-badges" });
       badgesEl.createDiv({ cls: "cortex-chat-header-mode-chip is-unrestricted", text: this.plugin.t("unrestricted") });
     }
-
-    const rightEl = this.headerMainEl.createDiv({ cls: "cortex-chat-header-right" });
-    this.historyWrapEl = rightEl.createDiv({ cls: "cortex-chat-history-wrap" });
-    const historyButton = this.createIconButton(this.historyWrapEl, "history", this.plugin.t("history"), "cortex-chat-icon-button");
-    historyButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      this.toggleHistoryMenu();
-    });
-    this.historyMenuEl = this.historyWrapEl.createDiv({ cls: "cortex-chat-history-menu" });
-    const newChatButton = this.createIconButton(rightEl, "square-pen", this.plugin.t("newChatReady"), "cortex-chat-icon-button");
-    newChatButton.addEventListener("click", () => this.startNewChat());
-    const actionsButton = this.createIconButton(rightEl, "settings", this.plugin.t("consistencyDiagnostics"), "cortex-chat-icon-button");
-    actionsButton.addEventListener("click", (event) => this.openActionsMenu(event));
-    if (this.plugin.settings.showDiagnostics) {
-      this.headerDiagnosticsEl = this.headerEl.createDiv({
-        cls: "cortex-chat-diagnostics",
-        text: `${this.plugin.settings.backendUrl} | ${this.plugin.settings.deviceId}`
-      });
-    }
-    this.renderHistoryMenu();
   }
 
   getCodexState() {
@@ -3415,6 +3425,18 @@ class CortexChatView extends ItemView {
     noteButton.addEventListener("click", async () => this.loadCurrentNoteContext());
     const mentionButton = this.createIconButton(rightEl, "at-sign", "@", "cortex-chat-toolbar-icon");
     mentionButton.addEventListener("click", () => this.insertMentionTrigger());
+    this.historyWrapEl = rightEl.createDiv({ cls: "cortex-chat-history-wrap" });
+    const historyButton = this.createIconButton(this.historyWrapEl, "history", this.plugin.t("history"), "cortex-chat-toolbar-icon");
+    historyButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.toggleHistoryMenu();
+    });
+    this.historyMenuEl = this.historyWrapEl.createDiv({ cls: "cortex-chat-history-menu" });
+    const newChatButton = this.createIconButton(rightEl, "square-pen", this.plugin.t("newChatReady"), "cortex-chat-toolbar-icon");
+    newChatButton.addEventListener("click", () => this.startNewChat());
+    const actionsButton = this.createIconButton(rightEl, "settings", this.plugin.t("consistencyDiagnostics"), "cortex-chat-toolbar-icon");
+    actionsButton.addEventListener("click", (event) => this.openActionsMenu(event));
     const detailsButton = rightEl.createEl("button", {
       cls: "cortex-chat-toolbar-pill",
       text: this.plugin.t("details"),
@@ -3424,6 +3446,8 @@ class CortexChatView extends ItemView {
       this.contextExpanded = !this.contextExpanded;
       this.renderContext();
     });
+    this.ensureHistoryDismissHandler();
+    this.renderHistoryMenu();
   }
 
   openPresetMenu(event) {
@@ -3449,8 +3473,7 @@ class CortexChatView extends ItemView {
       .getAllLoadedFiles()
       .filter((entry) => entry?.children && entry.path && !isIgnoredVaultPath(entry.path))
       .map((entry) => entry.path)
-      .sort((left, right) => left.localeCompare(right, this.plugin.getLanguage(), { sensitivity: "base" }))
-      .slice(0, 80);
+      .sort((left, right) => left.localeCompare(right, this.plugin.getLanguage(), { sensitivity: "base" }));
   }
 
   openFolderContextMenu(event) {
@@ -3476,13 +3499,24 @@ class CortexChatView extends ItemView {
       }
     });
     const listEl = pickerEl.createDiv({ cls: "cortex-chat-folder-picker-list" });
+    const limitEl = pickerEl.createDiv({ cls: "cortex-chat-folder-picker-limit" });
     const renderFolders = (query = "") => {
       const normalizedQuery = String(query || "").trim().toLowerCase();
-      const visibleFolders = folders.filter((folder) => folder.toLowerCase().includes(normalizedQuery)).slice(0, 160);
+      const matchedFolders = folders.filter((folder) => folder.toLowerCase().includes(normalizedQuery));
+      const visibleFolders = matchedFolders.slice(0, 200);
       listEl.empty();
+      limitEl.empty();
       if (!visibleFolders.length) {
         listEl.createDiv({ cls: "cortex-chat-folder-picker-empty", text: this.plugin.t("noVaultFolders") });
         return;
+      }
+      if (matchedFolders.length > visibleFolders.length) {
+        limitEl.setText(
+          this.plugin.t("folderSearchLimited", {
+            visible: visibleFolders.length,
+            total: matchedFolders.length
+          })
+        );
       }
       for (const folder of visibleFolders) {
         const itemEl = listEl.createEl("button", {
@@ -4109,7 +4143,7 @@ class CortexChatView extends ItemView {
       mention.type === "folder"
         ? this.getVaultFolders()
             .filter((folder) => folder.toLowerCase().includes(String(mention.query || "").toLowerCase()))
-            .slice(0, 60)
+            .slice(0, 200)
             .map((folder) => ({ type: "folder", path: folder, title: folder, basename: folder.split("/").pop() || folder }))
         : this.plugin.getMentionCandidates(mention.query).map((file) => ({ type: "mention", file }));
     if (!candidates.length) {
@@ -4499,10 +4533,12 @@ class CortexChatSettingTab extends PluginSettingTab {
           .addOption("es", t("languageSpanish"))
           .setValue(this.plugin.settings.languageMode || DEFAULT_SETTINGS.languageMode)
           .onChange(async (value) => {
-            this.plugin.settings.languageMode = normalizeLanguageMode(value);
-            if (!this.plugin.settings.systemPromptSections) {
-              this.plugin.settings.systemPromptSections = getDefaultSystemPromptSections(value);
-            }
+            const nextLanguageMode = normalizeLanguageMode(value);
+            this.plugin.settings.systemPromptSections = normalizeSystemPromptForLanguage(
+              this.plugin.settings.systemPromptSections,
+              nextLanguageMode
+            );
+            this.plugin.settings.languageMode = nextLanguageMode;
             await this.plugin.saveSettings();
             this.display();
           })
@@ -4622,6 +4658,17 @@ class CortexChatSettingTab extends PluginSettingTab {
     containerEl.createEl("p", {
       text: t("systemPromptDesc")
     });
+
+    new Setting(containerEl)
+      .setName(t("resetSystemPrompt"))
+      .setDesc(t("languageDesc"))
+      .addButton((button) =>
+        button.setButtonText(t("resetSystemPrompt")).onClick(async () => {
+          this.plugin.settings.systemPromptSections = getDefaultSystemPromptSections(this.plugin.settings.languageMode);
+          await this.plugin.saveSettings();
+          this.display();
+        })
+      );
 
     new Setting(containerEl)
       .setName(t("promptProfile"))
@@ -4939,7 +4986,7 @@ module.exports = class CortexChatPlugin extends Plugin {
     const local = await this.loadLocalRuntimeState(shared);
     this.settings = normalizeSettings(Object.assign({}, shared, local), DEFAULT_SETTINGS);
     this.settings.languageMode = normalizeLanguageMode(this.settings.languageMode);
-    this.settings.systemPromptSections = normalizeSystemPromptSections(
+    this.settings.systemPromptSections = normalizeSystemPromptForLanguage(
       this.settings.systemPromptSections,
       this.settings.languageMode
     );
@@ -4967,7 +5014,7 @@ module.exports = class CortexChatPlugin extends Plugin {
 
   async saveSettings() {
     this.settings.languageMode = normalizeLanguageMode(this.settings.languageMode);
-    this.settings.systemPromptSections = normalizeSystemPromptSections(
+    this.settings.systemPromptSections = normalizeSystemPromptForLanguage(
       this.settings.systemPromptSections,
       this.settings.languageMode
     );
@@ -5395,7 +5442,7 @@ module.exports = class CortexChatPlugin extends Plugin {
   }
 
   getConfiguredSystemPrompt(runOptions = {}, backupRoot = "") {
-    const basePrompt = composeSystemPrompt(this.settings.systemPromptSections);
+    const basePrompt = composeSystemPrompt(this.settings.systemPromptSections, this.settings.languageMode);
     const profileLines = ["[prompt-profile]", getPromptProfileInstruction(this.settings.activePromptProfile)];
     const backupInstruction = backupRoot
       ? this.t("workModeExecuteBackupPath", { backupRoot })
