@@ -3118,7 +3118,7 @@ class CortexChatView extends ItemView {
   addSegmentedSetting(config) {
     const current = this.plugin.settings[config.settingKey] || DEFAULT_SETTINGS[config.settingKey];
     const active = config.values[current] || config.values[Object.keys(config.values)[0]];
-    const groupEl = this.modeCardsEl.createDiv({ cls: "cortex-chat-mode-group" });
+    const groupEl = this.modeCardsEl.createDiv({ cls: "cortex-chat-mode-group cortex-chat-workmode-pill" });
     const headerEl = groupEl.createDiv({ cls: "cortex-chat-mode-group-header" });
     headerEl.createSpan({ cls: "cortex-chat-mode-group-title", text: config.title });
     if (active?.detail) {
@@ -3261,13 +3261,11 @@ class CortexChatView extends ItemView {
     const stateEl = titleClusterEl.createDiv({ cls: `cortex-chat-state is-${state.kind}` });
     stateEl.createSpan({ cls: "cortex-chat-state-dot" });
     stateEl.createSpan({ text: state.label });
-    const badgesEl = leftEl.createDiv({ cls: "cortex-chat-header-badges" });
-    badgesEl.createDiv({ cls: "cortex-chat-header-mode-chip", text: this.getActiveProviderBadge() });
     const isExecute = (this.plugin.settings.defaultInteractionMode || DEFAULT_SETTINGS.defaultInteractionMode) === "execute";
-    badgesEl.createDiv({
-      cls: `cortex-chat-header-mode-chip${isExecute ? " is-unrestricted" : ""}`,
-      text: isExecute ? this.plugin.t("unrestricted") : this.plugin.t("planner")
-    });
+    if (isExecute) {
+      const badgesEl = leftEl.createDiv({ cls: "cortex-chat-header-badges" });
+      badgesEl.createDiv({ cls: "cortex-chat-header-mode-chip is-unrestricted", text: this.plugin.t("unrestricted") });
+    }
 
     const rightEl = this.headerMainEl.createDiv({ cls: "cortex-chat-header-right" });
     this.historyWrapEl = rightEl.createDiv({ cls: "cortex-chat-history-wrap" });
@@ -3605,6 +3603,9 @@ class CortexChatView extends ItemView {
       toggleContext();
     });
 
+    const compactSourcesEl = this.contextEl.createDiv({ cls: "cortex-chat-context-strip" });
+    this.renderContextSourceChips(compactSourcesEl);
+
     if (!this.contextExpanded) {
       return;
     }
@@ -3633,7 +3634,6 @@ class CortexChatView extends ItemView {
       : this.plugin.t("noRefs");
 
     this.contextEl.createDiv({ cls: "cortex-chat-context-title", text: this.plugin.t("contextToSend") });
-    this.renderContextSourceChips(this.contextEl);
     const gridEl = this.contextEl.createDiv({ cls: "cortex-chat-context-grid" });
     this.createContextItem(gridEl, this.plugin.t("activeNote"), this.context.path || this.plugin.t("noNote"), this.context.path ? "is-ready" : "");
     this.createContextItem(gridEl, this.plugin.t("links"), outgoingSummary, this.context.outgoingLinks?.length ? "is-ready" : "");
@@ -3676,7 +3676,7 @@ class CortexChatView extends ItemView {
       const metaEl = headerEl.createDiv({ cls: "cortex-chat-message-meta" });
       metaEl.createDiv({
         cls: "cortex-chat-role",
-        text: isAssistant ? "Codex" : this.plugin.t("you")
+        text: isAssistant ? "Cortex" : this.plugin.t("you")
       });
       if (message.meta?.label) {
         metaEl.createDiv({ cls: "cortex-chat-message-chip", text: message.meta.label });
