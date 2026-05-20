@@ -81,6 +81,7 @@ const I18N = {
     folderContextAdded: "Folder context added: {folder}",
     folderContextCleared: "Folder context removed.",
     noVaultFolders: "No vault folders available.",
+    close: "Close",
     openChat: "Open Cortex Chat",
     newTab: "New tab",
     closeTab: "Close tab",
@@ -209,7 +210,7 @@ const I18N = {
     language: "Language",
     languageDesc: "Automatic uses Obsidian/browser language when available. Supported languages: English and Spanish.",
     askPlaceholder: "Ask Cortex...",
-    inputHint: "Enter sends · Shift+Enter new line · @note",
+    inputHint: "Enter sends · Shift+Enter new line · @note · #folder",
     sendMessage: "Send message",
     ready: "Ready",
     setup: "Setup",
@@ -245,6 +246,10 @@ const I18N = {
     preparingContext: "Preparing context",
     codexThinking: "Cortex is thinking",
     codexPreparingResponse: "Cortex is preparing the response",
+    processSending: "Sending the chat to Cortex",
+    processPreparingContext: "Preparing vault context",
+    processAnalyzingContent: "Cortex is analyzing the content",
+    processPreparingResponse: "Cortex is preparing the response",
     unrestrictedActive: "Unrestricted mode active: changes will not ask for additional confirmation.",
     history: "History",
     recentChats: "Recent chats",
@@ -392,6 +397,7 @@ const I18N = {
     folderContextAdded: "Contexto de carpeta añadido: {folder}",
     folderContextCleared: "Contexto de carpeta eliminado.",
     noVaultFolders: "No hay carpetas disponibles en la vault.",
+    close: "Cerrar",
     openChat: "Abrir Cortex Chat",
     newTab: "Nueva pestaña",
     closeTab: "Cerrar pestaña",
@@ -520,7 +526,7 @@ const I18N = {
     language: "Idioma",
     languageDesc: "Automático usa el idioma de Obsidian/navegador cuando está disponible. Idiomas soportados: inglés y español.",
     askPlaceholder: "Pregunta a Cortex...",
-    inputHint: "Enter envía · Shift+Enter línea · @nota",
+    inputHint: "Enter envía · Shift+Enter línea · @nota · #carpeta",
     sendMessage: "Enviar mensaje",
     ready: "Listo",
     setup: "Configurar",
@@ -556,6 +562,10 @@ const I18N = {
     preparingContext: "Preparando contexto",
     codexThinking: "Cortex está pensando",
     codexPreparingResponse: "Cortex está preparando la respuesta",
+    processSending: "Enviando el chat a Cortex",
+    processPreparingContext: "Preparando el contexto de la bóveda",
+    processAnalyzingContent: "Cortex está analizando el contenido",
+    processPreparingResponse: "Cortex está preparando la respuesta",
     unrestrictedActive: "Sin restricciones activo: si hay cambios, se ejecutarán sin pedir confirmación adicional.",
     history: "Historial",
     recentChats: "Chats recientes",
@@ -2756,6 +2766,7 @@ class CortexChatView extends ItemView {
     this.isSending = false;
     this.mentionState = {
       open: false,
+      type: "mention",
       query: "",
       range: null,
       items: [],
@@ -2765,6 +2776,8 @@ class CortexChatView extends ItemView {
     this.keydownHandler = null;
     this.historyMenuOpen = false;
     this.historyDocumentHandler = null;
+    this.folderPickerEl = null;
+    this.folderPickerOutsideHandler = null;
   }
 
   getViewType() {
@@ -2793,6 +2806,7 @@ class CortexChatView extends ItemView {
       this.contentEl?.ownerDocument?.removeEventListener("click", this.historyDocumentHandler);
       this.historyDocumentHandler = null;
     }
+    this.closeFolderPicker();
   }
 
   async prepareContext(context) {
@@ -3023,7 +3037,7 @@ class CortexChatView extends ItemView {
   }
 
   setPendingStatus(id, status, meta = {}, tabId = this.activeTabId) {
-    this.lastPendingStatus = status;
+    this.lastPendingStatus = meta.substatus || status;
     this.updateMessageInTab(tabId, id, "", {
       loading: true,
       status,
@@ -3440,31 +3454,85 @@ class CortexChatView extends ItemView {
   }
 
   openFolderContextMenu(event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (this.folderPickerEl) {
+      this.closeFolderPicker();
+      return;
+    }
     const folders = this.getVaultFolders();
     const selected = normalizeFolderRoots(this.plugin.settings.folderReferenceRoots);
-    const menu = new Menu();
+    const pickerEl = this.sendEl.createDiv({ cls: "cortex-chat-folder-picker" });
+    this.folderPickerEl = pickerEl;
+    const headerEl = pickerEl.createDiv({ cls: "cortex-chat-folder-picker-header" });
+    headerEl.createDiv({ cls: "cortex-chat-folder-picker-title", text: this.plugin.t("selectVaultFolder") });
+    const closeButton = this.createIconButton(headerEl, "x", this.plugin.t("close"), "cortex-chat-folder-picker-close");
+    closeButton.addEventListener("click", () => this.closeFolderPicker());
+    const searchEl = pickerEl.createEl("input", {
+      cls: "cortex-chat-folder-picker-search",
+      attr: {
+        type: "search",
+        placeholder: this.plugin.t("selectVaultFolder")
+      }
+    });
+    const listEl = pickerEl.createDiv({ cls: "cortex-chat-folder-picker-list" });
+    const renderFolders = (query = "") => {
+      const normalizedQuery = String(query || "").trim().toLowerCase();
+      const visibleFolders = folders.filter((folder) => folder.toLowerCase().includes(normalizedQuery)).slice(0, 160);
+      listEl.empty();
+      if (!visibleFolders.length) {
+        listEl.createDiv({ cls: "cortex-chat-folder-picker-empty", text: this.plugin.t("noVaultFolders") });
+        return;
+      }
+      for (const folder of visibleFolders) {
+        const itemEl = listEl.createEl("button", {
+          cls: `cortex-chat-folder-picker-item${selected.includes(folder) ? " is-selected" : ""}`,
+          attr: { type: "button", title: folder }
+        });
+        const depth = Math.max(0, folder.split("/").length - 1);
+        itemEl.style.paddingLeft = `${8 + Math.min(depth, 5) * 11}px`;
+        itemEl.createSpan({ cls: "cortex-chat-folder-picker-name", text: folder.split("/").pop() || folder });
+        itemEl.createSpan({ cls: "cortex-chat-folder-picker-path", text: folder });
+        itemEl.addEventListener("click", async () => {
+          await this.selectFolderContext(folder);
+          this.closeFolderPicker();
+        });
+      }
+    };
     if (!folders.length) {
-      menu.addItem((item) => item.setTitle(this.plugin.t("noVaultFolders")).setDisabled(true));
+      listEl.createDiv({ cls: "cortex-chat-folder-picker-empty", text: this.plugin.t("noVaultFolders") });
+    } else {
+      renderFolders();
     }
-    for (const folder of folders) {
-      menu.addItem((item) =>
-        item
-          .setTitle(folder)
-          .setChecked(selected.includes(folder))
-          .onClick(async () => {
-            await this.selectFolderContext(folder);
-          })
-      );
-    }
+    searchEl.addEventListener("input", () => renderFolders(searchEl.value));
     if (selected.length) {
-      menu.addSeparator();
-      menu.addItem((item) =>
-        item.setTitle(this.plugin.t("folderContextCleared")).setIcon("x").onClick(async () => {
-          await this.clearFolderContext();
-        })
-      );
+      const clearButton = pickerEl.createEl("button", {
+        cls: "cortex-chat-folder-picker-clear",
+        text: this.plugin.t("folderContextCleared"),
+        attr: { type: "button" }
+      });
+      clearButton.addEventListener("click", async () => {
+        await this.clearFolderContext();
+        this.closeFolderPicker();
+      });
     }
-    menu.showAtMouseEvent(event);
+    window.setTimeout(() => searchEl.focus(), 0);
+    const closeOnOutside = (outsideEvent) => {
+      if (!this.folderPickerEl?.contains(outsideEvent.target)) {
+        this.closeFolderPicker();
+      }
+    };
+    this.folderPickerOutsideHandler = closeOnOutside;
+    this.contentEl?.ownerDocument?.addEventListener("mousedown", closeOnOutside);
+  }
+
+  closeFolderPicker() {
+    if (this.folderPickerOutsideHandler) {
+      this.contentEl?.ownerDocument?.removeEventListener("mousedown", this.folderPickerOutsideHandler);
+      this.folderPickerOutsideHandler = null;
+    }
+    this.folderPickerEl?.remove();
+    this.folderPickerEl = null;
   }
 
   async selectFolderContext(folder) {
@@ -3854,6 +3922,9 @@ class CortexChatView extends ItemView {
       const bodyEl = messageEl.createDiv({ cls: "cortex-chat-message-body" });
       if (message.meta?.loading) {
         bodyEl.createDiv({ cls: "cortex-chat-loading", text: message.meta.status || this.plugin.t("preparingResponse") });
+        if (message.meta?.substatus) {
+          bodyEl.createDiv({ cls: "cortex-chat-loading-chip", text: message.meta.substatus });
+        }
         bodyEl.createDiv({ cls: "cortex-chat-loading-bar" });
       } else if (isAssistant) {
         void this.renderAssistantMessage(bodyEl, message.content);
@@ -4012,13 +4083,15 @@ class CortexChatView extends ItemView {
     const value = this.inputEl.value || "";
     const caret = this.inputEl.selectionStart || value.length;
     const beforeCaret = value.slice(0, caret);
-    const match = beforeCaret.match(/(?:^|\s)@([^\s@,.;:!?()[\]{}]*)$/);
+    const match = beforeCaret.match(/(?:^|\s)([@#])([^\s@#,.;:!?()[\]{}]*)$/);
     if (!match) {
       return null;
     }
 
-    const query = match[1] || "";
+    const trigger = match[1] || "@";
+    const query = match[2] || "";
     return {
+      type: trigger === "#" ? "folder" : "mention",
       query,
       start: caret - query.length - 1,
       end: caret
@@ -4032,7 +4105,13 @@ class CortexChatView extends ItemView {
       return;
     }
 
-    const candidates = this.plugin.getMentionCandidates(mention.query);
+    const candidates =
+      mention.type === "folder"
+        ? this.getVaultFolders()
+            .filter((folder) => folder.toLowerCase().includes(String(mention.query || "").toLowerCase()))
+            .slice(0, 60)
+            .map((folder) => ({ type: "folder", path: folder, title: folder, basename: folder.split("/").pop() || folder }))
+        : this.plugin.getMentionCandidates(mention.query).map((file) => ({ type: "mention", file }));
     if (!candidates.length) {
       this.hideMentionSuggestions();
       return;
@@ -4040,6 +4119,7 @@ class CortexChatView extends ItemView {
 
     this.mentionState = {
       open: true,
+      type: mention.type,
       query: mention.query,
       range: mention,
       items: candidates,
@@ -4051,6 +4131,7 @@ class CortexChatView extends ItemView {
 
   hideMentionSuggestions() {
     this.mentionState.open = false;
+    this.mentionState.type = "mention";
     this.mentionState.items = [];
     this.mentionState.range = null;
     if (this.suggestionsEl) {
@@ -4067,18 +4148,20 @@ class CortexChatView extends ItemView {
     this.suggestionsEl.empty();
     this.suggestionsEl.show();
 
-    this.mentionState.items.forEach((file, index) => {
+    this.mentionState.items.forEach((candidate, index) => {
+      const isFolder = candidate.type === "folder";
+      const file = candidate.file || candidate;
       const itemEl = this.suggestionsEl.createDiv({
-        cls: `suggestion-item cortex-chat-suggestion-item${index === this.mentionState.selectedIndex ? " is-selected" : ""}`
+        cls: `suggestion-item cortex-chat-suggestion-item${isFolder ? " is-folder" : ""}${index === this.mentionState.selectedIndex ? " is-selected" : ""}`
       });
 
       itemEl.createDiv({
         cls: "suggestion-title",
-        text: file.basename
+        text: isFolder ? candidate.title : file.basename
       });
       itemEl.createDiv({
         cls: "suggestion-note cortex-chat-suggestion-note",
-        text: file.path
+        text: isFolder ? this.plugin.t("selectVaultFolder") : file.path
       });
 
       itemEl.addEventListener("mouseenter", () => {
@@ -4088,20 +4171,22 @@ class CortexChatView extends ItemView {
 
       itemEl.addEventListener("mousedown", (event) => {
         event.preventDefault();
-        this.insertMention(file);
+        this.insertMention(candidate);
       });
     });
   }
 
-  insertMention(file) {
+  insertMention(candidate) {
     if (!this.inputEl || !this.mentionState.range) {
       return;
     }
 
+    const isFolder = candidate?.type === "folder";
+    const file = candidate?.file || candidate;
     const value = this.inputEl.value || "";
     const before = value.slice(0, this.mentionState.range.start);
     const after = value.slice(this.mentionState.range.end);
-    const insertion = `@${file.basename} `;
+    const insertion = isFolder ? `#${candidate.path} ` : `@${file.basename} `;
     const nextValue = `${before}${insertion}${after}`;
     const nextCursor = before.length + insertion.length;
 
@@ -4110,6 +4195,9 @@ class CortexChatView extends ItemView {
     this.inputEl.setSelectionRange(nextCursor, nextCursor);
     this.autoResizeInput();
     this.hideMentionSuggestions();
+    if (isFolder) {
+      void this.selectFolderContext(candidate.path);
+    }
   }
 
   setSending(value) {
@@ -4193,11 +4281,14 @@ class CortexChatView extends ItemView {
     const pendingId = this.appendMessage("assistant", "", {
       loading: true,
       label: workModeDetail(activeWorkMode, this.plugin.t),
-      status: this.plugin.t("sendingToAgent")
+      status: this.plugin.t("codexThinking"),
+      substatus: this.plugin.t("processSending")
     });
-    this.lastPendingStatus = this.plugin.t("sendingToAgent");
+    this.lastPendingStatus = this.plugin.t("processSending");
     if (!this.context?.path && !this.context?.references?.length) {
-      this.setPendingStatus(pendingId, this.plugin.t("preparingContext"), {}, requestTabId);
+      this.setPendingStatus(pendingId, this.plugin.t("codexThinking"), {
+        substatus: this.plugin.t("processPreparingContext")
+      }, requestTabId);
       this.context = await this.plugin.captureCurrentContext(false);
       this.setTabState(requestTabId, {
         context: this.context,
@@ -4214,12 +4305,17 @@ class CortexChatView extends ItemView {
       const runOptions = this.plugin.getRunOptions(requestContext, agentMessage);
       const folderStatus = this.getFolderReviewStatus(agentMessage, requestContext);
       if (folderStatus) {
-        this.setPendingStatus(pendingId, folderStatus, {}, requestTabId);
+        this.setPendingStatus(pendingId, this.plugin.t("codexThinking"), {
+          substatus: folderStatus
+        }, requestTabId);
       }
-      this.setPendingStatus(pendingId, this.plugin.t("codexThinking"), {}, requestTabId);
+      this.setPendingStatus(pendingId, this.plugin.t("codexThinking"), {
+        substatus: this.plugin.t("processAnalyzingContent")
+      }, requestTabId);
       const response = await this.plugin.sendMessageToAgent(requestTab?.threadId || null, agentMessage, requestContext, runOptions);
       const isFallback = response.localFallback || response.raw?.provider === "heuristic-fallback";
       this.setPendingStatus(pendingId, this.plugin.t("codexPreparingResponse"), {
+        substatus: this.plugin.t("processPreparingResponse"),
         detail:
           runOptions.interactionMode === "execute"
             ? this.plugin.t("unrestrictedActive")
