@@ -2411,14 +2411,22 @@
   justify-content: flex-start;
   min-height: calc(26px * var(--cortex-chat-scale));
   padding: 0 0 calc(3px * var(--cortex-chat-scale));
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.cortex-chat-tabbar::-webkit-scrollbar {
+  display: none;
 }
 
 .cortex-chat-tab {
-  min-width: calc(28px * var(--cortex-chat-scale));
-  width: calc(28px * var(--cortex-chat-scale));
+  min-width: calc(54px * var(--cortex-chat-scale));
+  max-width: calc(128px * var(--cortex-chat-scale));
+  width: auto;
   height: calc(26px * var(--cortex-chat-scale));
   justify-content: center;
-  padding: 0;
+  gap: calc(4px * var(--cortex-chat-scale));
+  padding: 0 calc(6px * var(--cortex-chat-scale));
   border: 1px solid color-mix(in srgb, var(--background-modifier-border) 78%, transparent);
   border-radius: calc(5px * var(--cortex-chat-scale));
   background: color-mix(in srgb, var(--background-secondary) 42%, transparent);
@@ -2432,16 +2440,50 @@
 }
 
 .cortex-chat-tab-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: calc(0.82em * var(--cortex-chat-scale));
   font-weight: 600;
 }
 
 .cortex-chat-tab-close {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(17px * var(--cortex-chat-scale));
+  height: calc(17px * var(--cortex-chat-scale));
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-faint);
+  opacity: 0;
+}
+
+.cortex-chat-tab:hover .cortex-chat-tab-close,
+.cortex-chat-tab.is-active .cortex-chat-tab-close,
+.cortex-chat-tab-close:focus-visible {
+  opacity: 1;
+}
+
+.cortex-chat-tab-close:hover,
+.cortex-chat-tab-close:focus-visible {
+  background: color-mix(in srgb, var(--color-red) 10%, var(--background-primary));
+  color: var(--color-red);
 }
 
 .cortex-chat-tab-add {
+  min-width: calc(28px * var(--cortex-chat-scale));
+  width: calc(28px * var(--cortex-chat-scale));
   background: transparent;
+}
+
+.cortex-chat-tab-add:disabled,
+.cortex-chat-tab-add.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .cortex-chat-context {
@@ -2527,19 +2569,28 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: calc(8px * var(--cortex-chat-scale));
   min-height: calc(30px * var(--cortex-chat-scale));
+  max-width: 100%;
 }
 
 .cortex-chat-composer-toolbar-left,
 .cortex-chat-composer-toolbar-right {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: calc(5px * var(--cortex-chat-scale));
   min-width: 0;
+  max-width: 100%;
+}
+
+.cortex-chat-composer-toolbar-left {
+  flex: 1 1 150px;
 }
 
 .cortex-chat-composer-toolbar-right {
+  flex: 0 1 auto;
   justify-content: flex-end;
 }
 
@@ -2557,6 +2608,10 @@
 .cortex-chat-toolbar-pill {
   padding: 0 calc(8px * var(--cortex-chat-scale));
   font-weight: 600;
+  max-width: min(150px, 100%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cortex-chat-toolbar-pill:hover,
@@ -2612,46 +2667,6 @@
 .cortex-chat-mode-selector.is-write .cortex-chat-mode-selector-knob {
   background: var(--color-orange);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-orange) 14%, transparent);
-}
-
-.cortex-chat-toolbar-pill[data-tooltip]::after,
-.cortex-chat-toolbar-icon[data-tooltip]::after,
-.cortex-chat-mode-selector[data-tooltip]::after,
-.cortex-chat-tab[data-tooltip]::after,
-.cortex-chat-context-icon[data-tooltip]::after,
-.cortex-chat-context-chip[data-tooltip]::after,
-.cortex-chat-message-action[data-tooltip]::after,
-.cortex-chat-manifest-pill[data-tooltip]::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  z-index: 9999;
-  max-width: 260px;
-  padding: 5px 8px;
-  border-radius: 6px;
-  background: rgba(18, 18, 20, 0.94);
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.25;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-50%) translateY(-3px);
-  transition: opacity 90ms ease, transform 90ms ease;
-}
-
-.cortex-chat-toolbar-pill[data-tooltip]:hover::after,
-.cortex-chat-toolbar-icon[data-tooltip]:hover::after,
-.cortex-chat-mode-selector[data-tooltip]:hover::after,
-.cortex-chat-tab[data-tooltip]:hover::after,
-.cortex-chat-context-icon[data-tooltip]:hover::after,
-.cortex-chat-context-chip[data-tooltip]:hover::after,
-.cortex-chat-message-action[data-tooltip]:hover::after,
-.cortex-chat-manifest-pill[data-tooltip]:hover::after {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
 }
 
 .cortex-chat-send.is-drag-over {
@@ -2928,11 +2943,17 @@
 
   .cortex-chat-composer-toolbar {
     align-items: flex-start;
+    justify-content: flex-start;
   }
 
   .cortex-chat-composer-toolbar-left,
   .cortex-chat-composer-toolbar-right {
+    flex: 1 1 100%;
     flex-wrap: wrap;
+  }
+
+  .cortex-chat-composer-toolbar-right {
+    justify-content: flex-start;
   }
 
   .cortex-chat-toolbar-pill {
@@ -2940,6 +2961,36 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+@media (max-width: 360px) {
+  .cortex-chat-send {
+    max-height: min(58vh, 520px);
+  }
+
+  .cortex-chat-composer-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(6px * var(--cortex-chat-scale));
+  }
+
+  .cortex-chat-composer-toolbar-left,
+  .cortex-chat-composer-toolbar-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .cortex-chat-composer-toolbar-right {
+    row-gap: calc(4px * var(--cortex-chat-scale));
+  }
+
+  .cortex-chat-toolbar-pill {
+    max-width: 100%;
+  }
+
+  .cortex-chat-mode-selector {
+    max-width: 100%;
   }
 }
 
@@ -3001,6 +3052,27 @@
   padding: calc(6px * var(--cortex-chat-scale)) !important;
 }
 
+.cortex-chat-context-folder-group {
+  display: grid;
+  gap: calc(5px * var(--cortex-chat-scale));
+  padding: calc(6px * var(--cortex-chat-scale));
+  border: 1px solid color-mix(in srgb, var(--cortex-chat-violet) 18%, transparent);
+  border-radius: calc(10px * var(--cortex-chat-scale));
+  background: color-mix(in srgb, var(--cortex-chat-violet) 5%, transparent);
+}
+
+.cortex-chat-context-folder-title {
+  padding: 0 calc(4px * var(--cortex-chat-scale)) calc(3px * var(--cortex-chat-scale));
+  color: var(--text-normal);
+  font-size: calc(0.78em * var(--cortex-chat-scale));
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.cortex-chat-context-folder-group .cortex-chat-context-source-row {
+  background: color-mix(in srgb, var(--background-primary) 72%, transparent);
+}
+
 .cortex-chat-context-source-main {
   min-width: 0;
   display: flex;
@@ -3047,30 +3119,6 @@
   height: 14px;
 }
 
-.cortex-chat-context-source-remove[data-tooltip]::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  z-index: 9999;
-  padding: 5px 8px;
-  border-radius: 6px;
-  background: rgba(18, 18, 20, 0.94);
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-50%) translateY(-3px);
-  transition: opacity 90ms ease, transform 90ms ease;
-}
-
-.cortex-chat-context-source-remove[data-tooltip]:hover::after {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
 @media (max-width: 420px) {
   .cortex-chat-context-source-remove {
     min-width: calc(34px * var(--cortex-chat-scale));
@@ -3078,5 +3126,28 @@
 
   .cortex-chat-context-source-remove-label {
     display: none;
+  }
+}
+
+.cortex-chat-floating-tooltip {
+  position: fixed;
+  z-index: 100000;
+  max-width: min(280px, calc(100vw - 16px));
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: rgba(18, 18, 20, 0.96);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24);
+  pointer-events: none;
+}
+
+@media (max-width: 420px) {
+  .cortex-chat-tab {
+    min-width: calc(46px * var(--cortex-chat-scale));
+    max-width: calc(96px * var(--cortex-chat-scale));
   }
 }

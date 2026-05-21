@@ -145,8 +145,10 @@ const I18N = {
     showDiagnosticsDesc: "Shows backend, device, and current context in the chat header.",
     folderRoots: "Folder reference roots",
     folderRootsDesc: "Comma-separated vault folders that the assistant may load when the user asks to review a folder.",
-    maxFolderReferences: "Maximum notes when summarizing a folder",
-    maxFolderReferencesDesc: "Limit of notes added as context when folder roots are explicitly configured.",
+    maxFolderReferences: "Maximum folder files",
+    maxFolderReferencesDesc: "Maximum files added as context when a vault folder is selected.",
+    maxFolderContextChars: "Folder context character budget",
+    maxFolderContextCharsDesc: "Total extracted characters allowed for selected folder context. Files beyond the budget are kept as metadata.",
     systemPrompt: "System Prompt",
     systemPromptDesc: "These sections are composed in fixed order and shared between devices through data.json.",
     promptRole: "Role",
@@ -292,6 +294,10 @@ const I18N = {
     manifestLinks: "Links",
     manifestMentions: "Mentions",
     manifestFolders: "Folders",
+    folderFilesSummary: "{folder} · {count} files · {chars} chars",
+    folderContextBudgetReached: "Folder context budget reached; preview omitted.",
+    unsupportedFileContext: "File selected as context. Text extraction is not available for .{extension} files.",
+    folderContextTruncated: "Folder context truncated",
     manifestMemory: "Memory",
     manifestSessions: "Sessions",
     manifestSkills: "Skills",
@@ -490,8 +496,10 @@ const I18N = {
     showDiagnosticsDesc: "Muestra backend, dispositivo y contexto actual en la cabecera del chat.",
     folderRoots: "Raíces de carpetas referenciables",
     folderRootsDesc: "Carpetas de la vault, separadas por comas, que el asistente puede cargar cuando pidas revisar una carpeta.",
-    maxFolderReferences: "Notas máximas al resumir una carpeta",
-    maxFolderReferencesDesc: "Límite de notas añadidas como contexto cuando haya carpetas configuradas explícitamente.",
+    maxFolderReferences: "Archivos máximos por carpeta",
+    maxFolderReferencesDesc: "Máximo de archivos añadidos como contexto cuando se selecciona una carpeta de la vault.",
+    maxFolderContextChars: "Presupuesto de caracteres de carpeta",
+    maxFolderContextCharsDesc: "Caracteres extraídos totales permitidos para el contexto de carpeta. Los archivos fuera del límite se mantienen como metadatos.",
     systemPrompt: "System Prompt",
     systemPromptDesc: "Estas secciones se combinan en orden fijo y se comparten entre equipos mediante data.json.",
     promptRole: "Rol",
@@ -637,6 +645,10 @@ const I18N = {
     manifestLinks: "Enlaces",
     manifestMentions: "Menciones",
     manifestFolders: "Carpetas",
+    folderFilesSummary: "{folder} · {count} archivos · {chars} caracteres",
+    folderContextBudgetReached: "Presupuesto de contexto de carpeta agotado; preview omitida.",
+    unsupportedFileContext: "Archivo seleccionado como contexto. La extracción de texto no está disponible para archivos .{extension}.",
+    folderContextTruncated: "Contexto de carpeta truncado",
     manifestMemory: "Memoria",
     manifestSessions: "Sesiones",
     manifestSkills: "Skills",
@@ -1082,6 +1094,7 @@ const SHARED_SETTING_KEYS = [
   "showDiagnostics",
   "localFallbackDelayMs",
   "maxFolderReferences",
+  "maxFolderContextChars",
   "folderReferenceRoots",
   "systemPromptSections",
   "uiScale",
@@ -1148,7 +1161,8 @@ function buildDefaultSettings(pluginId) {
     defaultInteractionMode: "plan",
     showDiagnostics: true,
     localFallbackDelayMs: 900,
-    maxFolderReferences: 24,
+    maxFolderReferences: 80,
+    maxFolderContextChars: 120000,
     folderReferenceRoots: [],
     localCodexCommand: "codex",
     allowCodexVaultTrust: false,
@@ -1254,6 +1268,16 @@ function normalizeRagIndexMaxNotes(value, fallback = 600) {
   return Number.isFinite(numeric) && numeric >= 50 && numeric <= 5000 ? Math.round(numeric) : fallback;
 }
 
+function normalizeMaxFolderReferences(value, fallback = 80) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric >= 3 && numeric <= 300 ? Math.round(numeric) : fallback;
+}
+
+function normalizeMaxFolderContextChars(value, fallback = 120000) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric >= 10000 && numeric <= 500000 ? Math.round(numeric) : fallback;
+}
+
 function normalizeSkillsRoot(value, fallback = "_cortex/skills") {
   const normalized = String(value || fallback)
     .replaceAll("\\", "/")
@@ -1323,6 +1347,8 @@ function normalizeSettings(settings, defaults) {
   next.contextIncludeMemory = next.contextIncludeMemory !== false;
   next.contextIncludeRecentSessions = next.contextIncludeRecentSessions !== false;
   next.contextIncludeRag = next.contextIncludeRag === true;
+  next.maxFolderReferences = normalizeMaxFolderReferences(next.maxFolderReferences, defaults.maxFolderReferences);
+  next.maxFolderContextChars = normalizeMaxFolderContextChars(next.maxFolderContextChars, defaults.maxFolderContextChars);
   next.ragIndexEnabled = next.ragIndexEnabled !== false;
   next.ragIndexMaxNotes = normalizeRagIndexMaxNotes(next.ragIndexMaxNotes, defaults.ragIndexMaxNotes);
   next.ragCandidateLimit = normalizeRagCandidateLimit(next.ragCandidateLimit, defaults.ragCandidateLimit);
@@ -1357,6 +1383,8 @@ module.exports = {
   getSettingsLanguage,
   normalizeExclusionPatterns,
   normalizeLanguageMode,
+  normalizeMaxFolderContextChars,
+  normalizeMaxFolderReferences,
   normalizePromptProfile,
   normalizeRagCandidateLimit,
   normalizeRagIndexMaxNotes,
@@ -1412,6 +1440,8 @@ const {
   buildDefaultSettings,
   normalizeExclusionPatterns,
   normalizeLanguageMode,
+  normalizeMaxFolderContextChars,
+  normalizeMaxFolderReferences,
   normalizePromptProfile,
   normalizeRagCandidateLimit,
   normalizeRagIndexMaxNotes,
@@ -1451,6 +1481,9 @@ const UI_SCALE_STEP = 0.1;
 const MAX_CHAT_TABS = 3;
 const PDF_PREVIEW_MAX_CHARS = 24000;
 const PDF_STREAM_SCAN_LIMIT = 24;
+const TEXT_CONTEXT_EXTENSIONS = new Set(["md", "txt", "csv", "tsv", "json", "xml", "yaml", "yml", "log"]);
+const HTML_CONTEXT_EXTENSIONS = new Set(["html", "htm"]);
+const FOLDER_FILE_PREVIEW_MAX_CHARS = 12000;
 
 function makeId(prefix) {
   if (nodeCrypto?.randomBytes) {
@@ -1557,8 +1590,24 @@ function normalizeChatTab(tab, t = createTranslator("en")) {
 }
 
 function titleFromMessage(message, fallback) {
-  const summary = summarize(message);
-  return summary ? summary.slice(0, 48) : fallback;
+  const stopWords = new Set([
+    "a", "al", "de", "del", "el", "la", "las", "los", "un", "una", "unos", "unas", "y", "o", "que", "me", "mi", "mis",
+    "the", "a", "an", "and", "or", "to", "of", "for", "with", "about", "this", "that"
+  ]);
+  const cleaned = String(message || "")
+    .replace(/[@#][^\s]+/g, " ")
+    .replace(/[A-Za-z]:[\\/][^\s]+/g, " ")
+    .replace(/(?:^|\s)[\w.-]+(?:\/[\w .-]+)+/g, " ")
+    .replace(/[^\p{L}\p{N}\s_-]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const words = cleaned
+    .split(/\s+/)
+    .map((word) => word.trim())
+    .filter((word) => word.length > 2 && !stopWords.has(word.toLowerCase()))
+    .slice(0, 4);
+  const title = words.join(" ");
+  return title || fallback;
 }
 
 function normalizeForFingerprint(value) {
@@ -1780,6 +1829,93 @@ function truncatePreviewText(text, maxChars, suffix = "") {
   }
   const trimmed = normalized.slice(0, Math.max(0, maxChars - suffix.length - 1)).trimEnd();
   return `${trimmed}${suffix || "…"}`;
+}
+
+function decodeBasicHtmlEntities(value) {
+  return String(value || "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'");
+}
+
+function htmlToPlainText(value) {
+  return decodeBasicHtmlEntities(
+    String(value || "")
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/(p|div|li|tr|h[1-6])>/gi, "\n")
+      .replace(/<[^>]+>/g, " ")
+  );
+}
+
+function extensionForFile(file) {
+  return String(file?.extension || file?.path?.split(".").pop() || "").toLowerCase();
+}
+
+function isTextContextFile(file) {
+  return TEXT_CONTEXT_EXTENSIONS.has(extensionForFile(file));
+}
+
+function isHtmlContextFile(file) {
+  return HTML_CONTEXT_EXTENSIONS.has(extensionForFile(file));
+}
+
+function buildUnsupportedFilePreview(file, translator = null) {
+  const extension = extensionForFile(file) || "file";
+  const size = Number(file?.stat?.size || 0);
+  const sizeText = size ? ` Size: ${size} bytes.` : "";
+  const fallback = `File selected as context. Text extraction is not available for .${extension} files.${sizeText}`;
+  return translator ? `${translator("unsupportedFileContext", { extension })}${sizeText}` : fallback;
+}
+
+function applyFolderContextBudget(references, maxChars, translator = null) {
+  const budget = Number(maxChars);
+  if (!Number.isFinite(budget) || budget <= 0) {
+    return references;
+  }
+  let used = 0;
+  return (references || []).map((reference) => {
+    if (reference.source !== "folder") {
+      return reference;
+    }
+    const preview = String(reference.preview || "");
+    if (!preview) {
+      return { ...reference, folderContextChars: 0 };
+    }
+    if (used >= budget) {
+      return {
+        ...reference,
+        preview: translator ? translator("folderContextBudgetReached") : "Folder context budget reached; preview omitted.",
+        folderContextChars: 0,
+        folderContextTruncated: true,
+        folderContextOmitted: true
+      };
+    }
+    const remaining = budget - used;
+    if (preview.length > remaining) {
+      const truncated = truncatePreviewText(
+        preview,
+        remaining,
+        translator ? `... [${translator("folderContextTruncated")}]` : "... [Folder context truncated]"
+      );
+      used += truncated.length;
+      return {
+        ...reference,
+        preview: truncated,
+        folderContextChars: truncated.length,
+        folderContextTruncated: true
+      };
+    }
+    used += preview.length;
+    return {
+      ...reference,
+      folderContextChars: preview.length
+    };
+  });
 }
 
 function decodePdfLiteralString(value) {
@@ -2648,8 +2784,102 @@ function buildHeuristicAnswer(message, context, recentSessions, runOptions = {})
   ].join("\n");
 }
 
-function extractAtTokens(text) {
-  return [...String(text || "").matchAll(/(^|\s)@([^\s@,.;:!?()[\]{}]+)/g)].map((match) => match[2]);
+function normalizeReferenceQuery(value) {
+  return normalizeWhitespace(String(value || ""))
+    .replace(/^[@#]+/, "")
+    .replace(/^[\s,.;:!?()[\]{}]+|[\s,.;:!?()[\]{}]+$/g, "")
+    .trim();
+}
+
+function scoreReferenceCandidate(file, query) {
+  const normalizedQuery = normalizeReferenceQuery(query).toLowerCase();
+  const basename = String(file?.basename || "").toLowerCase();
+  const pathText = String(file?.path || "").toLowerCase();
+  if (!normalizedQuery) {
+    return 20;
+  }
+  if (basename === normalizedQuery) {
+    return 0;
+  }
+  if (pathText === normalizedQuery || pathText.replace(/\.(md|pdf)$/i, "") === normalizedQuery) {
+    return 1;
+  }
+  if (basename.startsWith(normalizedQuery)) {
+    return 2;
+  }
+  if (pathText.includes(normalizedQuery)) {
+    return 3;
+  }
+  if (basename.includes(normalizedQuery)) {
+    return 4;
+  }
+  const words = normalizedQuery.split(/\s+/).filter(Boolean);
+  if (words.length && words.every((word) => basename.includes(word) || pathText.includes(word))) {
+    return 5;
+  }
+  return null;
+}
+
+function findBestReferenceMatch(query, files, locale = "en") {
+  const normalizedQuery = normalizeReferenceQuery(query);
+  if (!normalizedQuery) {
+    return null;
+  }
+  return (files || [])
+    .map((file) => ({ file, score: scoreReferenceCandidate(file, normalizedQuery) }))
+    .filter((entry) => entry.score !== null)
+    .sort((left, right) => {
+      if (left.score !== right.score) {
+        return left.score - right.score;
+      }
+      return String(left.file.path || "").localeCompare(String(right.file.path || ""), locale, { sensitivity: "base" });
+    })[0] || null;
+}
+
+function extractAtReferenceMatches(text, files, locale = "en") {
+  const source = String(text || "");
+  const matches = [];
+  const seen = new Set();
+  const triggerRegex = /(^|\s)@/g;
+  let trigger = null;
+  while ((trigger = triggerRegex.exec(source))) {
+    const atIndex = trigger.index + trigger[1].length;
+    const nextTriggerIndex = source.slice(atIndex + 1).search(/(^|\s)[@#]/);
+    const hardEnd = nextTriggerIndex === -1 ? source.length : atIndex + 1 + nextTriggerIndex;
+    const rawSegment = source.slice(atIndex + 1, hardEnd).split(/\r?\n/)[0] || "";
+    const segment = rawSegment.trim();
+    if (!segment) {
+      continue;
+    }
+
+    let best = null;
+    for (let end = segment.length; end > 0; end -= 1) {
+      const char = segment[end - 1];
+      if (end !== segment.length && !/[\s,.;:!?()[\]{}-]/.test(char)) {
+        continue;
+      }
+      const candidateQuery = normalizeReferenceQuery(segment.slice(0, end));
+      if (!candidateQuery) {
+        continue;
+      }
+      const match = findBestReferenceMatch(candidateQuery, files, locale);
+      if (match) {
+        best = { token: candidateQuery, file: match.file, score: match.score };
+        break;
+      }
+    }
+
+    if (best && !seen.has(best.file.path)) {
+      seen.add(best.file.path);
+      matches.push(best);
+    } else if (!best) {
+      const unresolved = normalizeReferenceQuery(segment.split(/\s{2,}/)[0] || segment);
+      if (unresolved) {
+        matches.push({ token: unresolved, file: null, unresolved: true });
+      }
+    }
+  }
+  return matches;
 }
 
 function mergeReferences(...groups) {
@@ -3211,6 +3441,7 @@ class CortexChatView extends ItemView {
     contentEl.setAttr("tabindex", "0");
     this.applyUiScale();
     this.registerScaleShortcuts();
+    this.registerTooltipHandlers(contentEl);
 
     this.headerEl = contentEl.createDiv({ cls: "cortex-chat-header" });
     this.headerMainEl = this.headerEl.createDiv({ cls: "cortex-chat-header-main" });
@@ -3471,12 +3702,9 @@ class CortexChatView extends ItemView {
       return;
     }
     this.tabBarEl.empty();
-    if (this.tabs.length < 2) {
-      this.tabBarEl.addClass("is-hidden");
-      return;
-    }
     this.tabBarEl.removeClass("is-hidden");
     this.tabs.forEach((tab, index) => {
+      const title = tab.title && tab.title !== this.plugin.t("untitledTab") ? tab.title : String(index + 1);
       const button = this.tabBarEl.createEl("button", {
         cls: `cortex-chat-tab${tab.id === this.activeTabId ? " is-active" : ""}${tab.isStreaming ? " is-streaming" : ""}${tab.needsAttention ? " needs-attention" : ""}`,
         attr: {
@@ -3484,11 +3712,19 @@ class CortexChatView extends ItemView {
           "data-tooltip": tab.title || this.plugin.t("untitledTab")
         }
       });
-      button.createSpan({ cls: "cortex-chat-tab-title", text: String(index + 1) });
+      button.createSpan({ cls: "cortex-chat-tab-title", text: title });
       if (this.tabs.length > 1) {
-        const close = button.createSpan({ cls: "cortex-chat-tab-close", text: "×" });
-        close.setAttribute("aria-label", this.plugin.t("closeTab"));
+        const close = button.createEl("button", {
+          cls: "cortex-chat-tab-close",
+          attr: {
+            type: "button",
+            "aria-label": this.plugin.t("closeTab"),
+            "data-tooltip": this.plugin.t("closeTab")
+          }
+        });
+        setIcon(close, "x");
         close.addEventListener("click", async (event) => {
+          event.preventDefault();
           event.stopPropagation();
           await this.closeTab(tab.id);
         });
@@ -3498,16 +3734,91 @@ class CortexChatView extends ItemView {
       });
     });
     const addButton = this.tabBarEl.createEl("button", {
-      cls: "cortex-chat-tab cortex-chat-tab-add",
+      cls: `cortex-chat-tab cortex-chat-tab-add${this.tabs.length >= MAX_CHAT_TABS ? " is-disabled" : ""}`,
       attr: {
         "aria-label": this.plugin.t("newTab"),
-        "data-tooltip": this.plugin.t("newTab")
+        "data-tooltip": this.tabs.length >= MAX_CHAT_TABS ? this.plugin.t("tabLimitTooltip", { count: MAX_CHAT_TABS }) : this.plugin.t("newTab")
       }
     });
+    addButton.disabled = this.tabs.length >= MAX_CHAT_TABS;
     setIcon(addButton, "plus");
     addButton.addEventListener("click", async () => {
+      if (this.tabs.length >= MAX_CHAT_TABS) {
+        new Notice(this.plugin.t("tabLimitReached", { count: MAX_CHAT_TABS }));
+        return;
+      }
       await this.createNewTab();
     });
+  }
+
+  registerTooltipHandlers(rootEl) {
+    this.hideTooltip();
+    rootEl.addEventListener("pointerover", (event) => {
+      const target = event.target?.closest?.("[data-tooltip]");
+      if (!target || !rootEl.contains(target)) {
+        return;
+      }
+      this.scheduleTooltip(target);
+    });
+    rootEl.addEventListener("pointerout", (event) => {
+      const target = event.target?.closest?.("[data-tooltip]");
+      if (!target) {
+        return;
+      }
+      if (!event.relatedTarget || !target.contains(event.relatedTarget)) {
+        this.hideTooltip();
+      }
+    });
+    rootEl.addEventListener("pointermove", () => this.hideTooltip());
+    rootEl.addEventListener("click", () => this.hideTooltip(), true);
+    rootEl.addEventListener("keydown", () => this.hideTooltip(), true);
+    rootEl.addEventListener("scroll", () => this.hideTooltip(), true);
+  }
+
+  scheduleTooltip(targetEl) {
+    this.hideTooltip();
+    const text = String(targetEl?.getAttribute?.("data-tooltip") || "").trim();
+    if (!text) {
+      return;
+    }
+    this.tooltipTimer = window.setTimeout(() => {
+      this.showTooltip(targetEl, text);
+    }, 2000);
+  }
+
+  showTooltip(targetEl, text) {
+    if (!targetEl?.isConnected || !this.contentEl?.isConnected) {
+      return;
+    }
+    const tooltipEl = this.contentEl.ownerDocument.createElement("div");
+    tooltipEl.className = "cortex-chat-floating-tooltip";
+    tooltipEl.textContent = text;
+    this.contentEl.ownerDocument.body.appendChild(tooltipEl);
+    this.tooltipEl = tooltipEl;
+    this.positionTooltip(targetEl);
+  }
+
+  positionTooltip(targetEl) {
+    if (!this.tooltipEl || !targetEl?.getBoundingClientRect) {
+      return;
+    }
+    const rect = targetEl.getBoundingClientRect();
+    const tooltipRect = this.tooltipEl.getBoundingClientRect();
+    const margin = 8;
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    const left = Math.max(margin, Math.min(rect.left + rect.width / 2 - tooltipRect.width / 2, viewportWidth - tooltipRect.width - margin));
+    const top = Math.max(margin, rect.top - tooltipRect.height - 10);
+    this.tooltipEl.style.left = `${left}px`;
+    this.tooltipEl.style.top = `${top}px`;
+  }
+
+  hideTooltip() {
+    if (this.tooltipTimer) {
+      window.clearTimeout(this.tooltipTimer);
+      this.tooltipTimer = null;
+    }
+    this.tooltipEl?.remove();
+    this.tooltipEl = null;
   }
 
   getPromptProfileOptions() {
@@ -3668,6 +3979,11 @@ class CortexChatView extends ItemView {
     const enabledIds = new Set(normalizeSkillIds(this.plugin.settings.enabledSkillIds));
     menu.addItem((item) =>
       item
+        .setTitle(this.plugin.t("skillContextSummary", { enabled: enabledIds.size, total: skills.length }))
+        .setDisabled(true)
+    );
+    menu.addItem((item) =>
+      item
         .setTitle(this.plugin.t("skillsEnabled"))
         .setChecked(this.plugin.settings.skillsEnabled === true)
         .onClick(async () => {
@@ -3678,6 +3994,14 @@ class CortexChatView extends ItemView {
     );
     if (!skills.length) {
       menu.addItem((item) => item.setTitle(this.plugin.t("noSkillsFound", { root: this.plugin.settings.skillsRoot || DEFAULT_SETTINGS.skillsRoot })).setDisabled(true));
+      menu.addItem((item) =>
+        item.setTitle(this.plugin.t("createExampleSkill")).onClick(async () => {
+          await this.plugin.ensureExampleSkill();
+          await this.plugin.saveSettings();
+          new Notice(this.plugin.t("exampleSkillCreated"));
+          this.renderComposerToolbar();
+        })
+      );
     }
     for (const skill of skills) {
       menu.addItem((item) =>
@@ -3866,7 +4190,7 @@ class CortexChatView extends ItemView {
 
   async closeTab(tabId) {
     if (this.tabs.length <= 1) {
-      this.startNewChat();
+      await this.startNewChat();
       return;
     }
     const index = this.tabs.findIndex((tab) => tab.id === tabId);
@@ -4105,11 +4429,12 @@ class CortexChatView extends ItemView {
     }
 
     const references = this.context.references || [];
-    const mentions = references.filter((reference) => reference.source === "mention").length;
-    const linked = references.filter((reference) => reference.source === "outgoing-link").length;
-    const folders = references.filter((reference) => reference.source === "folder").length;
+    const mentions = references.filter((reference) => referenceSourceBucket(reference) === "mentions").length;
+    const linked = references.filter((reference) => referenceSourceBucket(reference) === "links").length;
+    const folders = references.filter((reference) => referenceSourceBucket(reference) === "folders").length;
+    const rag = references.filter((reference) => referenceSourceBucket(reference) === "rag").length;
     const referenceSummary = references.length
-      ? `${this.plugin.t("referenceCount", { count: references.length })} (${mentions} @, ${linked} links, ${folders} folders)`
+      ? `${this.plugin.t("referenceCount", { count: references.length })} (${mentions} @, ${linked} ${this.plugin.t("links").toLowerCase()}, ${folders} ${this.plugin.t("manifestFolders").toLowerCase()}, ${rag} ${this.plugin.t("manifestRag")})`
       : this.plugin.t("noRefs");
     const outgoingSummary = this.context.outgoingLinks?.length
       ? `${this.context.outgoingLinks.length}: ${this.context.outgoingLinks.slice(0, 4).join(", ")}${
@@ -4125,26 +4450,58 @@ class CortexChatView extends ItemView {
 
     if (references.length) {
       const sourcesEl = this.contextEl.createDiv({ cls: "cortex-chat-context-source-list" });
-      for (const reference of references.slice(0, 8)) {
-        const sourceEl = sourcesEl.createDiv({ cls: "cortex-chat-context-source-row" });
-        const textEl = sourceEl.createDiv({ cls: "cortex-chat-context-source-main" });
-        textEl.createSpan({ cls: "cortex-chat-context-source-path", text: reference.path });
-        const kindEl = sourceEl.createSpan({ cls: "cortex-chat-context-source-kind", text: reference.source || "" });
-        const removeEl = sourceEl.createEl("button", {
-          cls: "cortex-chat-context-source-remove",
-          attr: {
-            type: "button",
-            "aria-label": this.plugin.t("removeContextSource"),
-            "data-tooltip": this.plugin.t("removeContextSource")
+      const folderReferences = references.filter((reference) => referenceSourceBucket(reference) === "folders");
+      const nonFolderReferences = references.filter((reference) => referenceSourceBucket(reference) !== "folders");
+      if (folderReferences.length) {
+        const folderGroups = new Map();
+        for (const reference of folderReferences) {
+          const root = reference.folderRoot || reference.token || this.plugin.t("configuredFolderToken");
+          if (!folderGroups.has(root)) {
+            folderGroups.set(root, []);
           }
-        });
-        setIcon(removeEl, "x");
-        removeEl.createSpan({ cls: "cortex-chat-context-source-remove-label", text: this.plugin.t("remove") || this.plugin.t("hide") });
-        removeEl.addEventListener("click", async () => {
-          await this.removeContextReference(reference.path);
-        });
+          folderGroups.get(root).push(reference);
+        }
+        for (const [root, items] of folderGroups.entries()) {
+          const charCount = items.reduce((total, item) => total + Number(item.folderContextChars || String(item.preview || "").length || 0), 0);
+          const groupEl = sourcesEl.createDiv({ cls: "cortex-chat-context-folder-group" });
+          groupEl.createDiv({
+            cls: "cortex-chat-context-folder-title",
+            text: this.plugin.t("folderFilesSummary", { folder: root, count: items.length, chars: charCount })
+          });
+          for (const reference of items) {
+            this.createContextSourceRow(groupEl, reference);
+          }
+        }
+      }
+      const orderedReferences = [
+        ...nonFolderReferences.filter((reference) => referenceSourceBucket(reference) !== "rag"),
+        ...nonFolderReferences.filter((reference) => referenceSourceBucket(reference) === "rag")
+      ];
+      for (const reference of orderedReferences.slice(0, 40)) {
+        this.createContextSourceRow(sourcesEl, reference);
       }
     }
+  }
+
+  createContextSourceRow(parentEl, reference) {
+    const sourceEl = parentEl.createDiv({ cls: "cortex-chat-context-source-row" });
+    const textEl = sourceEl.createDiv({ cls: "cortex-chat-context-source-main" });
+    textEl.createSpan({ cls: "cortex-chat-context-source-path", text: reference.path });
+    const kindLabel = reference.extension || reference.fileType || reference.kind || reference.source || "";
+    sourceEl.createSpan({ cls: "cortex-chat-context-source-kind", text: kindLabel });
+    const removeEl = sourceEl.createEl("button", {
+      cls: "cortex-chat-context-source-remove",
+      attr: {
+        type: "button",
+        "aria-label": this.plugin.t("removeContextSource"),
+        "data-tooltip": this.plugin.t("removeContextSource")
+      }
+    });
+    setIcon(removeEl, "x");
+    removeEl.createSpan({ cls: "cortex-chat-context-source-remove-label", text: this.plugin.t("remove") || this.plugin.t("hide") });
+    removeEl.addEventListener("click", async () => {
+      await this.removeContextReference(reference.path);
+    });
   }
 
   renderMessages() {
@@ -4333,7 +4690,7 @@ class CortexChatView extends ItemView {
       return true;
     }
 
-    if (event.key === "Tab") {
+    if (event.key === "Tab" || event.key === "Enter") {
       event.preventDefault();
       const selected = this.mentionState.items[this.mentionState.selectedIndex];
       if (selected) {
@@ -4359,17 +4716,24 @@ class CortexChatView extends ItemView {
     const value = this.inputEl.value || "";
     const caret = this.inputEl.selectionStart || value.length;
     const beforeCaret = value.slice(0, caret);
-    const match = beforeCaret.match(/(?:^|\s)([@#])([^\s@#,.;:!?()[\]{}]*)$/);
-    if (!match) {
+    const lineStart = Math.max(beforeCaret.lastIndexOf("\n"), beforeCaret.lastIndexOf("\r")) + 1;
+    const currentLine = beforeCaret.slice(lineStart);
+    const triggers = [...currentLine.matchAll(/(^|\s)([@#])/g)];
+    const lastTrigger = triggers[triggers.length - 1];
+    if (!lastTrigger) {
       return null;
     }
 
-    const trigger = match[1] || "@";
-    const query = match[2] || "";
+    const trigger = lastTrigger[2] || "@";
+    const triggerIndex = lineStart + lastTrigger.index + lastTrigger[1].length;
+    const query = beforeCaret.slice(triggerIndex + 1);
+    if (/[@#]/.test(query)) {
+      return null;
+    }
     return {
       type: trigger === "#" ? "folder" : "mention",
-      query,
-      start: caret - query.length - 1,
+      query: normalizeReferenceQuery(query),
+      start: triggerIndex,
       end: caret
     };
   }
@@ -4877,9 +5241,17 @@ class CortexChatSettingTab extends PluginSettingTab {
       .setDesc(t("maxFolderReferencesDesc"))
       .addText((text) =>
         text.setValue(String(this.plugin.settings.maxFolderReferences || DEFAULT_SETTINGS.maxFolderReferences)).onChange(async (value) => {
-          const numeric = Number(value);
-          this.plugin.settings.maxFolderReferences =
-            Number.isFinite(numeric) && numeric >= 3 && numeric <= 80 ? numeric : DEFAULT_SETTINGS.maxFolderReferences;
+          this.plugin.settings.maxFolderReferences = normalizeMaxFolderReferences(value, DEFAULT_SETTINGS.maxFolderReferences);
+          await this.plugin.saveSettings();
+        })
+      );
+
+    new Setting(containerEl)
+      .setName(t("maxFolderContextChars"))
+      .setDesc(t("maxFolderContextCharsDesc"))
+      .addText((text) =>
+        text.setValue(String(this.plugin.settings.maxFolderContextChars || DEFAULT_SETTINGS.maxFolderContextChars)).onChange(async (value) => {
+          this.plugin.settings.maxFolderContextChars = normalizeMaxFolderContextChars(value, DEFAULT_SETTINGS.maxFolderContextChars);
           await this.plugin.saveSettings();
         })
       );
@@ -5331,6 +5703,8 @@ module.exports = class CortexChatPlugin extends Plugin {
     this.settings.contextIncludeMemory = this.settings.contextIncludeMemory !== false;
     this.settings.contextIncludeRecentSessions = this.settings.contextIncludeRecentSessions !== false;
     this.settings.contextIncludeRag = this.settings.contextIncludeRag === true;
+    this.settings.maxFolderReferences = normalizeMaxFolderReferences(this.settings.maxFolderReferences, DEFAULT_SETTINGS.maxFolderReferences);
+    this.settings.maxFolderContextChars = normalizeMaxFolderContextChars(this.settings.maxFolderContextChars, DEFAULT_SETTINGS.maxFolderContextChars);
     this.settings.ragIndexEnabled = this.settings.ragIndexEnabled !== false;
     this.settings.ragIndexMaxNotes = normalizeRagIndexMaxNotes(this.settings.ragIndexMaxNotes, DEFAULT_SETTINGS.ragIndexMaxNotes);
     this.settings.ragCandidateLimit = normalizeRagCandidateLimit(this.settings.ragCandidateLimit, DEFAULT_SETTINGS.ragCandidateLimit);
@@ -5366,6 +5740,8 @@ module.exports = class CortexChatPlugin extends Plugin {
     this.settings.contextIncludeMemory = this.settings.contextIncludeMemory !== false;
     this.settings.contextIncludeRecentSessions = this.settings.contextIncludeRecentSessions !== false;
     this.settings.contextIncludeRag = this.settings.contextIncludeRag === true;
+    this.settings.maxFolderReferences = normalizeMaxFolderReferences(this.settings.maxFolderReferences, DEFAULT_SETTINGS.maxFolderReferences);
+    this.settings.maxFolderContextChars = normalizeMaxFolderContextChars(this.settings.maxFolderContextChars, DEFAULT_SETTINGS.maxFolderContextChars);
     this.settings.ragIndexEnabled = this.settings.ragIndexEnabled !== false;
     this.settings.ragIndexMaxNotes = normalizeRagIndexMaxNotes(this.settings.ragIndexMaxNotes, DEFAULT_SETTINGS.ragIndexMaxNotes);
     this.settings.ragCandidateLimit = normalizeRagCandidateLimit(this.settings.ragCandidateLimit, DEFAULT_SETTINGS.ragCandidateLimit);
@@ -5836,6 +6212,38 @@ module.exports = class CortexChatPlugin extends Plugin {
       });
     }
     return skills.sort((left, right) => left.id.localeCompare(right.id, this.getLanguage(), { sensitivity: "base" }));
+  }
+
+  async ensureExampleSkill() {
+    const root = normalizeSkillsRoot(this.settings.skillsRoot || DEFAULT_SETTINGS.skillsRoot, DEFAULT_SETTINGS.skillsRoot);
+    const folderPath = `${root}/example`;
+    const skillPath = `${folderPath}/SKILL.md`;
+    const existing = this.app.vault.getAbstractFileByPath(skillPath);
+    if (existing) {
+      return existing;
+    }
+    if (!this.app.vault.getAbstractFileByPath(folderPath)) {
+      await this.app.vault.createFolder(folderPath);
+    }
+    const content = [
+      "---",
+      'name: "Example Skill"',
+      'description: "Shows how to give Cortex reusable instructions from inside the vault."',
+      "tags: [example, cortex]",
+      "---",
+      "",
+      "# Example Skill",
+      "",
+      "Use this skill when the user asks for a structured explanation.",
+      "",
+      "Instructions:",
+      "- Be concise and practical.",
+      "- Use the active note and explicit context first.",
+      "- Do not run commands or scripts from this skill.",
+      "- Ask for missing context only when necessary.",
+      ""
+    ].join("\n");
+    return this.app.vault.create(skillPath, content);
   }
 
   async getActiveSkillContext() {
@@ -6421,26 +6829,37 @@ module.exports = class CortexChatPlugin extends Plugin {
   }
 
   getReferenceKind(file) {
-    const extension = String(file?.extension || "").toLowerCase();
+    const extension = extensionForFile(file);
     if (extension === "pdf") {
       return "pdf";
     }
     if (extension === "md") {
       return "markdown";
     }
+    if (isHtmlContextFile(file)) {
+      return "html";
+    }
+    if (isTextContextFile(file)) {
+      return "text";
+    }
     return "file";
   }
 
-  async buildReferenceFromFile(file, source, token = "") {
+  async buildReferenceFromFile(file, source, token = "", options = {}) {
     const kind = this.getReferenceKind(file);
+    const maxChars = Number(options.maxChars || 0);
     let preview = "";
     if (kind === "pdf") {
-      preview = await this.extractPdfPreview(file);
+      preview = await this.extractPdfPreview(file, maxChars || PDF_PREVIEW_MAX_CHARS);
     } else if (kind === "markdown") {
       const content = await this.app.vault.cachedRead(file);
-      preview = truncatePreviewText(content, 2500);
+      preview = truncatePreviewText(content, maxChars || 2500);
+    } else if (kind === "html") {
+      preview = await this.extractHtmlPreview(file, maxChars || 2500);
+    } else if (kind === "text") {
+      preview = await this.extractTextFilePreview(file, maxChars || 2500);
     } else {
-      preview = `[File selected as context. Text extraction is not available for .${file.extension || "file"} files.]`;
+      preview = buildUnsupportedFilePreview(file, this.t.bind(this));
     }
     return {
       token: token || file.basename,
@@ -6449,16 +6868,36 @@ module.exports = class CortexChatPlugin extends Plugin {
       preview,
       source,
       kind,
-      fileType: kind
+      fileType: kind,
+      extension: extensionForFile(file),
+      size: file.stat?.size || 0
     };
   }
 
-  async extractPdfPreview(file) {
+  async extractTextFilePreview(file, maxChars = 2500) {
+    try {
+      const content = await this.app.vault.cachedRead(file);
+      return truncatePreviewText(content, maxChars);
+    } catch (error) {
+      return `[Text file not readable: ${error.message}]`;
+    }
+  }
+
+  async extractHtmlPreview(file, maxChars = 2500) {
+    try {
+      const content = await this.app.vault.cachedRead(file);
+      return truncatePreviewText(htmlToPlainText(content), maxChars);
+    } catch (error) {
+      return `[HTML file not readable: ${error.message}]`;
+    }
+  }
+
+  async extractPdfPreview(file, maxChars = PDF_PREVIEW_MAX_CHARS) {
     try {
       const adapter = this.app.vault.adapter;
       const binary = await adapter.readBinary(file.path);
       const buffer = Buffer.isBuffer(binary) ? binary : Buffer.from(binary);
-      const extracted = this.extractPdfTextFromBuffer(buffer, PDF_PREVIEW_MAX_CHARS);
+      const extracted = this.extractPdfTextFromBuffer(buffer, maxChars);
       if (extracted) {
         return extracted;
       }
@@ -6536,26 +6975,13 @@ module.exports = class CortexChatPlugin extends Plugin {
   }
 
   getMentionCandidates(query) {
-    const normalizedQuery = String(query || "").trim().toLowerCase();
+    const normalizedQuery = normalizeReferenceQuery(query).toLowerCase();
     const files = this.getReferenceableFiles();
 
     return files
       .map((file) => {
-        const basename = file.basename.toLowerCase();
-        const fullPath = file.path.toLowerCase();
-        let score = 4;
-
-        if (!normalizedQuery) {
-          score = 3;
-        } else if (basename === normalizedQuery) {
-          score = 0;
-        } else if (basename.startsWith(normalizedQuery)) {
-          score = 1;
-        } else if (basename.includes(normalizedQuery)) {
-          score = 2;
-        } else if (fullPath.includes(normalizedQuery)) {
-          score = 3;
-        } else {
+        const score = scoreReferenceCandidate(file, normalizedQuery);
+        if (score === null) {
           return null;
         }
 
@@ -6876,7 +7302,11 @@ module.exports = class CortexChatPlugin extends Plugin {
         path: item.path || "",
         title: item.title || "",
         source: item.source || "",
-        reason: item.reason || item.token || ""
+        reason: item.reason || item.token || "",
+        fileType: item.fileType || item.kind || "",
+        extension: item.extension || "",
+        chars: item.folderContextChars || 0,
+        truncated: item.folderContextTruncated === true
       }))
     });
 
@@ -7167,27 +7597,18 @@ module.exports = class CortexChatPlugin extends Plugin {
   }
 
   async resolveAtReferences(text) {
-    const tokens = [...new Set(extractAtTokens(text))];
     const files = this.getReferenceableFiles();
+    const matches = extractAtReferenceMatches(text, files, this.getLanguage());
     const references = [];
     const unresolved = [];
 
-    for (const token of tokens) {
-      const normalizedToken = token.toLowerCase();
-      const exact = files.find((file) => file.basename.toLowerCase() === normalizedToken);
-      const startsWith = files.find((file) => file.basename.toLowerCase().startsWith(normalizedToken));
-      const includes = files.find(
-        (file) =>
-          file.basename.toLowerCase().includes(normalizedToken) || file.path.toLowerCase().includes(normalizedToken)
-      );
-      const match = exact || startsWith || includes;
-
-      if (!match) {
-        unresolved.push(token);
+    for (const match of matches) {
+      if (!match.file) {
+        unresolved.push(match.token);
         continue;
       }
-      const source = this.getReferenceKind(match) === "pdf" ? "pdf-mention" : "mention";
-      references.push(await this.buildReferenceFromFile(match, source, token));
+      const source = this.getReferenceKind(match.file) === "pdf" ? "pdf-mention" : "mention";
+      references.push(await this.buildReferenceFromFile(match.file, source, match.token));
     }
 
     return {
@@ -7205,22 +7626,31 @@ module.exports = class CortexChatPlugin extends Plugin {
 
     const existingPaths = new Set((existingReferences || []).map((reference) => reference.path));
     const files = this.app.vault
-      .getMarkdownFiles()
+      .getFiles()
       .filter((file) => isInsideConfiguredRoot(file.path, roots))
       .filter((file) => !isIgnoredVaultPath(file.path))
+      .filter((file) => !this.isContextPathExcluded(file.path))
       .filter((file) => !existingPaths.has(file.path))
       .sort((left, right) => {
         return left.path.localeCompare(right.path, this.getLanguage(), { sensitivity: "base" });
       })
-      .slice(0, this.settings.maxFolderReferences || DEFAULT_SETTINGS.maxFolderReferences);
+      .slice(0, normalizeMaxFolderReferences(this.settings.maxFolderReferences, DEFAULT_SETTINGS.maxFolderReferences));
 
     const references = [];
     for (const file of files) {
       const root = rootForPath(file.path, roots);
-      references.push(await this.buildReferenceFromFile(file, "folder", root || this.t("configuredFolderToken")));
+      const reference = await this.buildReferenceFromFile(file, "folder", root || this.t("configuredFolderToken"), {
+        maxChars: FOLDER_FILE_PREVIEW_MAX_CHARS
+      });
+      reference.folderRoot = root || this.t("configuredFolderToken");
+      references.push(reference);
     }
 
-    return references;
+    return applyFolderContextBudget(
+      references,
+      normalizeMaxFolderContextChars(this.settings.maxFolderContextChars, DEFAULT_SETTINGS.maxFolderContextChars),
+      this.t.bind(this)
+    );
   }
 
   async sendLocalMessage(threadId, message, context, runOptions, skillContext = null) {
