@@ -2507,7 +2507,7 @@
   display: none;
 }
 
-.cortex-chat-context:has(.cortex-chat-context-title) {
+.cortex-chat-context.is-expanded {
   position: absolute;
   left: calc(10px * var(--cortex-chat-scale));
   right: calc(10px * var(--cortex-chat-scale));
@@ -2524,10 +2524,10 @@
   box-shadow: 0 12px 28px color-mix(in srgb, var(--background-modifier-box-shadow) 14%, transparent);
 }
 
-.cortex-chat-context:has(.cortex-chat-context-title) .cortex-chat-context-title,
-.cortex-chat-context:has(.cortex-chat-context-title) .cortex-chat-context-help,
-.cortex-chat-context:has(.cortex-chat-context-title) .cortex-chat-context-grid,
-.cortex-chat-context:has(.cortex-chat-context-title) .cortex-chat-context-source-list {
+.cortex-chat-context.is-expanded .cortex-chat-context-title,
+.cortex-chat-context.is-expanded .cortex-chat-context-help,
+.cortex-chat-context.is-expanded .cortex-chat-context-grid,
+.cortex-chat-context.is-expanded .cortex-chat-context-source-list {
   display: grid;
 }
 
@@ -2846,11 +2846,11 @@
 
 .cortex-chat-header-right,
 .cortex-chat-diagnostics {
-  display: none !important;
+  display: none;
 }
 
 .cortex-chat-state-dot {
-  background: color-mix(in srgb, var(--cortex-chat-violet) 70%, var(--color-green)) !important;
+  background: color-mix(in srgb, var(--cortex-chat-violet) 70%, var(--color-green));
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--cortex-chat-violet) 11%, transparent);
 }
 
@@ -3000,7 +3000,7 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  padding: 0 !important;
+  padding: 0;
 }
 
 .workspace-leaf-content[data-type="cortex-chat-view"] .view-content > .cortex-chat-view {
@@ -3032,13 +3032,13 @@
   max-height: min(46vh, 420px);
 }
 
-.cortex-chat-context:has(.cortex-chat-context-title) {
+.cortex-chat-context.is-expanded {
   max-height: min(38vh, 320px);
   overflow: hidden;
   grid-template-rows: auto auto minmax(0, auto) minmax(0, 1fr);
 }
 
-.cortex-chat-context:has(.cortex-chat-context-title) .cortex-chat-context-source-list {
+.cortex-chat-context.is-expanded .cortex-chat-context-source-list {
   min-height: 0;
   max-height: min(22vh, 190px);
   overflow-y: auto;
@@ -3046,10 +3046,10 @@
 }
 
 .cortex-chat-context-source-row {
-  grid-template-columns: minmax(0, 1fr) auto auto !important;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: calc(7px * var(--cortex-chat-scale));
-  padding: calc(6px * var(--cortex-chat-scale)) !important;
+  padding: calc(6px * var(--cortex-chat-scale));
 }
 
 .cortex-chat-context-folder-group {
@@ -3096,9 +3096,9 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  width: auto !important;
+  width: auto;
   min-width: calc(68px * var(--cortex-chat-scale));
-  height: calc(28px * var(--cortex-chat-scale)) !important;
+  height: calc(28px * var(--cortex-chat-scale));
   padding: 0 calc(8px * var(--cortex-chat-scale));
   border: 1px solid color-mix(in srgb, var(--color-red) 24%, var(--background-modifier-border));
   border-radius: 999px;

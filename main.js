@@ -4359,6 +4359,7 @@ class CortexChatView extends ItemView {
 
   renderContext() {
     this.contextEl.empty();
+    this.contextEl.classList.toggle("is-expanded", Boolean(this.contextExpanded));
     const summaryEl = this.contextEl.createDiv({ cls: "cortex-chat-context-summary" });
     summaryEl.setAttribute("role", "button");
     summaryEl.setAttribute("tabindex", "0");

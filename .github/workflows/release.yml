@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish, for example 1.5.1"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate version
+        run: |
+          VERSION="$(node -p "require('./manifest.json').version")"
+          TAG="${{ inputs.tag || github.ref_name }}"
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "manifest.json version ($VERSION) must match release tag ($TAG)."
+            exit 1
+          fi
+
+      - name: Build release assets
+        run: |
+          node scripts/bundle-main.js
+          node --check main.js
+          node scripts/prepare-release.js
+          node --check release/main.js
+
+      - name: Publish GitHub release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "Cortex Chat $TAG" --notes "Cortex Chat $TAG"
+          gh release edit "$TAG" --title "Cortex Chat $TAG"
+          gh release upload "$TAG" release/main.js release/manifest.json release/styles.css --clobber
+
+      - name: Attest release assets
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            release/main.js
+            release/manifest.json
+            release/styles.css

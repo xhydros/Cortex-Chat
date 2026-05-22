@@ -59,6 +59,8 @@ Cortex Chat does not include client-side telemetry, ads, or analytics.
 The plugin may access:
 
 - The active Obsidian vault, including notes and user-configured folder roots.
+- Vault file paths via Obsidian enumeration APIs. This is required for `@` references, folder selection, drag-and-drop context, and the optional local related-note index.
+- The system clipboard only when the user explicitly clicks a copy action. Cortex Chat writes assistant responses to the clipboard; it does not read clipboard contents.
 - `_cortex/` inside the vault for shared memory, sessions, candidates, outbox files, and backups.
 - `_cortex/index/vault-keywords.json` for the optional local RAG keyword index.
 - `~/.cortex-chat` for local runtime state that should not sync through Obsidian Sync.
