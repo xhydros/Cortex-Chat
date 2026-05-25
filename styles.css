@@ -3145,6 +3145,58 @@
   pointer-events: none;
 }
 
+.cortex-chat-setup-checks,
+.cortex-chat-setup-log {
+  margin-top: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.cortex-chat-setup-checks h4,
+.cortex-chat-setup-log h4 {
+  margin: 0;
+  font-size: 0.9em;
+}
+
+.cortex-chat-setup-check,
+.cortex-chat-setup-log-line {
+  display: grid;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-secondary);
+  font-size: 0.86em;
+}
+
+.cortex-chat-setup-diagnostics {
+  max-height: 220px;
+  margin: 8px 0 0;
+  padding: 8px;
+  overflow: auto;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-secondary);
+  white-space: pre-wrap;
+  font-size: 0.82em;
+}
+
+.cortex-chat-setup-check {
+  grid-template-columns: minmax(140px, 1fr) minmax(0, 1.2fr);
+}
+
+.cortex-chat-setup-check.is-ok {
+  border-color: color-mix(in srgb, var(--color-green) 35%, var(--background-modifier-border));
+}
+
+.cortex-chat-setup-log-line.is-error {
+  border-color: color-mix(in srgb, var(--color-red) 35%, var(--background-modifier-border));
+}
+
+.cortex-chat-setup-log-line.is-warn {
+  border-color: color-mix(in srgb, var(--color-yellow) 35%, var(--background-modifier-border));
+}
+
 @media (max-width: 420px) {
   .cortex-chat-tab {
     min-width: calc(46px * var(--cortex-chat-scale));

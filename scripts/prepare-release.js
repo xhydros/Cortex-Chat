@@ -18,4 +18,23 @@ for (const fileName of requiredFiles) {
   fs.copyFileSync(path.join(root, fileName), path.join(releaseDir, fileName));
 }
 
+const releaseMain = fs.readFileSync(path.join(releaseDir, "main.js"), "utf8");
+for (const snippet of [
+  "setupDiagnose",
+  "setupNode",
+  "setupNpmOptionalDetail",
+  "localCodexExecSpec",
+  "diagnoseCodexCli",
+  "runLocalCommandDetailed",
+  "codex-node",
+  "isExecSpecCompatibleWithPlatform",
+  "normalizeCodexExecSpec",
+  "setupClearLog",
+  "setupToggleDiagnostics"
+]) {
+  if (!releaseMain.includes(snippet)) {
+    throw new Error(`release/main.js is missing required Codex setup snippet: ${snippet}`);
+  }
+}
+
 console.log(`Prepared Cortex Chat ${manifest.version} release assets in ${releaseDir}`);

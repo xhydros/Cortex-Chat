@@ -353,10 +353,39 @@ const I18N = {
     setupDesktopDesc:
       "This plugin needs Codex CLI installed and authenticated with ChatGPT for full local answers. If Codex is not ready, it can only use local fallback.",
     setupInstall: "1. Install/update Codex",
+    setupDiagnose: "Diagnose Codex",
     setupLogin: "2. Start OAuth",
     setupTest: "3. Test Codex",
     setupRegister: "Register device",
     setupRefresh: "Refresh status",
+    setupRepairFlatpak: "Copy Flatpak repair command",
+    setupToggleDiagnostics: "Show/hide full diagnostics",
+    setupClearLog: "Clear log",
+    setupPlatform: "System: {platform}",
+    setupChecks: "Setup checks",
+    setupLog: "Setup log",
+    setupLogEmpty: "No setup actions yet.",
+    setupNode: "Node.js",
+    setupNpm: "npm",
+    setupNpmOptionalDetail: "Only needed to install/update",
+    setupStrategy: "Strategy: {strategy}",
+    setupDiagnostics: "Diagnostics: {summary}",
+    setupRuntime: "Runtime: {runtime}",
+    setupHostPermission: "Host permission: {status}",
+    setupFlatpakRepair: "Flatpak repair: {command}",
+    setupFlatpakBlocked: "Blocked",
+    setupFlatpakAllowed: "Allowed",
+    setupFlatpakRepairCopied: "Flatpak repair command copied.",
+    setupCli: "Codex CLI",
+    setupOauth: "OAuth",
+    setupExecution: "Execution test",
+    setupDevice: "Device registration",
+    setupBackend: "Backend",
+    setupOk: "OK",
+    setupPending: "Pending",
+    setupFailed: "Failed",
+    setupOptional: "Optional",
+    setupManualCommand: "Manual command: {command}",
     backendStatus: "Backend: {url}",
     status: "Status: {status}",
     version: "Version: {version}",
@@ -704,10 +733,39 @@ const I18N = {
     setupDesktopDesc:
       "Este plugin necesita Codex CLI instalado y autenticado con ChatGPT para dar respuestas locales completas. Si Codex no está listo, solo puede usar respaldo local.",
     setupInstall: "1. Instalar/actualizar Codex",
+    setupDiagnose: "Diagnosticar Codex",
     setupLogin: "2. Iniciar OAuth",
     setupTest: "3. Probar Codex",
     setupRegister: "Registrar dispositivo",
     setupRefresh: "Actualizar estado",
+    setupRepairFlatpak: "Copiar reparación Flatpak",
+    setupToggleDiagnostics: "Mostrar/ocultar diagnóstico completo",
+    setupClearLog: "Limpiar log",
+    setupPlatform: "Sistema: {platform}",
+    setupChecks: "Comprobaciones de configuración",
+    setupLog: "Log de configuración",
+    setupLogEmpty: "Todavía no hay acciones de configuración.",
+    setupNode: "Node.js",
+    setupNpm: "npm",
+    setupNpmOptionalDetail: "Solo necesario para instalar/actualizar",
+    setupStrategy: "Estrategia: {strategy}",
+    setupDiagnostics: "Diagnóstico: {summary}",
+    setupRuntime: "Runtime: {runtime}",
+    setupHostPermission: "Permiso host: {status}",
+    setupFlatpakRepair: "Reparación Flatpak: {command}",
+    setupFlatpakBlocked: "Bloqueado",
+    setupFlatpakAllowed: "Permitido",
+    setupFlatpakRepairCopied: "Comando de reparación Flatpak copiado.",
+    setupCli: "Codex CLI",
+    setupOauth: "OAuth",
+    setupExecution: "Prueba de ejecución",
+    setupDevice: "Registro de dispositivo",
+    setupBackend: "Backend",
+    setupOk: "OK",
+    setupPending: "Pendiente",
+    setupFailed: "Fallido",
+    setupOptional: "Opcional",
+    setupManualCommand: "Comando manual: {command}",
     backendStatus: "Backend: {url}",
     status: "Estado: {status}",
     version: "Versión: {version}",
@@ -1140,11 +1198,22 @@ const LOCAL_SETTING_KEYS = [
   "codexSetupCompleted",
   "codexStatus",
   "codexVersion",
+  "nodeVersion",
+  "npmVersion",
+  "nodeAvailableOk",
+  "npmAvailableOk",
+  "localCodexCommandDisplay",
+  "localCodexExecSpec",
+  "codexDiagnosticSummary",
+  "codexDiagnosticDetail",
+  "flatpakHostBridgeOk",
+  "flatpakHostBridgeBlocked",
   "codexLastCheck",
   "codexInstalledOk",
   "codexLoginOk",
   "codexExecutionOk",
-  "deviceRegisteredOk"
+  "deviceRegisteredOk",
+  "codexSetupLog"
 ];
 
 function buildDefaultSettings(pluginId) {
@@ -1170,11 +1239,22 @@ function buildDefaultSettings(pluginId) {
     codexSetupCompleted: false,
     codexStatus: "",
     codexVersion: "",
+    nodeVersion: "",
+    npmVersion: "",
+    nodeAvailableOk: false,
+    npmAvailableOk: false,
+    localCodexCommandDisplay: "",
+    localCodexExecSpec: null,
+    codexDiagnosticSummary: "",
+    codexDiagnosticDetail: "",
+    flatpakHostBridgeOk: false,
+    flatpakHostBridgeBlocked: false,
     codexLastCheck: "",
     codexInstalledOk: false,
     codexLoginOk: false,
     codexExecutionOk: false,
     deviceRegisteredOk: false,
+    codexSetupLog: [],
     systemPromptSections: getDefaultSystemPromptSections("auto"),
     uiScale: 1,
     uiDensity: "compact",
@@ -1428,8 +1508,9 @@ const {
   sessionBackupRoot
 } = __cortexChatRequire('./lib/agent-store');
 const {
-  buildCodexExecCommand: buildCodexExecCommandSafe,
-  classifyLocalCodexFailure: classifyLocalCodexFailureSafe
+  buildCodexExecArgs: buildCodexExecArgsSafe,
+  classifyLocalCodexFailure: classifyLocalCodexFailureSafe,
+  detectCodexPlatform: detectCodexPlatformSafe
 } = __cortexChatRequire('./lib/codex-cli');
 const {
   CORTEX_SCHEMA_VERSION,
@@ -2009,8 +2090,8 @@ function escapeYamlString(value) {
   return String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
-function escapePowerShellSingleQuoted(value) {
-  return String(value).replace(/'/g, "''");
+function quoteShellArg(value) {
+  return `'${String(value).replace(/'/g, "'\\''")}'`;
 }
 
 function parseLastJsonObject(output) {
@@ -3040,6 +3121,7 @@ class CodexSetupModal extends Modal {
   constructor(app, plugin) {
     super(app);
     this.plugin = plugin;
+    this.showFullDiagnostics = false;
   }
 
   onOpen() {
@@ -3069,6 +3151,13 @@ class CodexSetupModal extends Modal {
       });
       return;
     }
+    void this.plugin.checkCodexStatus({ notify: false, log: false }).finally(() => {
+      this.renderStatus();
+    });
+    this.addAction(actionsEl, this.plugin.t("setupDiagnose"), "codexInstalledOk", async () => {
+      await this.plugin.diagnoseCodexCli({ notify: true, log: true });
+      this.renderStatus();
+    });
     this.addAction(actionsEl, this.plugin.t("setupInstall"), "codexInstalledOk", async () => {
       await this.plugin.installOrUpdateCodex();
       this.renderStatus();
@@ -3089,6 +3178,18 @@ class CodexSetupModal extends Modal {
       await this.plugin.autoCheckCodexSetup({ notify: true });
       this.renderStatus();
     });
+    this.addAction(actionsEl, this.plugin.t("setupRepairFlatpak"), "codexInstalledOk", async () => {
+      await this.plugin.copyFlatpakRepairCommand();
+      this.renderStatus();
+    });
+    this.addAction(actionsEl, this.plugin.t("setupToggleDiagnostics"), "", async () => {
+      this.showFullDiagnostics = !this.showFullDiagnostics;
+      this.renderStatus();
+    });
+    this.addAction(actionsEl, this.plugin.t("setupClearLog"), "", async () => {
+      await this.plugin.clearSetupLog();
+      this.renderStatus();
+    });
   }
 
   renderStatus() {
@@ -3101,18 +3202,78 @@ class CodexSetupModal extends Modal {
       this.statusEl.createDiv({ text: this.plugin.t("backendStatus", { url: this.plugin.settings.backendUrl || "(unset)" }) });
       return;
     }
-    this.statusEl.createDiv({ text: this.plugin.t("status", { status: this.plugin.settings.codexStatus || this.plugin.t("pending") }) });
-    this.statusEl.createDiv({
-      text: this.plugin.t("deviceStateDesc", {
-        state: this.plugin.settings.deviceRegisteredOk ? this.plugin.t("registered") : this.plugin.t("pending"),
-        id: this.plugin.settings.deviceId || this.plugin.t("generatedAutomatically")
-      })
-    });
+    const platform = this.plugin.resolveSetupPlatform();
+    this.statusEl.createDiv({ text: this.plugin.t("setupPlatform", { platform: platform.label }) });
+    const runtime = this.plugin.getLinuxRuntimeKind();
+    this.statusEl.createDiv({ text: this.plugin.t("setupRuntime", { runtime }) });
+    if (runtime === "flatpak") {
+      const hostPermission = this.plugin.settings.flatpakHostBridgeOk ? this.plugin.t("setupFlatpakAllowed") : this.plugin.t("setupFlatpakBlocked");
+      this.statusEl.createDiv({ text: this.plugin.t("setupHostPermission", { status: hostPermission }) });
+      if (!this.plugin.settings.flatpakHostBridgeOk) {
+        this.statusEl.createDiv({ text: this.plugin.t("setupFlatpakRepair", { command: this.plugin.getFlatpakRepairCommand() }) });
+      }
+    }
+    const rawStatus = this.plugin.settings.codexStatus || "";
+    const isLocalBackendPending = /local configuration pending|configuración local pendiente/i.test(rawStatus);
+    const status = isLocalBackendPending && (this.plugin.settings.codexInstalledOk || this.plugin.settings.codexLoginOk)
+      ? this.plugin.t("codexLoginDetected")
+      : rawStatus || this.plugin.t("pending");
+    this.statusEl.createDiv({ text: this.plugin.t("status", { status }) });
+    this.renderSetupChecks();
     if (this.plugin.settings.codexVersion) {
       this.statusEl.createDiv({ text: this.plugin.t("version", { version: this.plugin.settings.codexVersion }) });
     }
+    if (this.plugin.settings.localCodexCommandDisplay) {
+      this.statusEl.createDiv({ text: this.plugin.t("setupStrategy", { strategy: this.plugin.settings.localCodexCommandDisplay }) });
+    }
+    if (this.plugin.settings.codexDiagnosticSummary) {
+      this.statusEl.createDiv({ text: this.plugin.t("setupDiagnostics", { summary: this.plugin.compactSetupText(this.plugin.settings.codexDiagnosticSummary, 360) }) });
+    }
+    if (this.showFullDiagnostics && this.plugin.settings.codexDiagnosticDetail) {
+      this.statusEl.createEl("pre", {
+        cls: "cortex-chat-setup-diagnostics",
+        text: this.plugin.settings.codexDiagnosticDetail
+      });
+    }
     if (this.plugin.settings.codexLastCheck) {
       this.statusEl.createDiv({ text: this.plugin.t("lastCheck", { time: this.plugin.settings.codexLastCheck }) });
+    }
+    this.renderSetupLog();
+  }
+
+  renderSetupChecks() {
+    const checksEl = this.statusEl.createDiv({ cls: "cortex-chat-setup-checks" });
+    checksEl.createEl("h4", { text: this.plugin.t("setupChecks") });
+    const checks = [
+      [this.plugin.t("setupNode"), this.plugin.settings.nodeAvailableOk, this.plugin.settings.nodeVersion || this.plugin.t("setupPending")],
+      [this.plugin.t("setupNpm"), this.plugin.settings.npmAvailableOk, this.plugin.settings.npmVersion || this.plugin.t("setupNpmOptionalDetail")],
+      [this.plugin.t("setupCli"), this.plugin.settings.codexInstalledOk, this.plugin.settings.codexVersion || this.plugin.settings.localCodexCommandDisplay || this.plugin.t("setupPending")],
+      [this.plugin.t("setupOauth"), this.plugin.settings.codexLoginOk, this.plugin.settings.codexLoginOk ? this.plugin.t("codexLoginDetected") : this.plugin.t("setupPending")],
+      [this.plugin.t("setupExecution"), this.plugin.settings.codexExecutionOk, this.plugin.settings.codexExecutionOk ? this.plugin.t("codexOauthOk") : this.plugin.t("setupPending")],
+      [this.plugin.t("setupDevice"), this.plugin.settings.deviceRegisteredOk, this.plugin.settings.deviceRegisteredOk ? this.plugin.t("registered") : this.plugin.t("setupOptional")],
+      [this.plugin.t("setupBackend"), false, this.plugin.t("setupOptional")]
+    ];
+    for (const [label, ok, detail] of checks) {
+      const rowEl = checksEl.createDiv({ cls: `cortex-chat-setup-check ${ok ? "is-ok" : "is-pending"}` });
+      rowEl.createSpan({ text: `${ok ? this.plugin.t("setupOk") : this.plugin.t("setupPending")} · ${label}` });
+      rowEl.createSpan({ text: detail || "" });
+    }
+  }
+
+  renderSetupLog() {
+    const logEl = this.statusEl.createDiv({ cls: "cortex-chat-setup-log" });
+    logEl.createEl("h4", { text: this.plugin.t("setupLog") });
+    const entries = this.plugin.getSetupLogEntries().slice(0, 3);
+    if (!entries.length) {
+      logEl.createDiv({ text: this.plugin.t("setupLogEmpty") });
+      return;
+    }
+    for (const entry of entries) {
+      const lineEl = logEl.createDiv({ cls: `cortex-chat-setup-log-line is-${entry.level || "info"}` });
+      lineEl.createSpan({ text: `${entry.time || ""} · ${entry.action || ""}` });
+      if (entry.detail) {
+        lineEl.createDiv({ text: this.plugin.compactSetupText(entry.detail, 260) });
+      }
     }
   }
 
@@ -3124,9 +3285,12 @@ class CodexSetupModal extends Modal {
       this.renderActionButton(button, this.plugin.t("preparingResponse"), statusKey);
       try {
         await onClick();
+      } catch (error) {
+        new Notice(error.message);
       } finally {
         button.disabled = false;
         this.renderActionButton(button, label, statusKey);
+        this.renderStatus();
       }
     });
   }
@@ -3690,6 +3854,9 @@ class CortexChatView extends ItemView {
     const status = String(this.plugin.settings.codexStatus || "").toLowerCase();
     if (this.plugin.settings.codexSetupCompleted || /probado correctamente|oauth detectado/.test(status)) {
       return { kind: "ready", label: this.plugin.t("ready") };
+    }
+    if (/local configuration pending|configuración local pendiente/.test(status) && (this.plugin.settings.codexInstalledOk || this.plugin.settings.codexLoginOk)) {
+      return { kind: "pending", label: this.plugin.t("pending") };
     }
     if (/error|no disponible|no pudo|no se pudo/.test(status)) {
       return { kind: "error", label: this.plugin.t("error") };
@@ -5666,7 +5833,6 @@ module.exports = class CortexChatPlugin extends Plugin {
         }
         return;
       }
-      await this.registerLocalDeviceIfPossible({ notify: false });
       const status = await this.autoCheckCodexSetup({ notify: false });
       if (!status.ready) {
         new CodexSetupModal(this.app, this).open();
@@ -6104,6 +6270,7 @@ module.exports = class CortexChatPlugin extends Plugin {
   normalizePortableSettings() {
     this.localStatePortabilityReset = false;
     this.normalizeCodexCommand();
+    this.normalizeCodexExecSpec();
     this.normalizeLocalBackendBootstrapScript();
   }
 
@@ -6119,6 +6286,21 @@ module.exports = class CortexChatPlugin extends Plugin {
   normalizeLocalBackendBootstrapScript() {
     if (isForeignWindowsUserPath(this.settings.localBackendBootstrapScript, os?.homedir?.() || "")) {
       this.settings.localBackendBootstrapScript = "";
+      this.localStatePortabilityReset = true;
+    }
+  }
+
+  normalizeCodexExecSpec() {
+    const platform = this.getCodexPlatform();
+    const spec = this.normalizeExecSpec(this.settings.localCodexExecSpec);
+    if (spec && this.isExecSpecCompatibleWithPlatform(spec, platform)) {
+      return;
+    }
+    if (spec || this.settings.localCodexCommandDisplay || this.settings.flatpakHostBridgeOk || this.settings.flatpakHostBridgeBlocked) {
+      this.settings.localCodexExecSpec = null;
+      this.settings.localCodexCommandDisplay = "";
+      this.settings.flatpakHostBridgeOk = false;
+      this.settings.flatpakHostBridgeBlocked = false;
       this.localStatePortabilityReset = true;
     }
   }
@@ -6459,51 +6641,982 @@ module.exports = class CortexChatPlugin extends Plugin {
     new Notice(this.t("responseCopied"));
   }
 
-  async runPowerShell(command, timeout = 120000) {
+  resolveSetupPlatform() {
+    if (Platform?.isWin) {
+      return { id: "windows", label: "Windows", desktop: Boolean(Platform?.isDesktopApp) };
+    }
+    if (Platform?.isMacOS) {
+      return { id: "macos", label: "macOS", desktop: Boolean(Platform?.isDesktopApp) };
+    }
+    if (Platform?.isLinux) {
+      return { id: "linux", label: "Linux", desktop: Boolean(Platform?.isDesktopApp) };
+    }
+    const fallback = detectCodexPlatformSafe(os?.platform ? os.platform() : "");
+    const labels = { windows: "Windows", macos: "macOS", linux: "Linux", unsupported: "Unsupported" };
+    return { id: fallback, label: labels[fallback] || fallback, desktop: !this.isMobileRuntime() };
+  }
+
+  getCodexPlatform() {
+    return this.resolveSetupPlatform().id;
+  }
+
+  getSetupLogEntries() {
+    return Array.isArray(this.settings.codexSetupLog) ? this.settings.codexSetupLog : [];
+  }
+
+  compactSetupText(text, maxLength = 600) {
+    const normalized = String(text || "").replace(/\s+/g, " ").trim();
+    if (!normalized || normalized.length <= maxLength) {
+      return normalized;
+    }
+    return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+  }
+
+  async clearSetupLog() {
+    this.settings.codexSetupLog = [];
+    this.settings.codexSetupLogCleared = true;
+    await this.saveSettings();
+  }
+
+  async appendSetupLog(action, detail = "", level = "info") {
+    const entries = this.getSetupLogEntries();
+    const normalizedAction = String(action || "");
+    const normalizedDetail = this.compactSetupText(detail, 600);
+    const now = Date.now();
+    const duplicate = entries.find((entry) => {
+      const entryTime = Date.parse(entry.time || "");
+      return (
+        entry.action === normalizedAction &&
+        entry.detail === normalizedDetail &&
+        entry.level === level &&
+        Number.isFinite(entryTime) &&
+        now - entryTime < 2000
+      );
+    });
+    if (duplicate) {
+      return;
+    }
+    const entry = {
+      time: new Date(now).toISOString(),
+      level,
+      action: normalizedAction,
+      detail: normalizedDetail
+    };
+    this.settings.codexSetupLog = [entry, ...entries].slice(0, 8);
+    await this.saveSettings();
+  }
+
+  summarizeCommand(command, args = []) {
+    return [command, ...(args || [])].filter(Boolean).join(" ");
+  }
+
+  assertSupportedLocalPlatform() {
     if (!this.canUseLocalCodex()) {
       throw new Error(this.t("localOnlyDesktop"));
     }
-    const { stdout, stderr } = await execFileAsync(
-      "powershell.exe",
-      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command],
-      {
-        cwd: this.getVaultRoot() || undefined,
-        windowsHide: true,
-        timeout,
-        maxBuffer: 1024 * 1024 * 10
-      }
-    );
-    return `${stdout || ""}${stderr ? `\n${stderr}` : ""}`.trim();
+    const platform = this.getCodexPlatform();
+    if (platform === "unsupported") {
+      throw new Error(`Unsupported operating system for local Codex: ${os?.platform ? os.platform() : "unknown"}`);
+    }
+    return platform;
   }
 
-  async runPowerShellScript(script, timeout = 120000) {
-    if (!this.canUseLocalCodex()) {
-      throw new Error("Codex CLI local solo está disponible en escritorio.");
+  getLocalCommandPathEntries() {
+    const entries = [];
+    const addEntry = (entry) => {
+      const value = String(entry || "").trim();
+      if (value && !entries.includes(value)) {
+        entries.push(value);
+      }
+    };
+    for (const directory of String(globalThis?.process?.env?.PATH || "").split(path.delimiter || ":")) {
+      addEntry(directory);
     }
-    const vaultRoot = this.getVaultRoot();
-    const scriptRoot = this.getLocalTempDirectory() || (vaultRoot ? agentPaths(vaultRoot).outboxRoot : os.tmpdir());
-    await fs.mkdir(scriptRoot, { recursive: true });
-    const scriptPath = path.join(scriptRoot, `${makeId("codex_script")}.ps1`);
-    await fs.writeFile(scriptPath, `\uFEFF${script}`, "utf8");
-    try {
-      const { stdout, stderr } = await execFileAsync(
-        "powershell.exe",
-        ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath],
-        {
-          cwd: vaultRoot || undefined,
-          windowsHide: true,
-          timeout,
-          maxBuffer: 1024 * 1024 * 10
-        }
-      );
-      return `${stdout || ""}${stderr ? `\n${stderr}` : ""}`.trim();
-    } finally {
-      try {
-        await fs.unlink(scriptPath);
-      } catch {
-        // Best effort cleanup.
+    for (const home of this.getHomeDirectoryCandidates()) {
+      for (const directory of [
+        path.join(home, ".local", "share", "npm", "bin"),
+        path.join(home, ".local", "bin"),
+        path.join(home, ".npm-global", "bin"),
+        path.join(home, ".npm", "bin"),
+        path.join(home, "node_modules", ".bin")
+      ]) {
+        addEntry(directory);
       }
     }
+    for (const directory of [
+      "/opt/codex-desktop/resources/node-runtime/bin",
+      "/run/host/usr/bin",
+      "/app/bin",
+      "/usr/local/bin",
+      "/usr/bin",
+      "/bin",
+      "/opt/homebrew/bin"
+    ]) {
+      addEntry(directory);
+    }
+    return entries;
+  }
+
+  getLocalCommandEnv() {
+    const env = Object.assign({}, globalThis?.process?.env || {});
+    env.PATH = this.getLocalCommandPathEntries().join(path.delimiter || ":");
+    return env;
+  }
+
+  async runLocalCommandDetailed(command, args = [], options = {}) {
+    this.assertSupportedLocalPlatform();
+    try {
+      const { stdout, stderr } = await execFileAsync(command, args, {
+        cwd: options.cwd || this.getVaultRoot() || undefined,
+        env: options.env || this.getLocalCommandEnv(),
+        windowsHide: true,
+        timeout: options.timeout || 120000,
+        maxBuffer: options.maxBuffer || 1024 * 1024 * 10
+      });
+      const output = `${stdout || ""}${stderr ? `\n${stderr}` : ""}`.trim();
+      return {
+        ok: true,
+        stdout: stdout || "",
+        stderr: stderr || "",
+        output,
+        code: 0,
+        error: ""
+      };
+    } catch (error) {
+      const stdout = error.stdout ? String(error.stdout) : "";
+      const stderr = error.stderr ? String(error.stderr) : "";
+      const output = `${stdout || ""}${stderr ? `\n${stderr}` : ""}`.trim();
+      return {
+        ok: false,
+        stdout,
+        stderr,
+        output,
+        code: Number.isFinite(error.code) ? error.code : null,
+        error: error.message || String(error)
+      };
+    }
+  }
+
+  async runLocalCommandOrThrow(command, args = [], options = {}) {
+    const result = await this.runLocalCommandDetailed(command, args, options);
+    if (!result.ok) {
+      throw new Error(result.output || result.error || `Command failed: ${this.summarizeCommand(command, args)}`);
+    }
+    return result.output;
+  }
+
+  async runLocalCommand(command, args = [], options = {}) {
+    return this.runLocalCommandOrThrow(command, args, options);
+  }
+
+  async runExecSpec(spec, args = [], options = {}) {
+    return this.runLocalCommand(spec.command, [...(spec.argsPrefix || []), ...(spec.args || []), ...(args || [])], options);
+  }
+
+  async runExecSpecDetailed(spec, args = [], options = {}) {
+    return this.runLocalCommandDetailed(spec.command, [...(spec.argsPrefix || []), ...(spec.args || []), ...(args || [])], options);
+  }
+
+  summarizeExecSpec(spec, args = []) {
+    return this.summarizeCommand(spec.command, [...(spec.argsPrefix || []), ...(spec.args || []), ...(args || [])]);
+  }
+
+  shellCommandFromExecSpec(spec, args = []) {
+    return [spec.command, ...(spec.argsPrefix || []), ...(spec.args || []), ...(args || [])].map((part) => quoteShellArg(part)).join(" ");
+  }
+
+  normalizeExecSpec(spec) {
+    if (!spec || typeof spec !== "object" || !spec.command) {
+      return null;
+    }
+    return {
+      command: String(spec.command || ""),
+      argsPrefix: Array.isArray(spec.argsPrefix) ? spec.argsPrefix.map((arg) => String(arg)) : [],
+      args: Array.isArray(spec.args) ? spec.args.map((arg) => String(arg)) : [],
+      display: String(spec.display || this.summarizeCommand(spec.command, [...(spec.argsPrefix || []), ...(spec.args || [])])),
+      kind: String(spec.kind || "command")
+    };
+  }
+
+  isExecSpecCompatibleWithPlatform(spec, platform = this.getCodexPlatform()) {
+    const normalized = this.normalizeExecSpec(spec);
+    if (!normalized) {
+      return false;
+    }
+    const command = normalized.command.toLowerCase();
+    const kind = normalized.kind.toLowerCase();
+    if (kind.startsWith("flatpak-host-")) {
+      return platform === "linux" && this.isFlatpakRuntime();
+    }
+    if (platform === "windows") {
+      if (normalized.argsPrefix.length) {
+        return false;
+      }
+      if (command.includes("/") || command === "osascript" || command === "bash" || command.endsWith("\\bash.exe")) {
+        return false;
+      }
+      if (["codex-shell", "codex-node"].includes(kind)) {
+        return false;
+      }
+      return true;
+    }
+    if (platform === "macos") {
+      if (command.includes("\\") || command === "cmd.exe" || command === "powershell.exe" || command === "powershell") {
+        return false;
+      }
+      return !kind.startsWith("flatpak-host-");
+    }
+    if (platform === "linux") {
+      if (command.includes("\\") || command === "cmd.exe" || command === "powershell.exe" || command === "powershell" || command === "osascript") {
+        return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  persistCodexExecSpec(spec) {
+    const normalized = this.normalizeExecSpec(spec);
+    this.settings.localCodexExecSpec = normalized;
+    this.settings.localCodexCommandDisplay = normalized?.display || "";
+    this.settings.localCodexCommand = normalized?.kind === "codex-wrapper" ? normalized.command : "codex";
+    return normalized;
+  }
+
+  getProcessDiagnosticSnapshot() {
+    const env = globalThis?.process?.env || {};
+    const platform = this.resolveSetupPlatform();
+    const execPath = String(globalThis?.process?.execPath || "");
+    const flatpakInfoExists = Boolean(this.flatpakInfoExists);
+    return {
+      platform: platform.id,
+      platformLabel: platform.label,
+      runtime: this.getLinuxRuntimeKind(),
+      execPath,
+      path: String(env.PATH || ""),
+      home: String(env.HOME || os?.homedir?.() || ""),
+      shell: String(env.SHELL || ""),
+      flatpakId: String(env.FLATPAK_ID || ""),
+      flatpakInfoExists
+    };
+  }
+
+  async refreshRuntimeFacts() {
+    this.flatpakInfoExists = await this.fileExists("/.flatpak-info");
+    return this.flatpakInfoExists;
+  }
+
+  isFlatpakRuntime() {
+    const env = globalThis?.process?.env || {};
+    const execPath = String(globalThis?.process?.execPath || "");
+    return Boolean(env.FLATPAK_ID || execPath.startsWith("/app/") || this.flatpakInfoExists);
+  }
+
+  getLinuxRuntimeKind() {
+    if (this.getCodexPlatform() !== "linux") {
+      return this.getCodexPlatform();
+    }
+    if (this.isFlatpakRuntime()) {
+      return "flatpak";
+    }
+    const env = globalThis?.process?.env || {};
+    if (env.APPIMAGE || String(globalThis?.process?.execPath || "").toLowerCase().includes("appimage")) {
+      return "appimage";
+    }
+    return "native";
+  }
+
+  getFlatpakRepairCommand() {
+    return "flatpak override --user --talk-name=org.freedesktop.Flatpak md.obsidian.Obsidian";
+  }
+
+  isFlatpakHostBridgeBlockedText(value) {
+    return /org\.freedesktop\.Flatpak|--host only works|ServiceUnknown/i.test(String(value || ""));
+  }
+
+  async copyFlatpakRepairCommand() {
+    const command = this.getFlatpakRepairCommand();
+    await navigator.clipboard.writeText(command);
+    await this.appendSetupLog(this.t("setupRepairFlatpak"), command, "info");
+    new Notice(this.t("setupFlatpakRepairCopied"));
+  }
+
+  async fileExists(filePath) {
+    if (!filePath || !fs?.access) {
+      return false;
+    }
+    try {
+      await fs.access(filePath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  addUniquePathDetail(details, filePath, source = "") {
+    const value = String(filePath || "").trim();
+    if (!value || details.some((detail) => detail.path === value)) {
+      return;
+    }
+    details.push({ path: value, source, exists: false });
+  }
+
+  addUniqueHomeCandidate(candidates, homePath) {
+    const value = String(homePath || "").trim().replace(/\/+$/, "");
+    if (!value || value === "/" || candidates.includes(value)) {
+      return;
+    }
+    candidates.push(value);
+  }
+
+  getHomeDirectoryCandidates() {
+    const candidates = [];
+    const env = globalThis?.process?.env || {};
+    const addHome = (value) => this.addUniqueHomeCandidate(candidates, value);
+    addHome(env.HOME);
+    addHome(os?.homedir?.());
+    try {
+      addHome(os?.userInfo?.()?.homedir);
+    } catch {
+      // userInfo can fail in restricted sandboxes.
+    }
+
+    const vaultRoot = this.getVaultRoot() || "";
+    const match = vaultRoot.match(/^\/(home|var\/home)\/([^/]+)/);
+    if (match) {
+      const user = match[2];
+      addHome(`/home/${user}`);
+      addHome(`/var/home/${user}`);
+      addHome(`/run/host/home/${user}`);
+      addHome(`/run/host/var/home/${user}`);
+    }
+
+    for (const home of [...candidates]) {
+      const homeMatch = home.match(/^\/(?:run\/host\/)?(?:var\/)?home\/([^/]+)/);
+      if (homeMatch) {
+        const user = homeMatch[1];
+        addHome(`/home/${user}`);
+        addHome(`/var/home/${user}`);
+        addHome(`/run/host/home/${user}`);
+        addHome(`/run/host/var/home/${user}`);
+      }
+    }
+    return candidates;
+  }
+
+  async updatePathDetailsExistence(details) {
+    for (const detail of details) {
+      detail.exists = await this.fileExists(detail.path);
+    }
+    return details;
+  }
+
+  addUniqueCandidate(candidates, candidate) {
+    const value = String(candidate || "").trim();
+    if (value && !candidates.includes(value)) {
+      candidates.push(value);
+    }
+  }
+
+  addUniqueExecSpec(candidates, spec) {
+    if (!spec?.command) {
+      return;
+    }
+    const display = spec.display || this.summarizeExecSpec(spec);
+    if (!candidates.some((candidate) => candidate.display === display)) {
+      candidates.push(Object.assign({}, spec, { display }));
+    }
+  }
+
+  async getBundledNodeCommand() {
+    const bundled = "/opt/codex-desktop/resources/node-runtime/bin/node";
+    if (await this.fileExists(bundled)) {
+      return bundled;
+    }
+    return "";
+  }
+
+  async getFlatpakSpawnCommand() {
+    for (const candidate of ["/usr/bin/flatpak-spawn", "/bin/flatpak-spawn", "/app/bin/flatpak-spawn", "flatpak-spawn"]) {
+      if (candidate === "flatpak-spawn" || (await this.fileExists(candidate))) {
+        return candidate;
+      }
+    }
+    return "";
+  }
+
+  async getNpmCliPath() {
+    const bundled = "/opt/codex-desktop/resources/node-runtime/lib/node_modules/npm/bin/npm-cli.js";
+    if (await this.fileExists(bundled)) {
+      return bundled;
+    }
+    return "";
+  }
+
+  async getCodexWrapperCandidateDetails() {
+    const details = [];
+    this.addUniquePathDetail(details, "codex", "portable");
+    for (const home of this.getHomeDirectoryCandidates()) {
+      for (const wrapper of [
+        path.join(home, ".local", "share", "npm", "bin", "codex"),
+        path.join(home, ".local", "bin", "codex"),
+        path.join(home, ".npm-global", "bin", "codex"),
+        path.join(home, ".npm", "bin", "codex")
+      ]) {
+        this.addUniquePathDetail(details, wrapper, `home ${home}`);
+      }
+    }
+    for (const directory of this.getLocalCommandPathEntries()) {
+      this.addUniquePathDetail(details, path.join(directory, "codex"), `PATH ${directory}`);
+    }
+    return this.updatePathDetailsExistence(details);
+  }
+
+  async getCodexCliScriptCandidateDetails() {
+    const details = [];
+    for (const home of this.getHomeDirectoryCandidates()) {
+      for (const scriptPath of [
+        path.join(home, ".local", "share", "npm", "lib", "node_modules", "@openai", "codex", "bin", "codex.js"),
+        path.join(home, ".npm-global", "lib", "node_modules", "@openai", "codex", "bin", "codex.js"),
+        path.join(home, ".npm", "lib", "node_modules", "@openai", "codex", "bin", "codex.js"),
+        path.join(home, "node_modules", "@openai", "codex", "bin", "codex.js")
+      ]) {
+        this.addUniquePathDetail(details, scriptPath, `home ${home}`);
+      }
+    }
+    for (const scriptPath of [
+      "/usr/local/lib/node_modules/@openai/codex/bin/codex.js",
+      "/app/lib/node_modules/@openai/codex/bin/codex.js",
+      "/run/host/usr/local/lib/node_modules/@openai/codex/bin/codex.js",
+      "/opt/homebrew/lib/node_modules/@openai/codex/bin/codex.js"
+    ]) {
+      this.addUniquePathDetail(details, scriptPath, "standard");
+    }
+
+    for (const wrapper of await this.getCodexWrapperCandidateDetails()) {
+      if (wrapper.path === "codex" || !wrapper.exists) {
+        continue;
+      }
+      try {
+        const realPath = await fs.realpath(wrapper.path);
+        this.addUniquePathDetail(details, realPath, `realpath ${wrapper.path}`);
+      } catch {
+        // Symlink resolution is best effort.
+      }
+      try {
+        const linkTarget = await fs.readlink(wrapper.path);
+        const resolvedTarget = path.isAbsolute(linkTarget) ? linkTarget : path.resolve(path.dirname(wrapper.path), linkTarget);
+        this.addUniquePathDetail(details, resolvedTarget, `readlink ${wrapper.path}`);
+      } catch {
+        // readlink only works for symlinks.
+      }
+      const wrapperDir = path.dirname(wrapper.path);
+      const npmPrefix = path.dirname(wrapperDir);
+      this.addUniquePathDetail(
+        details,
+        path.join(npmPrefix, "lib", "node_modules", "@openai", "codex", "bin", "codex.js"),
+        `derived ${wrapper.path}`
+      );
+    }
+
+    for (const npmSpec of await this.getNpmExecSpecs()) {
+      const result = await this.runExecSpecDetailed(npmSpec, ["root", "-g"], { timeout: 10000 });
+      if (result.ok && result.output.trim()) {
+        this.addUniquePathDetail(
+          details,
+          path.join(result.output.trim(), "@openai", "codex", "bin", "codex.js"),
+          `npm root -g ${npmSpec.display}`
+        );
+      }
+    }
+    return this.updatePathDetailsExistence(details);
+  }
+
+  async getCodexCliScriptCandidates() {
+    return (await this.getCodexCliScriptCandidateDetails())
+      .filter((detail) => detail.exists)
+      .map((detail) => detail.path);
+  }
+
+  getPathCommandCandidates(commandName) {
+    const candidates = [];
+    for (const directory of this.getLocalCommandPathEntries()) {
+      if (directory) {
+        this.addUniqueCandidate(candidates, path.join(directory, commandName));
+      }
+    }
+    return candidates;
+  }
+
+  async resolveLinuxCommandCandidates(commandName) {
+    const candidates = [];
+    this.addUniqueCandidate(candidates, commandName);
+    for (const pathCandidate of this.getPathCommandCandidates(commandName)) {
+      this.addUniqueCandidate(candidates, pathCandidate);
+    }
+
+    const npmCandidates = commandName === "npm" ? candidates : await this.resolveLinuxCommandCandidates("npm");
+    if (commandName !== "npm") {
+      for (const npmCommand of npmCandidates) {
+        try {
+          const prefix = (await this.runLocalCommand(npmCommand, ["prefix", "-g"], { timeout: 10000 })).trim();
+          if (prefix) {
+            this.addUniqueCandidate(candidates, path.join(prefix, "bin", commandName));
+          }
+        } catch {
+          // npm prefix is a best-effort hint.
+        }
+      }
+    }
+
+    const existing = [];
+    for (const candidate of candidates) {
+      if (candidate === commandName || (await this.fileExists(candidate))) {
+        this.addUniqueCandidate(existing, candidate);
+      }
+    }
+    return existing;
+  }
+
+  async getCodexCommandCandidates(configuredCommand = "") {
+    const candidates = [];
+    const addCandidate = (candidate) => this.addUniqueCandidate(candidates, candidate);
+    addCandidate(configuredCommand || "codex");
+    if (!isPortableCodexCommand(configuredCommand)) {
+      addCandidate("codex");
+    }
+    const platform = this.getCodexPlatform();
+    const possiblePaths =
+      platform === "linux"
+        ? (await this.getCodexWrapperCandidateDetails()).filter((detail) => detail.path === "codex" || detail.exists).map((detail) => detail.path)
+        : platform === "windows"
+        ? []
+        : [
+            ...this.getHomeDirectoryCandidates().flatMap((home) => [
+              path.join(home, ".local", "share", "npm", "bin", "codex"),
+              path.join(home, ".local", "bin", "codex"),
+              path.join(home, ".npm-global", "bin", "codex"),
+              path.join(home, ".npm", "bin", "codex"),
+              path.join(home, "node_modules", ".bin", "codex")
+            ]),
+            "/usr/local/bin/codex",
+            "/opt/homebrew/bin/codex"
+          ];
+    for (const candidatePath of possiblePaths) {
+      if (candidatePath === "codex" || (await this.fileExists(candidatePath))) {
+        addCandidate(candidatePath);
+      }
+    }
+    return candidates;
+  }
+
+  async getNodeExecSpecs() {
+    const specs = [];
+    const addNodeSpec = async (command) => {
+      if (command === "node" || (await this.fileExists(command))) {
+        this.addUniqueExecSpec(specs, { command, args: [], display: command, kind: "node" });
+      }
+    };
+    await addNodeSpec("node");
+    for (const command of [
+      "/usr/bin/node",
+      "/app/bin/node",
+      "/run/host/usr/bin/node",
+      "/usr/local/bin/node",
+      "/bin/node",
+      "/opt/codex-desktop/resources/node-runtime/bin/node",
+      "/opt/homebrew/bin/node"
+    ]) {
+      await addNodeSpec(command);
+    }
+    for (const candidate of await this.resolveLinuxCommandCandidates("node")) {
+      await addNodeSpec(candidate);
+    }
+    return specs;
+  }
+
+  async getNpmExecSpecs() {
+    const specs = [];
+    const platform = this.getCodexPlatform();
+    if (platform === "windows") {
+      this.addUniqueExecSpec(specs, { command: "cmd.exe", args: ["/d", "/s", "/c", "npm.cmd"], display: "npm.cmd", kind: "npm" });
+      this.addUniqueExecSpec(specs, { command: "cmd.exe", args: ["/d", "/s", "/c", "npm"], display: "npm", kind: "npm" });
+      return specs;
+    }
+    for (const npmCommand of await this.resolveLinuxCommandCandidates("npm")) {
+      this.addUniqueExecSpec(specs, { command: npmCommand, args: [], display: npmCommand, kind: "npm" });
+    }
+    const node = await this.getBundledNodeCommand();
+    const npmCli = await this.getNpmCliPath();
+    if (node && npmCli) {
+      this.addUniqueExecSpec(specs, { command: node, args: [npmCli], display: `${node} ${npmCli}`, kind: "npm-node" });
+    }
+    return specs;
+  }
+
+  async resolveNpmExecSpec() {
+    let lastError = null;
+    for (const spec of await this.getNpmExecSpecs()) {
+      try {
+        const version = await this.runExecSpec(spec, ["--version"], { timeout: 10000 });
+        this.settings.npmAvailableOk = true;
+        this.settings.npmVersion = version.trim();
+        return spec;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    this.settings.npmAvailableOk = false;
+    this.settings.npmVersion = "";
+    if (lastError) {
+      return null;
+    }
+    return null;
+  }
+
+  async resolveNodeExecSpec() {
+    for (const spec of await this.getNodeExecSpecs()) {
+      try {
+        const version = await this.runExecSpec(spec, ["--version"], { timeout: 10000 });
+        this.settings.nodeAvailableOk = true;
+        this.settings.nodeVersion = version.trim();
+        return spec;
+      } catch {
+        // Keep looking for a usable Node.js command.
+      }
+    }
+    this.settings.nodeAvailableOk = false;
+    this.settings.nodeVersion = "";
+    return null;
+  }
+
+  async getCodexExecSpecs(configuredCommand = "") {
+    const specs = [];
+    const platform = this.getCodexPlatform();
+    const saved = this.normalizeExecSpec(this.settings.localCodexExecSpec);
+    if (saved && this.isExecSpecCompatibleWithPlatform(saved, platform)) {
+      this.addUniqueExecSpec(specs, saved);
+    }
+
+    await this.refreshRuntimeFacts();
+    if (this.isFlatpakRuntime()) {
+      const flatpakSpawn = await this.getFlatpakSpawnCommand();
+      if (flatpakSpawn) {
+        this.addUniqueExecSpec(specs, {
+          command: flatpakSpawn,
+          argsPrefix: ["--host", "codex"],
+          display: `${flatpakSpawn} --host codex`,
+          kind: "flatpak-host-codex"
+        });
+        for (const wrapper of await this.getCodexWrapperCandidateDetails()) {
+          if (wrapper.path !== "codex" && wrapper.exists) {
+            this.addUniqueExecSpec(specs, {
+              command: flatpakSpawn,
+              argsPrefix: ["--host", wrapper.path],
+              display: `${flatpakSpawn} --host ${wrapper.path}`,
+              kind: "flatpak-host-wrapper"
+            });
+          }
+        }
+        for (const scriptPath of (await this.getCodexCliScriptCandidateDetails()).filter((detail) => detail.exists).map((detail) => detail.path)) {
+          this.addUniqueExecSpec(specs, {
+            command: flatpakSpawn,
+            argsPrefix: ["--host", "node", scriptPath],
+            display: `${flatpakSpawn} --host node ${scriptPath}`,
+            kind: "flatpak-host-node"
+          });
+        }
+      }
+    }
+
+    const nodeCommands = [];
+    const addNodeCommand = async (candidate) => {
+      if (candidate && !nodeCommands.includes(candidate) && (await this.fileExists(candidate))) {
+        nodeCommands.push(candidate);
+      }
+    };
+    for (const spec of await this.getNodeExecSpecs()) {
+      if (spec.command !== "node") {
+        await addNodeCommand(spec.command);
+      }
+    }
+    await addNodeCommand("/usr/bin/node");
+    await addNodeCommand("/app/bin/node");
+    await addNodeCommand("/run/host/usr/bin/node");
+    await addNodeCommand("/usr/local/bin/node");
+    await addNodeCommand(await this.getBundledNodeCommand());
+    await addNodeCommand("/opt/homebrew/bin/node");
+    for (const candidate of await this.resolveLinuxCommandCandidates("node")) {
+      if (candidate !== "node") {
+        await addNodeCommand(candidate);
+      }
+    }
+
+    for (const scriptPath of await this.getCodexCliScriptCandidates()) {
+      for (const nodeCommand of nodeCommands) {
+        this.addUniqueExecSpec(specs, {
+          command: nodeCommand,
+          args: [scriptPath],
+          display: `${nodeCommand} ${scriptPath}`,
+          kind: "codex-node"
+        });
+      }
+    }
+
+    for (const candidate of await this.getCodexCommandCandidates(configuredCommand)) {
+      if (candidate !== "codex") {
+        this.addUniqueExecSpec(specs, { command: candidate, args: [], display: candidate, kind: "codex-wrapper" });
+      }
+    }
+
+    if (await this.fileExists("/bin/bash")) {
+      const shellPath = [
+        ...this.getHomeDirectoryCandidates().map((home) => path.join(home, ".local", "share", "npm", "bin")),
+        "/usr/bin",
+        "/bin",
+        "/app/bin",
+        "/run/host/usr/bin"
+      ].filter(Boolean).filter((value, index, values) => values.indexOf(value) === index).join(":");
+      this.addUniqueExecSpec(specs, {
+        command: "/bin/bash",
+        args: ["-lc", `PATH=${quoteShellArg(shellPath)}:$PATH codex "$@"`, "codex"],
+        display: "/bin/bash -lc codex",
+        kind: "codex-shell"
+      });
+    }
+    return specs;
+  }
+
+  async diagnoseCodexCli(options = {}) {
+    const notify = options.notify === true;
+    const shouldLog = options.log === true;
+    this.assertSupportedLocalPlatform();
+    await this.refreshRuntimeFacts();
+    await this.resolveNodeExecSpec();
+    await this.resolveNpmExecSpec();
+    const snapshot = this.getProcessDiagnosticSnapshot();
+    const flatpakSpawn = await this.getFlatpakSpawnCommand();
+    const scriptDetails = await this.getCodexCliScriptCandidateDetails();
+    const wrapperDetails = await this.getCodexWrapperCandidateDetails();
+    const nodeSpecs = await this.getNodeExecSpecs();
+    const scriptsFound = scriptDetails.filter((detail) => detail.exists).length;
+    const wrappersFound = wrapperDetails.filter((detail) => detail.path !== "codex" && detail.exists).length;
+    const nodesFound = nodeSpecs.filter((spec) => spec.command !== "node").length;
+    const candidates = await this.getCodexExecSpecs(options.configuredCommand || this.settings.localCodexCommand || "codex");
+    const traces = [];
+    let winner = null;
+    let version = "";
+
+    for (const spec of candidates) {
+      const normalized = this.normalizeExecSpec(spec);
+      if (!normalized) {
+        continue;
+      }
+      const trace = {
+        display: normalized.display,
+        kind: normalized.kind,
+        command: normalized.command,
+        args: normalized.args,
+        exists: normalized.command.includes("/") ? await this.fileExists(normalized.command) : null,
+        ok: false,
+        code: null,
+        stdout: "",
+        stderr: "",
+        error: ""
+      };
+      const result = await this.runExecSpecDetailed(normalized, ["--version"], { timeout: 30000 });
+      trace.ok = result.ok;
+      trace.code = result.code;
+      trace.stdout = result.stdout.trim();
+      trace.stderr = result.stderr.trim();
+      trace.error = result.error;
+      traces.push(trace);
+      if (result.ok) {
+        const output = result.output;
+        version = output
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .find((line) => /codex/i.test(line)) || output.trim();
+        winner = normalized;
+        break;
+      }
+    }
+
+    const hostBridgeTrace = flatpakSpawn
+      ? await this.runLocalCommandDetailed(flatpakSpawn, ["--host", "sh", "-lc", "command -v codex && codex --version"], { timeout: 30000 })
+      : { ok: false, output: "", error: "flatpak-spawn not found" };
+    const winnerUsesFlatpakHost = Boolean(winner?.kind && String(winner.kind).startsWith("flatpak-host-"));
+    const hostBridgeBlocked = this.isFlatpakRuntime() && flatpakSpawn && !winnerUsesFlatpakHost && this.isFlatpakHostBridgeBlockedText(`${hostBridgeTrace.error}\n${hostBridgeTrace.stderr}\n${hostBridgeTrace.output}`);
+    this.settings.flatpakHostBridgeOk = Boolean(hostBridgeTrace.ok || winnerUsesFlatpakHost);
+    this.settings.flatpakHostBridgeBlocked = Boolean(hostBridgeBlocked);
+    const baseCounts = `runtime: ${snapshot.runtime}; flatpak-info=${snapshot.flatpakInfoExists}; flatpak-spawn=${flatpakSpawn || "missing"}; codex via host=${hostBridgeTrace.ok ? "ok" : "fail"}; scripts encontrados: ${scriptsFound}/${scriptDetails.length}; nodes encontrados: ${nodesFound}/${nodeSpecs.length}; estrategias probadas: ${traces.length}`;
+    const noScriptMessage = wrappersFound > 0 && scriptsFound === 0
+      ? "Codex wrapper encontrado, pero no se pudo resolver codex.js desde el sandbox de Obsidian."
+      : "";
+    const summary = winner
+      ? `OK ${winner.display} (${version}); ${baseCounts}`
+      : `${hostBridgeBlocked ? `Obsidian Flatpak bloquea la ejecución de Codex del host. Ejecuta: ${this.getFlatpakRepairCommand()} y reinicia Obsidian.` : this.isFlatpakRuntime() && !flatpakSpawn ? "Obsidian Flatpak no puede ejecutar Codex del host. Usa la AppImage/deb de Obsidian o habilita flatpak-spawn/host access." : noScriptMessage || "Sin estrategia válida."} ${baseCounts}. Último error: ${traces[traces.length - 1]?.error || hostBridgeTrace.error || "sin detalle"}`;
+    const compactSummary = winner
+      ? `OK ${winner.display} (${version}); runtime=${snapshot.runtime}; permiso host=${this.settings.flatpakHostBridgeOk ? "OK" : "pendiente"}; estrategias=${traces.length}`
+      : this.compactSetupText(summary, 360);
+    this.settings.codexDiagnosticSummary = compactSummary;
+    this.settings.codexDiagnosticDetail = [
+      summary,
+      `HOME=${snapshot.home || "(empty)"}`,
+      `os.homedir=${os?.homedir?.() || "(empty)"}`,
+      `process.execPath=${snapshot.execPath || "(empty)"}`,
+      `PATH=${snapshot.path || "(empty)"}`
+    ].join("\n");
+    this.settings.codexLastCheck = new Date().toISOString();
+    if (winner) {
+      this.persistCodexExecSpec(winner);
+      this.settings.codexVersion = version;
+      this.settings.codexStatus = `${this.t("codexFound")} ${winner.display}`;
+      this.settings.codexInstalledOk = true;
+      this.settings.codexLoginOk = Boolean(this.settings.codexLoginOk);
+    } else {
+      this.settings.codexInstalledOk = false;
+      this.settings.codexLoginOk = false;
+      this.settings.codexExecutionOk = false;
+      this.settings.codexSetupCompleted = false;
+      this.settings.codexStatus = hostBridgeBlocked
+        ? "Obsidian Flatpak bloquea la ejecución de Codex del host."
+        : this.isFlatpakRuntime() && !flatpakSpawn
+        ? "Codex instalado, pero Obsidian Flatpak no puede ejecutar Node/Codex del host."
+        : noScriptMessage || `Codex no disponible: ${summary}`;
+    }
+    await this.saveSettings();
+    if (shouldLog) {
+      const compactTrace = traces
+        .slice(0, 8)
+        .map((trace) => `${trace.ok ? "OK" : "FAIL"} ${trace.display} exists=${trace.exists}${trace.ok ? "" : ` => ${trace.error || trace.stderr || "error"}`}`)
+        .join("\n");
+      const scriptTrace = scriptDetails
+        .slice(0, 12)
+        .map((detail) => `${detail.exists ? "FOUND" : "MISS"} script ${detail.path} (${detail.source})`)
+        .join("\n");
+      const nodeTrace = nodeSpecs.map((spec) => `NODE ${spec.display}`).join("\n");
+      const runtimeTrace = [
+        `runtime=${snapshot.runtime}`,
+        `process.execPath=${snapshot.execPath}`,
+        `HOME=${snapshot.home}`,
+        `PATH=${snapshot.path}`,
+        `/.flatpak-info exists=${snapshot.flatpakInfoExists}`,
+        `flatpak-spawn=${flatpakSpawn || "missing"}`,
+        `codex via host=${hostBridgeTrace.ok ? hostBridgeTrace.output : hostBridgeTrace.error}`
+      ].join("\n");
+      const repairTrace = hostBridgeBlocked ? `Flatpak host bridge blocked. Run: ${this.getFlatpakRepairCommand()}` : "";
+      this.settings.codexDiagnosticDetail = `${this.settings.codexDiagnosticDetail}\n${repairTrace}\n${runtimeTrace}\n${scriptTrace}\n${nodeTrace}\n${compactTrace}`.trim();
+      await this.appendSetupLog(this.t("setupDiagnose"), compactSummary, winner ? "ok" : "error");
+    }
+    if (notify) {
+      new Notice(summary);
+    }
+    return { ok: Boolean(winner), spec: winner, version, traces, snapshot, summary };
+  }
+
+  async resolveCodexExecSpec(configuredCommand = "") {
+    const diagnostic = await this.diagnoseCodexCli({ notify: false, log: false, configuredCommand });
+    if (diagnostic?.ok) {
+      return { spec: diagnostic.spec, version: diagnostic.version, traces: diagnostic.traces };
+    }
+    throw new Error(diagnostic?.summary || "Codex command not found.");
+  }
+
+  async getNpmInstallCandidates() {
+    const candidates = [];
+    for (const spec of await this.getNpmExecSpecs()) {
+      try {
+        await this.runExecSpec(spec, ["--version"], { timeout: 10000 });
+        candidates.push([spec, ["install", "-g", "@openai/codex"]]);
+      } catch {
+        // Keep looking for a usable npm.
+      }
+    }
+    return candidates;
+  }
+
+  async runLocalCommandDetached(command, args = [], options = {}) {
+    this.assertSupportedLocalPlatform();
+    if (!childProcess?.spawn) {
+      throw new Error(this.t("localOnlyDesktop"));
+    }
+    await new Promise((resolve, reject) => {
+      const child = childProcess.spawn(command, args, {
+        cwd: options.cwd || this.getVaultRoot() || undefined,
+        env: this.getLocalCommandEnv(),
+        detached: true,
+        stdio: "ignore",
+        windowsHide: false
+      });
+      child.once("error", reject);
+      child.once("spawn", () => {
+        child.unref();
+        resolve();
+      });
+    });
+  }
+
+  async runCodexExec(options = {}, timeout = 180000) {
+    this.assertSupportedLocalPlatform();
+    if (!childProcess?.spawn) {
+      throw new Error(this.t("localOnlyDesktop"));
+    }
+    const prompt = await fs.readFile(options.promptPath, "utf8");
+    const codexSpec = options.codexSpec || (await this.resolveCodexExecSpec(options.codexCommand || this.settings.localCodexCommand || "codex")).spec;
+    const args = buildCodexExecArgsSafe(options);
+    const childArgs = [...(codexSpec.argsPrefix || []), ...(codexSpec.args || []), ...args];
+    return new Promise((resolve, reject) => {
+      let stdout = "";
+      let stderr = "";
+      let settled = false;
+      const child = childProcess.spawn(codexSpec.command, childArgs, {
+        cwd: options.vaultRoot || this.getVaultRoot() || undefined,
+        env: this.getLocalCommandEnv(),
+        windowsHide: true,
+        stdio: ["pipe", "pipe", "pipe"]
+      });
+      const timer = setTimeout(() => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        child.kill();
+        reject(new Error("Codex local timed out."));
+      }, timeout);
+      child.stdout?.on("data", (chunk) => {
+        stdout += chunk.toString("utf8");
+      });
+      child.stderr?.on("data", (chunk) => {
+        stderr += chunk.toString("utf8");
+      });
+      child.on("error", (error) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      });
+      child.on("close", (code) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        clearTimeout(timer);
+        const output = `${stdout || ""}${stderr ? `\n${stderr}` : ""}`.trim();
+        if (code === 0) {
+          resolve(output);
+        } else {
+          const error = new Error(output || `Codex exited with code ${code}`);
+          error.stdout = stdout;
+          error.stderr = stderr;
+          reject(error);
+        }
+      });
+      child.stdin.end(prompt);
+    });
   }
 
   async autoCheckCodexSetup(options = {}) {
@@ -6512,7 +7625,6 @@ module.exports = class CortexChatPlugin extends Plugin {
       return { ready, installed: false, login: ready, execution: ready };
     }
     const notify = Boolean(options.notify);
-    await this.registerLocalDeviceIfPossible({ notify: false });
     const install = await this.checkCodexStatus({ notify: false });
     if (!install) {
       if (notify) {
@@ -6531,48 +7643,39 @@ module.exports = class CortexChatPlugin extends Plugin {
       return { ready: false, installed: true, login: false, execution: false };
     }
 
-    const execution = await this.testCodexExecution({ notify: false });
-    const ready = Boolean(execution);
+    const ready = Boolean(this.settings.codexExecutionOk);
     this.settings.codexSetupCompleted = ready;
     if (ready) {
       this.settings.codexStatus = this.t("codexOauthOk");
     }
     await this.saveSettings();
     if (notify) {
-      new Notice(ready ? this.t("codexReady") : this.t("codexExecutionFailed"));
+      new Notice(ready ? this.t("codexReady") : this.t("codexLoginDetected"));
     }
     return { ready, installed: true, login: true, execution: ready };
   }
 
   async checkCodexStatus(options = {}) {
     const notify = options.notify !== false;
+    const shouldLog = options.log !== false;
     try {
-      if (!this.canUseLocalCodex()) {
-        throw new Error(this.t("localOnlyDesktop"));
-      }
+      this.assertSupportedLocalPlatform();
       this.normalizeCodexCommand();
+      await this.resolveNodeExecSpec();
+      await this.resolveNpmExecSpec();
       const configuredCodexCommand = this.settings.localCodexCommand || "codex";
-      const codexCommand = escapePowerShellSingleQuoted(configuredCodexCommand);
-      const command = [
-        "$ErrorActionPreference = 'Stop'",
-        `$target = '${codexCommand}'`,
-        "$cmd = Get-Command $target -ErrorAction SilentlyContinue",
-        "$path = if ($cmd) { $cmd.Source } elseif ([System.IO.Path]::IsPathRooted($target) -and -not (Test-Path -LiteralPath $target)) { (Get-Command codex -ErrorAction Stop).Source } else { $target }",
-        "$versionOutput = (& $path --version) 2>&1",
-        "$versionText = ($versionOutput | Where-Object { $_ -match 'codex-cli\\s+\\S+' } | Select-Object -Last 1)",
-        "$version = if ($versionText) { $versionText } else { ($versionOutput -join ' ') }",
-        "[pscustomobject]@{ Path = $path; Version = $version } | ConvertTo-Json -Compress"
-      ].join("; ");
-      const output = await this.runPowerShell(command, 30000);
-      const parsed = parseLastJsonObject(output);
-      if (parsed.Path && !isPortableCodexCommand(configuredCodexCommand)) {
-        this.settings.localCodexCommand = parsed.Path;
-      }
-      this.settings.codexVersion = parsed.Version || "";
-      this.settings.codexStatus = `${this.t("codexFound")} ${parsed.Path || "PATH"}`;
+      const parsed = await this.resolveCodexExecSpec(configuredCodexCommand);
+      const spec = parsed.spec;
+      this.settings.localCodexCommand = spec.kind === "codex-node" ? "codex" : spec.command;
+      this.settings.localCodexCommandDisplay = spec.display || this.summarizeExecSpec(spec);
+      this.settings.codexVersion = parsed.version || "";
+      this.settings.codexStatus = `${this.t("codexFound")} ${this.settings.localCodexCommandDisplay || "PATH"}`;
       this.settings.codexLastCheck = new Date().toISOString();
       this.settings.codexInstalledOk = true;
       await this.saveSettings();
+      if (shouldLog) {
+        await this.appendSetupLog(this.t("setupCli"), `${this.t("codexFound")} ${this.settings.localCodexCommandDisplay || "PATH"} ${parsed.version || ""}`, "ok");
+      }
       if (notify) {
         new Notice(this.t("codexFound"));
       }
@@ -6585,6 +7688,9 @@ module.exports = class CortexChatPlugin extends Plugin {
       this.settings.codexExecutionOk = false;
       this.settings.codexSetupCompleted = false;
       await this.saveSettings();
+      if (shouldLog) {
+        await this.appendSetupLog(this.t("setupCli"), error.message, "error");
+      }
       if (notify) {
         new Notice(this.t("codexNotReady"));
       }
@@ -6595,11 +7701,9 @@ module.exports = class CortexChatPlugin extends Plugin {
   async checkCodexLoginStatus(options = {}) {
     const notify = options.notify !== false;
     try {
-      if (!this.canUseLocalCodex()) {
-        throw new Error(this.t("localOnlyDesktop"));
-      }
-      const codexCommand = escapePowerShellSingleQuoted(this.settings.localCodexCommand || "codex");
-      const output = await this.runPowerShell(`& '${codexCommand}' login status`, 30000);
+      this.assertSupportedLocalPlatform();
+      const { spec } = await this.resolveCodexExecSpec(this.settings.localCodexCommand || "codex");
+      const output = await this.runExecSpec(spec, ["login", "status"], { timeout: 30000 });
       const loginOk = !/(not logged|not signed|no auth|login required|error loading configuration|not authenticated)/i.test(output);
       this.settings.codexLoginOk = loginOk;
       this.settings.codexStatus = loginOk ? this.t("codexLoginDetected") : this.t("codexLoginPending");
@@ -6609,6 +7713,7 @@ module.exports = class CortexChatPlugin extends Plugin {
         this.settings.codexSetupCompleted = false;
       }
       await this.saveSettings();
+      await this.appendSetupLog(this.t("setupOauth"), this.settings.codexStatus, loginOk ? "ok" : "warn");
       if (notify) {
         new Notice(loginOk ? this.t("codexLoginDetected") : this.t("codexLoginPending"));
       }
@@ -6620,6 +7725,7 @@ module.exports = class CortexChatPlugin extends Plugin {
       this.settings.codexStatus = `${this.t("oauthCheckFailed")} ${error.message}`;
       this.settings.codexLastCheck = new Date().toISOString();
       await this.saveSettings();
+      await this.appendSetupLog(this.t("setupOauth"), error.message, "error");
       if (notify) {
         new Notice(this.t("oauthCheckFailed"));
       }
@@ -6662,41 +7768,149 @@ module.exports = class CortexChatPlugin extends Plugin {
   }
 
   async installOrUpdateCodex() {
-    if (!this.canUseLocalCodex()) {
-      new Notice(this.t("localOnlyDesktop"));
-      throw new Error(this.t("localOnlyDesktop"));
-    }
     new Notice(this.t("installingCodex"));
     try {
-      const output = await this.runPowerShell("npm install -g @openai/codex", 300000);
+      this.assertSupportedLocalPlatform();
+      if (this.settings.flatpakHostBridgeBlocked) {
+        const message = `Obsidian Flatpak bloquea la ejecución de Codex del host. Ejecuta: ${this.getFlatpakRepairCommand()} y reinicia Obsidian.`;
+        this.settings.codexStatus = message;
+        this.settings.codexLastCheck = new Date().toISOString();
+        await this.saveSettings();
+        await this.appendSetupLog(this.t("setupInstall"), message, "error");
+        new Notice(message);
+        return "";
+      }
+      const existingCodex = await this.checkCodexStatus({ notify: false, log: false });
+      if (existingCodex) {
+        const npmSpec = await this.resolveNpmExecSpec();
+        if (!npmSpec) {
+          const message = "Codex CLI encontrado. npm no disponible para actualizar; se omite instalación.";
+          this.settings.codexStatus = message;
+          this.settings.codexLastCheck = new Date().toISOString();
+          await this.saveSettings();
+          await this.appendSetupLog(this.t("setupInstall"), message, "ok");
+          new Notice(message);
+          return "";
+        }
+      }
+      const npmCandidates = await this.getNpmInstallCandidates();
+      if (!npmCandidates.length) {
+        throw new Error("npm not found. Install Node.js/npm first. Linux: sudo pacman -S nodejs npm (Arch/EndeavourOS), sudo apt install nodejs npm (Debian/Ubuntu), sudo dnf install nodejs npm (Fedora).");
+      }
+      let output = "";
+      let lastError = null;
+      let installCommand = "";
+      for (const [npmSpec, npmArgs] of npmCandidates) {
+        try {
+          installCommand = this.summarizeExecSpec(npmSpec, npmArgs);
+          output = await this.runExecSpec(npmSpec, npmArgs, { timeout: 300000 });
+          lastError = null;
+          break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      if (lastError) {
+        throw lastError;
+      }
       this.settings.codexStatus = this.t("codexInstalled");
       this.settings.codexLastCheck = new Date().toISOString();
       await this.saveSettings();
+      await this.appendSetupLog(this.t("setupInstall"), installCommand ? `${this.t("codexInstalled")} (${installCommand})` : this.t("codexInstalled"), "ok");
       new Notice(this.t("codexInstalled"));
-      await this.checkCodexStatus();
+      await this.checkCodexStatus({ log: false });
       return output;
     } catch (error) {
-      this.settings.codexStatus = `${this.t("codexInstallFailed")} ${error.message}`;
+      const permissionHint =
+        this.getCodexPlatform() !== "windows" && /eacces|permission denied|operation not permitted/i.test(String(error.message || ""))
+          ? " npm global no tiene permisos; instala Codex manualmente o configura npm global sin sudo."
+          : "";
+      this.settings.codexStatus = `${this.t("codexInstallFailed")} ${error.message}${permissionHint}`;
       this.settings.codexLastCheck = new Date().toISOString();
       this.settings.codexSetupCompleted = false;
       await this.saveSettings();
+      await this.appendSetupLog(this.t("setupInstall"), `${error.message}${permissionHint}`, "error");
       new Notice(this.t("codexInstallFailed"));
       throw error;
     }
   }
 
   async launchCodexLogin() {
-    if (!this.canUseLocalCodex()) {
-      new Notice(this.t("localOnlyDesktop"));
-      throw new Error(this.t("localOnlyDesktop"));
+    const platform = this.assertSupportedLocalPlatform();
+    const { spec: codexSpec } = await this.resolveCodexExecSpec(this.settings.localCodexCommand || "codex");
+    const codexCommand = this.shellCommandFromExecSpec(codexSpec, ["login"]);
+    if (platform === "windows") {
+      await this.appendSetupLog(this.t("setupLogin"), "cmd.exe /d /s /c start Cortex Codex Login cmd.exe /k codex login", "info");
+      await this.runLocalCommandDetached("cmd.exe", ["/d", "/s", "/c", "start", "Cortex Codex Login", "cmd.exe", "/k", codexSpec.command, ...(codexSpec.args || []), "login"]);
+    } else if (platform === "macos") {
+      const script = `tell application "Terminal" to do script ${JSON.stringify(codexCommand)}\ntell application "Terminal" to activate`;
+      await this.appendSetupLog(this.t("setupLogin"), `osascript Terminal: ${codexCommand}`, "info");
+      await this.runLocalCommand("osascript", ["-e", script], { timeout: 30000 });
+    } else {
+      const flatpakSpawn = this.isFlatpakRuntime() ? await this.getFlatpakSpawnCommand() : "";
+      if (flatpakSpawn) {
+        const hostTerminals = [
+          [flatpakSpawn, ["--host", "xfce4-terminal", "-e", "codex login"]],
+          [flatpakSpawn, ["--host", "x-terminal-emulator", "-e", "codex", "login"]],
+          [flatpakSpawn, ["--host", "gnome-terminal", "--", "codex", "login"]],
+          [flatpakSpawn, ["--host", "konsole", "-e", "codex", "login"]],
+          [flatpakSpawn, ["--host", "alacritty", "-e", "codex", "login"]],
+          [flatpakSpawn, ["--host", "kitty", "codex", "login"]],
+          [flatpakSpawn, ["--host", "xterm", "-e", "codex login"]]
+        ];
+        let hostLaunched = false;
+        let hostLastError = null;
+        for (const [terminal, args] of hostTerminals) {
+          try {
+            await this.runLocalCommandDetached(terminal, args);
+            await this.appendSetupLog(this.t("setupLogin"), this.summarizeCommand(terminal, args), "info");
+            hostLaunched = true;
+            break;
+          } catch (error) {
+            hostLastError = error;
+          }
+        }
+        if (!hostLaunched) {
+          await this.appendSetupLog(this.t("setupLogin"), this.t("setupManualCommand", { command: "codex login" }), "warn");
+          throw new Error(`No host terminal emulator found. Run manually on the host: codex login${hostLastError ? ` (${hostLastError.message})` : ""}`);
+        }
+        this.settings.codexStatus = this.t("oauthLaunched");
+        this.settings.codexLastCheck = new Date().toISOString();
+        await this.saveSettings();
+        await this.appendSetupLog(this.t("setupLogin"), this.t("oauthLaunched"), "ok");
+        new Notice(this.t("oauthLaunched"));
+        return;
+      }
+      const terminalCandidates = [
+        ["xfce4-terminal", ["-e", codexCommand]],
+        ["x-terminal-emulator", ["-e", codexSpec.command, ...(codexSpec.args || []), "login"]],
+        ["gnome-terminal", ["--", codexSpec.command, ...(codexSpec.args || []), "login"]],
+        ["konsole", ["-e", codexSpec.command, ...(codexSpec.args || []), "login"]],
+        ["alacritty", ["-e", codexSpec.command, ...(codexSpec.args || []), "login"]],
+        ["kitty", [codexSpec.command, ...(codexSpec.args || []), "login"]],
+        ["xterm", ["-e", codexCommand]]
+      ];
+      let launched = false;
+      let lastError = null;
+      for (const [terminal, args] of terminalCandidates) {
+        try {
+          await this.appendSetupLog(this.t("setupLogin"), this.summarizeCommand(terminal, args), "info");
+          await this.runLocalCommandDetached(terminal, args);
+          launched = true;
+          break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      if (!launched) {
+        await this.appendSetupLog(this.t("setupLogin"), this.t("setupManualCommand", { command: codexCommand }), "warn");
+        throw new Error(`No terminal emulator found. Run manually: ${codexCommand}${lastError ? ` (${lastError.message})` : ""}`);
+      }
     }
-    const codexCommand = escapePowerShellSingleQuoted(this.settings.localCodexCommand || "codex");
-    const loginCommand = `& '${codexCommand}' login`;
-    const command = `Start-Process -FilePath powershell.exe -ArgumentList @('-NoExit','-ExecutionPolicy','Bypass','-Command','${escapePowerShellSingleQuoted(loginCommand)}')`;
-    await this.runPowerShell(command, 30000);
     this.settings.codexStatus = this.t("oauthLaunched");
     this.settings.codexLastCheck = new Date().toISOString();
     await this.saveSettings();
+    await this.appendSetupLog(this.t("setupLogin"), this.t("oauthLaunched"), "ok");
     new Notice(this.t("oauthLaunched"));
   }
 
@@ -6712,6 +7926,12 @@ module.exports = class CortexChatPlugin extends Plugin {
       new Notice(this.t("testingCodex"));
     }
     try {
+      if (!this.settings.codexInstalledOk || !this.settings.localCodexCommand || this.settings.localCodexCommand === "codex") {
+        const install = await this.checkCodexStatus({ notify: false, log: false });
+        if (!install) {
+          throw new Error(this.settings.codexStatus || "Codex CLI not found.");
+        }
+      }
       await this.ensureCodexVaultTrust();
       const vaultRoot = this.getVaultRoot();
       const tempRoot = this.getLocalTempDirectory() || agentPaths(vaultRoot).outboxRoot;
@@ -6719,14 +7939,14 @@ module.exports = class CortexChatPlugin extends Plugin {
       const outputPath = path.join(tempRoot, `${makeId("codex_test_result")}.txt`);
       await fs.mkdir(tempRoot, { recursive: true });
       await fs.writeFile(promptPath, "Responde exactamente: OK", "utf8");
-      const output = await this.runPowerShellScript(
-        buildCodexExecCommandSafe({
+      const output = await this.runCodexExec(
+        {
           codexCommand: this.settings.localCodexCommand || "codex",
           promptPath,
           outputPath,
           vaultRoot,
           runOptions: { effort: "fast", interactionMode: "plan" }
-        }),
+        },
         180000
       );
       let finalMessage = "";
@@ -6747,6 +7967,7 @@ module.exports = class CortexChatPlugin extends Plugin {
       this.settings.codexStatus = this.t("codexOauthOk");
       this.settings.codexLastCheck = new Date().toISOString();
       await this.saveSettings();
+      await this.appendSetupLog(this.t("setupTest"), this.t("codexOauthOk"), "ok");
       if (notify) {
         new Notice(this.t("codexOauthOk"));
       }
@@ -6757,6 +7978,7 @@ module.exports = class CortexChatPlugin extends Plugin {
       this.settings.codexStatus = `${this.t("codexExecutionFailed")} ${error.message}`;
       this.settings.codexLastCheck = new Date().toISOString();
       await this.saveSettings();
+      await this.appendSetupLog(this.t("setupTest"), error.message, "error");
       if (notify) {
         new Notice(this.t("codexExecutionFailed"));
         throw error;
@@ -7087,14 +8309,18 @@ module.exports = class CortexChatPlugin extends Plugin {
         this.settings.codexStatus = this.t("localDeviceRegisteredStatus");
       }
       await this.saveSettings();
+      await this.appendSetupLog(this.t("setupRegister"), this.t("deviceRegistered"), "ok");
       if (options.notify) {
         new Notice(this.t("deviceRegistered"));
       }
       return true;
     } catch (error) {
       this.settings.deviceRegisteredOk = false;
-      this.settings.codexStatus = this.t("localDevicePendingStatus", { error: error.message });
+      if (options.notify || !this.settings.codexStatus) {
+        this.settings.codexStatus = this.t("localDevicePendingStatus", { error: error.message });
+      }
       await this.saveSettings();
+      await this.appendSetupLog(this.t("setupRegister"), error.message, options.notify ? "error" : "warn");
       if (options.notify) {
         new Notice(this.t("deviceRegisterFailed"));
       }
@@ -7126,12 +8352,12 @@ module.exports = class CortexChatPlugin extends Plugin {
     throw new Error(this.t("noDeviceToken"));
   }
 
-  async apiRequest(method, endpoint, body) {
+  async apiRequest(method, endpoint, body, options = {}) {
     if (this.isMobileRuntime() && !this.canUseRemoteBackend()) {
       throw new Error(this.t("remoteHttpsRequired"));
     }
     await this.ensureLocalBackendRunning();
-    if (this.isLocalBackendUrl(this.settings.backendUrl)) {
+    if (this.isLocalBackendUrl(this.settings.backendUrl) && !options.skipLocalRegistration) {
       await this.registerLocalDeviceIfPossible({ notify: false });
     }
     const token = await this.getDeviceToken();
@@ -7181,21 +8407,18 @@ module.exports = class CortexChatPlugin extends Plugin {
     }
 
     try {
-      childProcess?.execFile?.(this.getShellExecutable(), [
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        this.settings.localBackendBootstrapScript
-      ]);
+      const script = this.settings.localBackendBootstrapScript;
+      const platform = this.getCodexPlatform();
+      if (platform === "windows") {
+        childProcess?.execFile?.("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script]);
+      } else {
+        childProcess?.execFile?.(script, [], { cwd: this.getVaultRoot() || undefined });
+      }
     } catch {
       return;
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1800));
-  }
-
-  getShellExecutable() {
-    return "powershell.exe";
   }
 
   validateBackendUrl(value) {
@@ -7543,12 +8766,13 @@ module.exports = class CortexChatPlugin extends Plugin {
     });
 
     try {
+      const localFallbackAvailable = this.canUseLocalCodex() && this.isLocalBackendUrl(this.settings.backendUrl);
       let activeThreadId = threadId;
       if (!activeThreadId) {
         const started = await this.apiRequest("POST", "/chat/start", {
           notePath: context.path || "",
           title: context.title || ""
-        });
+        }, { skipLocalRegistration: localFallbackAvailable });
         activeThreadId = started.threadId;
       }
 
@@ -7558,7 +8782,7 @@ module.exports = class CortexChatPlugin extends Plugin {
         noteContext: context,
         runOptions,
         systemPrompt
-      });
+      }, { skipLocalRegistration: localFallbackAvailable });
 
       return {
         ...response,
@@ -7590,11 +8814,7 @@ module.exports = class CortexChatPlugin extends Plugin {
     if (!this.isLocalBackendUrl(this.settings.backendUrl)) {
       return false;
     }
-
-    const message = String(error?.message || "");
-    return /(ERR_CONNECTION_REFUSED|ECONNREFUSED|connection refused|Failed to fetch|HTTP 5|status 500|request failed|No se puede establecer una conexión)/i.test(
-      message
-    );
+    return true;
   }
 
   async resolveAtReferences(text) {
@@ -7949,14 +9169,16 @@ module.exports = class CortexChatPlugin extends Plugin {
       await this.ensureCodexVaultTrust();
       await fs.mkdir(path.dirname(promptPath), { recursive: true });
       await fs.writeFile(promptPath, prompt, "utf8");
-      const command = buildCodexExecCommandSafe({
-        codexCommand: this.settings.localCodexCommand || "codex",
-        promptPath,
-        outputPath,
-        vaultRoot,
-        runOptions
-      });
-      const output = await this.runPowerShellScript(command, 180000);
+      const output = await this.runCodexExec(
+        {
+          codexCommand: this.settings.localCodexCommand || "codex",
+          promptPath,
+          outputPath,
+          vaultRoot,
+          runOptions
+        },
+        180000
+      );
       let finalMessage = "";
       try {
         finalMessage = await fs.readFile(outputPath, "utf8");
