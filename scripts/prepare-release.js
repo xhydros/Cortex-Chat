@@ -29,6 +29,7 @@ for (const snippet of [
   "codex-node",
   "isExecSpecCompatibleWithPlatform",
   "normalizeCodexExecSpec",
+  "windows-codex-cmd",
   "setupClearLog",
   "setupToggleDiagnostics"
 ]) {

@@ -7037,6 +7037,9 @@ module.exports = class CortexChatPlugin extends Plugin {
   }
 
   async getFlatpakSpawnCommand() {
+    if (!this.isFlatpakRuntime()) {
+      return "";
+    }
     for (const candidate of ["/usr/bin/flatpak-spawn", "/bin/flatpak-spawn", "/app/bin/flatpak-spawn", "flatpak-spawn"]) {
       if (candidate === "flatpak-spawn" || (await this.fileExists(candidate))) {
         return candidate;
@@ -7298,6 +7301,27 @@ module.exports = class CortexChatPlugin extends Plugin {
       this.addUniqueExecSpec(specs, saved);
     }
 
+    if (platform === "windows") {
+      const addWindowsCodexCommand = (command, kind = "windows-codex") => {
+        const value = String(command || "").trim();
+        if (!value) {
+          return;
+        }
+        this.addUniqueExecSpec(specs, {
+          command: "cmd.exe",
+          args: ["/d", "/s", "/c", value],
+          display: `cmd.exe /d /s /c ${value}`,
+          kind
+        });
+      };
+      if (!isPortableCodexCommand(configuredCommand)) {
+        addWindowsCodexCommand(configuredCommand, "windows-codex-configured");
+      }
+      addWindowsCodexCommand("codex.cmd", "windows-codex-cmd");
+      addWindowsCodexCommand("codex", "windows-codex");
+      return specs;
+    }
+
     await this.refreshRuntimeFacts();
     if (this.isFlatpakRuntime()) {
       const flatpakSpawn = await this.getFlatpakSpawnCommand();
@@ -7395,7 +7419,7 @@ module.exports = class CortexChatPlugin extends Plugin {
     await this.resolveNodeExecSpec();
     await this.resolveNpmExecSpec();
     const snapshot = this.getProcessDiagnosticSnapshot();
-    const flatpakSpawn = await this.getFlatpakSpawnCommand();
+    const flatpakSpawn = this.isFlatpakRuntime() ? await this.getFlatpakSpawnCommand() : "";
     const scriptDetails = await this.getCodexCliScriptCandidateDetails();
     const wrapperDetails = await this.getCodexWrapperCandidateDetails();
     const nodeSpecs = await this.getNodeExecSpecs();
@@ -7443,14 +7467,17 @@ module.exports = class CortexChatPlugin extends Plugin {
       }
     }
 
-    const hostBridgeTrace = flatpakSpawn
+    const hostBridgeTrace = this.isFlatpakRuntime() && flatpakSpawn
       ? await this.runLocalCommandDetailed(flatpakSpawn, ["--host", "sh", "-lc", "command -v codex && codex --version"], { timeout: 30000 })
-      : { ok: false, output: "", error: "flatpak-spawn not found" };
+      : { ok: false, output: "", error: "" };
     const winnerUsesFlatpakHost = Boolean(winner?.kind && String(winner.kind).startsWith("flatpak-host-"));
     const hostBridgeBlocked = this.isFlatpakRuntime() && flatpakSpawn && !winnerUsesFlatpakHost && this.isFlatpakHostBridgeBlockedText(`${hostBridgeTrace.error}\n${hostBridgeTrace.stderr}\n${hostBridgeTrace.output}`);
     this.settings.flatpakHostBridgeOk = Boolean(hostBridgeTrace.ok || winnerUsesFlatpakHost);
     this.settings.flatpakHostBridgeBlocked = Boolean(hostBridgeBlocked);
-    const baseCounts = `runtime: ${snapshot.runtime}; flatpak-info=${snapshot.flatpakInfoExists}; flatpak-spawn=${flatpakSpawn || "missing"}; codex via host=${hostBridgeTrace.ok ? "ok" : "fail"}; scripts encontrados: ${scriptsFound}/${scriptDetails.length}; nodes encontrados: ${nodesFound}/${nodeSpecs.length}; estrategias probadas: ${traces.length}`;
+    const flatpakCounts = this.isFlatpakRuntime()
+      ? `; flatpak-info=${snapshot.flatpakInfoExists}; flatpak-spawn=${flatpakSpawn || "missing"}; codex via host=${hostBridgeTrace.ok ? "ok" : "fail"}`
+      : "";
+    const baseCounts = `runtime: ${snapshot.runtime}${flatpakCounts}; scripts encontrados: ${scriptsFound}/${scriptDetails.length}; nodes encontrados: ${nodesFound}/${nodeSpecs.length}; estrategias probadas: ${traces.length}`;
     const noScriptMessage = wrappersFound > 0 && scriptsFound === 0
       ? "Codex wrapper encontrado, pero no se pudo resolver codex.js desde el sandbox de Obsidian."
       : "";
@@ -7475,6 +7502,11 @@ module.exports = class CortexChatPlugin extends Plugin {
       this.settings.codexStatus = `${this.t("codexFound")} ${winner.display}`;
       this.settings.codexInstalledOk = true;
       this.settings.codexLoginOk = Boolean(this.settings.codexLoginOk);
+      if (this.getCodexPlatform() === "windows") {
+        this.settings.flatpakHostBridgeOk = false;
+        this.settings.flatpakHostBridgeBlocked = false;
+        this.settings.codexSetupLog = this.getSetupLogEntries().filter((entry) => !/flatpak-spawn|flatpak-info|codex via host/i.test(`${entry.action || ""}\n${entry.detail || ""}`));
+      }
     } else {
       this.settings.codexInstalledOk = false;
       this.settings.codexLoginOk = false;
@@ -7502,9 +7534,13 @@ module.exports = class CortexChatPlugin extends Plugin {
         `process.execPath=${snapshot.execPath}`,
         `HOME=${snapshot.home}`,
         `PATH=${snapshot.path}`,
-        `/.flatpak-info exists=${snapshot.flatpakInfoExists}`,
-        `flatpak-spawn=${flatpakSpawn || "missing"}`,
-        `codex via host=${hostBridgeTrace.ok ? hostBridgeTrace.output : hostBridgeTrace.error}`
+        ...(this.isFlatpakRuntime()
+          ? [
+              `/.flatpak-info exists=${snapshot.flatpakInfoExists}`,
+              `flatpak-spawn=${flatpakSpawn || "missing"}`,
+              `codex via host=${hostBridgeTrace.ok ? hostBridgeTrace.output : hostBridgeTrace.error}`
+            ]
+          : [])
       ].join("\n");
       const repairTrace = hostBridgeBlocked ? `Flatpak host bridge blocked. Run: ${this.getFlatpakRepairCommand()}` : "";
       this.settings.codexDiagnosticDetail = `${this.settings.codexDiagnosticDetail}\n${repairTrace}\n${runtimeTrace}\n${scriptTrace}\n${nodeTrace}\n${compactTrace}`.trim();
@@ -7840,8 +7876,9 @@ module.exports = class CortexChatPlugin extends Plugin {
     const { spec: codexSpec } = await this.resolveCodexExecSpec(this.settings.localCodexCommand || "codex");
     const codexCommand = this.shellCommandFromExecSpec(codexSpec, ["login"]);
     if (platform === "windows") {
-      await this.appendSetupLog(this.t("setupLogin"), "cmd.exe /d /s /c start Cortex Codex Login cmd.exe /k codex login", "info");
-      await this.runLocalCommandDetached("cmd.exe", ["/d", "/s", "/c", "start", "Cortex Codex Login", "cmd.exe", "/k", codexSpec.command, ...(codexSpec.args || []), "login"]);
+      const windowsLoginCommand = this.summarizeExecSpec(codexSpec, ["login"]);
+      await this.appendSetupLog(this.t("setupLogin"), `cmd.exe /d /s /c start Cortex Codex Login cmd.exe /k ${windowsLoginCommand}`, "info");
+      await this.runLocalCommandDetached("cmd.exe", ["/d", "/s", "/c", "start", "Cortex Codex Login", "cmd.exe", "/k", windowsLoginCommand]);
     } else if (platform === "macos") {
       const script = `tell application "Terminal" to do script ${JSON.stringify(codexCommand)}\ntell application "Terminal" to activate`;
       await this.appendSetupLog(this.t("setupLogin"), `osascript Terminal: ${codexCommand}`, "info");
