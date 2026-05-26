@@ -487,6 +487,14 @@
   gap: 8px;
 }
 
+.cortex-chat-setup-inline-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .cortex-chat-setup-badge {
   display: inline-flex;
   align-items: center;
@@ -508,6 +516,19 @@
 .cortex-chat-setup-badge.is-pending {
   background: var(--background-secondary-alt);
   color: var(--text-muted);
+}
+
+.cortex-chat-settings-advanced {
+  margin-top: 18px;
+  border-top: 1px solid var(--background-modifier-border);
+  padding-top: 10px;
+}
+
+.cortex-chat-settings-advanced > summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 /* Compact v2 sidebar layout */

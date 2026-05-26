@@ -98,6 +98,8 @@ const I18N = {
     configureCodex: "Configure Codex OAuth",
     consistencyDiagnostics: "Consistency diagnostics",
     connectionSecurity: "Connection and security",
+    basicSettings: "Basic",
+    advancedSettings: "Advanced",
     backendUrl: "Backend URL",
     backendUrlDesc: "Central backend address. If it fails and the backend is local, the plugin can use direct local mode.",
     deviceState: "Device state",
@@ -349,9 +351,10 @@ const I18N = {
     noLastResponseMemory: "There is no response with memory context yet.",
     memoryLoadFailed: "Could not load memory used: {error}",
     setupMobileTitle: "Remote backend setup",
-    setupDesktopTitle: "Configure Codex OAuth",
+    setupDesktopTitle: "Prepare Cortex",
     setupDesktopDesc:
-      "This plugin needs Codex CLI installed and authenticated with ChatGPT for full local answers. If Codex is not ready, it can only use local fallback.",
+      "Cortex prepares the local Codex connection, opens login when needed, and keeps technical details hidden unless you need them.",
+    setupPrepare: "Prepare Cortex",
     setupInstall: "1. Install/update Codex",
     setupDiagnose: "Diagnose Codex",
     setupLogin: "2. Start OAuth",
@@ -362,6 +365,7 @@ const I18N = {
     setupToggleDiagnostics: "Show/hide full diagnostics",
     setupClearLog: "Clear log",
     setupPlatform: "System: {platform}",
+    setupHumanPlatform: "Detected system: {platform}",
     setupChecks: "Setup checks",
     setupLog: "Setup log",
     setupLogEmpty: "No setup actions yet.",
@@ -373,6 +377,7 @@ const I18N = {
     setupRuntime: "Runtime: {runtime}",
     setupHostPermission: "Host permission: {status}",
     setupFlatpakRepair: "Flatpak repair: {command}",
+    setupFlatpakNeedsRepair: "Obsidian Flatpak needs host permission before Cortex can run Codex.",
     setupFlatpakBlocked: "Blocked",
     setupFlatpakAllowed: "Allowed",
     setupFlatpakRepairCopied: "Flatpak repair command copied.",
@@ -402,6 +407,7 @@ const I18N = {
     codexFound: "Codex CLI found.",
     codexLoginDetected: "Codex OAuth detected.",
     codexLoginPending: "Codex OAuth pending.",
+    setupLoginOpenedStatus: "Login opened. Finish it in the external window, then return and refresh status.",
     oauthCheckFailed: "Could not check Codex OAuth.",
     installingCodex: "Installing or updating Codex CLI. This may take a few minutes.",
     codexInstalled: "Codex CLI installed or updated.",
@@ -478,6 +484,8 @@ const I18N = {
     configureCodex: "Configurar Codex OAuth",
     consistencyDiagnostics: "Diagnóstico de consistencia",
     connectionSecurity: "Conexión y seguridad",
+    basicSettings: "Básico",
+    advancedSettings: "Avanzado",
     backendUrl: "Backend URL",
     backendUrlDesc: "Dirección del backend central. Si falla y el backend es local, el plugin puede usar modo local directo.",
     deviceState: "Estado de dispositivo",
@@ -729,9 +737,10 @@ const I18N = {
     noLastResponseMemory: "Todavía no hay una respuesta con contexto de memoria.",
     memoryLoadFailed: "No se pudo cargar la memoria usada: {error}",
     setupMobileTitle: "Configurar backend remoto",
-    setupDesktopTitle: "Configurar Codex OAuth",
+    setupDesktopTitle: "Preparar Cortex",
     setupDesktopDesc:
-      "Este plugin necesita Codex CLI instalado y autenticado con ChatGPT para dar respuestas locales completas. Si Codex no está listo, solo puede usar respaldo local.",
+      "Cortex prepara la conexión local con Codex, abre el inicio de sesión cuando hace falta y oculta el detalle técnico salvo que lo necesites.",
+    setupPrepare: "Preparar Cortex",
     setupInstall: "1. Instalar/actualizar Codex",
     setupDiagnose: "Diagnosticar Codex",
     setupLogin: "2. Iniciar OAuth",
@@ -742,6 +751,7 @@ const I18N = {
     setupToggleDiagnostics: "Mostrar/ocultar diagnóstico completo",
     setupClearLog: "Limpiar log",
     setupPlatform: "Sistema: {platform}",
+    setupHumanPlatform: "Sistema detectado: {platform}",
     setupChecks: "Comprobaciones de configuración",
     setupLog: "Log de configuración",
     setupLogEmpty: "Todavía no hay acciones de configuración.",
@@ -753,6 +763,7 @@ const I18N = {
     setupRuntime: "Runtime: {runtime}",
     setupHostPermission: "Permiso host: {status}",
     setupFlatpakRepair: "Reparación Flatpak: {command}",
+    setupFlatpakNeedsRepair: "Obsidian Flatpak necesita permiso de host antes de que Cortex pueda ejecutar Codex.",
     setupFlatpakBlocked: "Bloqueado",
     setupFlatpakAllowed: "Permitido",
     setupFlatpakRepairCopied: "Comando de reparación Flatpak copiado.",
@@ -782,6 +793,7 @@ const I18N = {
     codexFound: "Codex CLI encontrado.",
     codexLoginDetected: "OAuth de Codex detectado.",
     codexLoginPending: "OAuth de Codex pendiente.",
+    setupLoginOpenedStatus: "Inicio de sesión abierto. Complétalo en la ventana externa y vuelve para actualizar el estado.",
     oauthCheckFailed: "No se pudo comprobar OAuth de Codex.",
     installingCodex: "Instalando o actualizando Codex CLI. Puede tardar unos minutos.",
     codexInstalled: "Codex CLI instalado o actualizado.",
@@ -1078,6 +1090,31 @@ function codexReasoningForEffort(runOptions = {}) {
   return runOptions.effort === "fast" ? "medium" : "high";
 }
 
+function buildCodexExecArgs(options = {}) {
+  const sandbox = codexSandboxForMode(options.runOptions);
+  const effort = codexReasoningForEffort(options.runOptions);
+  const args = [
+    "--ask-for-approval",
+    "never",
+    "exec"
+  ];
+  if (options.vaultRoot) {
+    args.push("-C", options.vaultRoot);
+  }
+  args.push(
+    "--skip-git-repo-check",
+    "--sandbox",
+    sandbox,
+    "-c",
+    `model_reasoning_effort="${effort}"`
+  );
+  if (options.outputPath) {
+    args.push("--output-last-message", options.outputPath);
+  }
+  args.push("-");
+  return args;
+}
+
 function buildCodexExecCommand(options) {
   const codexCommand = escapePowerShellSingleQuoted(options.codexCommand || "codex");
   const promptPath = escapePowerShellSingleQuoted(options.promptPath);
@@ -1126,11 +1163,27 @@ function classifyLocalCodexFailure(detail, context = {}, messages = {}) {
   return messages.generic || "Codex local failed while answering with the injected context.";
 }
 
+function detectCodexPlatform(value) {
+  const platform = String(value || "").toLowerCase();
+  if (platform === "win32" || platform === "windows") {
+    return "windows";
+  }
+  if (platform === "darwin" || platform === "macos") {
+    return "macos";
+  }
+  if (platform === "linux") {
+    return "linux";
+  }
+  return "unsupported";
+}
+
 module.exports = {
+  buildCodexExecArgs,
   buildCodexExecCommand,
   classifyLocalCodexFailure,
   codexReasoningForEffort,
   codexSandboxForMode,
+  detectCodexPlatform,
   escapePowerShellSingleQuoted,
   hasNonAscii
 };
@@ -3154,40 +3207,16 @@ class CodexSetupModal extends Modal {
     void this.plugin.checkCodexStatus({ notify: false, log: false }).finally(() => {
       this.renderStatus();
     });
-    this.addAction(actionsEl, this.plugin.t("setupDiagnose"), "codexInstalledOk", async () => {
-      await this.plugin.diagnoseCodexCli({ notify: true, log: true });
+    this.addAction(actionsEl, this.plugin.t("setupPrepare"), "codexSetupCompleted", async () => {
+      await this.plugin.prepareCodexSetup({ notify: true });
       this.renderStatus();
-    });
-    this.addAction(actionsEl, this.plugin.t("setupInstall"), "codexInstalledOk", async () => {
-      await this.plugin.installOrUpdateCodex();
-      this.renderStatus();
-    });
-    this.addAction(actionsEl, this.plugin.t("setupLogin"), "codexLoginOk", async () => {
-      await this.plugin.launchCodexLogin();
-      this.renderStatus();
-    });
-    this.addAction(actionsEl, this.plugin.t("setupTest"), "codexExecutionOk", async () => {
-      await this.plugin.testCodexExecution();
-      this.renderStatus();
-    });
-    this.addAction(actionsEl, this.plugin.t("setupRegister"), "deviceRegisteredOk", async () => {
-      await this.plugin.repairLocalProvisioning();
-      this.renderStatus();
-    });
+    }, "mod-cta");
     this.addAction(actionsEl, this.plugin.t("setupRefresh"), "codexSetupCompleted", async () => {
       await this.plugin.autoCheckCodexSetup({ notify: true });
       this.renderStatus();
     });
-    this.addAction(actionsEl, this.plugin.t("setupRepairFlatpak"), "codexInstalledOk", async () => {
-      await this.plugin.copyFlatpakRepairCommand();
-      this.renderStatus();
-    });
     this.addAction(actionsEl, this.plugin.t("setupToggleDiagnostics"), "", async () => {
       this.showFullDiagnostics = !this.showFullDiagnostics;
-      this.renderStatus();
-    });
-    this.addAction(actionsEl, this.plugin.t("setupClearLog"), "", async () => {
-      await this.plugin.clearSetupLog();
       this.renderStatus();
     });
   }
@@ -3203,14 +3232,19 @@ class CodexSetupModal extends Modal {
       return;
     }
     const platform = this.plugin.resolveSetupPlatform();
-    this.statusEl.createDiv({ text: this.plugin.t("setupPlatform", { platform: platform.label }) });
+    this.statusEl.createDiv({ text: this.plugin.t("setupHumanPlatform", { platform: platform.label }) });
     const runtime = this.plugin.getLinuxRuntimeKind();
-    this.statusEl.createDiv({ text: this.plugin.t("setupRuntime", { runtime }) });
     if (runtime === "flatpak") {
       const hostPermission = this.plugin.settings.flatpakHostBridgeOk ? this.plugin.t("setupFlatpakAllowed") : this.plugin.t("setupFlatpakBlocked");
       this.statusEl.createDiv({ text: this.plugin.t("setupHostPermission", { status: hostPermission }) });
       if (!this.plugin.settings.flatpakHostBridgeOk) {
-        this.statusEl.createDiv({ text: this.plugin.t("setupFlatpakRepair", { command: this.plugin.getFlatpakRepairCommand() }) });
+        const repairEl = this.statusEl.createDiv({ cls: "cortex-chat-setup-inline-action" });
+        repairEl.createSpan({ text: this.plugin.t("setupFlatpakNeedsRepair") });
+        const repairButton = repairEl.createEl("button", { text: this.plugin.t("setupRepairFlatpak") });
+        repairButton.addEventListener("click", async () => {
+          await this.plugin.copyFlatpakRepairCommand();
+          this.renderStatus();
+        });
       }
     }
     const rawStatus = this.plugin.settings.codexStatus || "";
@@ -3219,26 +3253,34 @@ class CodexSetupModal extends Modal {
       ? this.plugin.t("codexLoginDetected")
       : rawStatus || this.plugin.t("pending");
     this.statusEl.createDiv({ text: this.plugin.t("status", { status }) });
-    this.renderSetupChecks();
-    if (this.plugin.settings.codexVersion) {
-      this.statusEl.createDiv({ text: this.plugin.t("version", { version: this.plugin.settings.codexVersion }) });
-    }
-    if (this.plugin.settings.localCodexCommandDisplay) {
-      this.statusEl.createDiv({ text: this.plugin.t("setupStrategy", { strategy: this.plugin.settings.localCodexCommandDisplay }) });
-    }
-    if (this.plugin.settings.codexDiagnosticSummary) {
-      this.statusEl.createDiv({ text: this.plugin.t("setupDiagnostics", { summary: this.plugin.compactSetupText(this.plugin.settings.codexDiagnosticSummary, 360) }) });
-    }
-    if (this.showFullDiagnostics && this.plugin.settings.codexDiagnosticDetail) {
-      this.statusEl.createEl("pre", {
-        cls: "cortex-chat-setup-diagnostics",
-        text: this.plugin.settings.codexDiagnosticDetail
-      });
-    }
     if (this.plugin.settings.codexLastCheck) {
       this.statusEl.createDiv({ text: this.plugin.t("lastCheck", { time: this.plugin.settings.codexLastCheck }) });
     }
-    this.renderSetupLog();
+    if (this.showFullDiagnostics) {
+      this.renderSetupChecks();
+      this.statusEl.createDiv({ text: this.plugin.t("setupRuntime", { runtime }) });
+      if (this.plugin.settings.codexVersion) {
+        this.statusEl.createDiv({ text: this.plugin.t("version", { version: this.plugin.settings.codexVersion }) });
+      }
+      if (this.plugin.settings.localCodexCommandDisplay) {
+        this.statusEl.createDiv({ text: this.plugin.t("setupStrategy", { strategy: this.plugin.settings.localCodexCommandDisplay }) });
+      }
+      if (this.plugin.settings.codexDiagnosticSummary) {
+        this.statusEl.createDiv({ text: this.plugin.t("setupDiagnostics", { summary: this.plugin.compactSetupText(this.plugin.settings.codexDiagnosticSummary, 360) }) });
+      }
+      if (this.plugin.settings.codexDiagnosticDetail) {
+        this.statusEl.createEl("pre", {
+          cls: "cortex-chat-setup-diagnostics",
+          text: this.plugin.settings.codexDiagnosticDetail
+        });
+      }
+      this.renderSetupLog();
+      const clearButton = this.statusEl.createEl("button", { text: this.plugin.t("setupClearLog") });
+      clearButton.addEventListener("click", async () => {
+        await this.plugin.clearSetupLog();
+        this.renderStatus();
+      });
+    }
   }
 
   renderSetupChecks() {
@@ -3277,8 +3319,8 @@ class CodexSetupModal extends Modal {
     }
   }
 
-  addAction(parentEl, label, statusKey, onClick) {
-    const button = parentEl.createEl("button", { cls: "cortex-chat-setup-action" });
+  addAction(parentEl, label, statusKey, onClick, extraClass = "") {
+    const button = parentEl.createEl("button", { cls: `cortex-chat-setup-action ${extraClass}`.trim() });
     this.renderActionButton(button, label, statusKey);
     button.addEventListener("click", async () => {
       button.disabled = true;
@@ -5214,9 +5256,91 @@ class CortexChatSettingTab extends PluginSettingTab {
   }
 
   display() {
-    const { containerEl } = this;
+    const rootEl = this.containerEl;
     const t = this.plugin.t;
-    containerEl.empty();
+    rootEl.empty();
+    rootEl.createEl("h3", { text: t("basicSettings") });
+
+    new Setting(rootEl)
+      .setName(t("language"))
+      .setDesc(t("languageDesc"))
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("auto", t("languageAuto"))
+          .addOption("en", t("languageEnglish"))
+          .addOption("es", t("languageSpanish"))
+          .setValue(this.plugin.settings.languageMode || DEFAULT_SETTINGS.languageMode)
+          .onChange(async (value) => {
+            const nextLanguageMode = normalizeLanguageMode(value);
+            this.plugin.settings.systemPromptSections = normalizeSystemPromptForLanguage(
+              this.plugin.settings.systemPromptSections,
+              nextLanguageMode
+            );
+            this.plugin.settings.languageMode = nextLanguageMode;
+            await this.plugin.saveSettings();
+            this.display();
+          })
+      );
+
+    new Setting(rootEl)
+      .setName(t("defaultWorkMode"))
+      .setDesc(t("defaultWorkModeDesc"))
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("plan", t("planner"))
+          .addOption("execute", t("execute"))
+          .setValue(this.plugin.settings.defaultInteractionMode || DEFAULT_SETTINGS.defaultInteractionMode)
+          .onChange(async (value) => {
+            this.plugin.settings.defaultInteractionMode = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(rootEl)
+      .setName(t("backendUrl"))
+      .setDesc(t("backendUrlDesc"))
+      .addText((text) =>
+        text
+          .setPlaceholder("http://127.0.0.1:8787")
+          .setValue(this.plugin.settings.backendUrl)
+          .onChange(async (value) => {
+            this.plugin.settings.backendUrl = value.trim();
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(rootEl)
+      .setName(t("allowRemoteBackend"))
+      .setDesc(t("allowRemoteBackendDesc"))
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.allowRemoteBackend).onChange(async (value) => {
+          this.plugin.settings.allowRemoteBackend = value;
+          await this.plugin.saveSettings();
+        })
+      );
+
+    new Setting(rootEl)
+      .setName(t("approvedEditsOnly"))
+      .setDesc(t("approvedEditsOnlyDesc"))
+      .addToggle((toggle) =>
+        toggle.setValue(Boolean(this.plugin.settings.approvedEditsOnly)).onChange(async (value) => {
+          this.plugin.settings.approvedEditsOnly = Boolean(value);
+          await this.plugin.saveSettings();
+        })
+      );
+
+    new Setting(rootEl)
+      .setName("Codex OAuth")
+      .setDesc(t("status", { status: this.plugin.settings.codexSetupCompleted ? t("codexReady") : this.plugin.settings.codexStatus || t("pending") }))
+      .addButton((button) =>
+        button.setButtonText(t("openAssistant")).onClick(() => {
+          new CodexSetupModal(this.app, this.plugin).open();
+        })
+      );
+
+    const advancedEl = rootEl.createEl("details", { cls: "cortex-chat-settings-advanced" });
+    advancedEl.createEl("summary", { text: t("advancedSettings") });
+    const containerEl = advancedEl.createDiv();
     containerEl.createEl("h3", { text: t("connectionSecurity") });
 
     new Setting(containerEl)
@@ -7689,6 +7813,56 @@ module.exports = class CortexChatPlugin extends Plugin {
       new Notice(ready ? this.t("codexReady") : this.t("codexLoginDetected"));
     }
     return { ready, installed: true, login: true, execution: ready };
+  }
+
+  async prepareCodexSetup(options = {}) {
+    const notify = options.notify !== false;
+    if (this.isMobileRuntime()) {
+      const ready = await this.checkRemoteBackendForMobile({ notify });
+      return { ready, installed: false, login: ready, execution: ready };
+    }
+
+    this.assertSupportedLocalPlatform();
+    await this.diagnoseCodexCli({ notify: false, log: true });
+
+    let install = await this.checkCodexStatus({ notify: false, log: false });
+    if (!install) {
+      await this.installOrUpdateCodex();
+      install = await this.checkCodexStatus({ notify: false, log: false });
+    }
+    if (!install) {
+      if (notify) {
+        new Notice(this.t("codexNotReady"));
+      }
+      return { ready: false, installed: false, login: false, execution: false };
+    }
+
+    const login = await this.checkCodexLoginStatus({ notify: false });
+    if (!login) {
+      await this.launchCodexLogin();
+      this.settings.codexSetupCompleted = false;
+      this.settings.codexStatus = this.t("setupLoginOpenedStatus");
+      await this.saveSettings();
+      if (notify) {
+        new Notice(this.t("setupLoginOpenedStatus"));
+      }
+      return { ready: false, installed: true, login: false, execution: false };
+    }
+
+    const output = await this.testCodexExecution({ notify: false });
+    const execution = Boolean(output && this.settings.codexExecutionOk);
+    if (execution && this.isLocalBackendUrl(this.settings.backendUrl)) {
+      await this.registerLocalDeviceIfPossible({ notify: false });
+    }
+    if (notify) {
+      new Notice(execution ? this.t("codexReady") : this.t("codexExecutionFailed"));
+    }
+    return {
+      ready: execution,
+      installed: true,
+      login: true,
+      execution
+    };
   }
 
   async checkCodexStatus(options = {}) {
